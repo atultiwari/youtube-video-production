@@ -56,6 +56,12 @@ not do and footage that misses what the script needs.
 
 **One human gate.** Step 5. Scripts are cheap to change and takes are not.
 
+**Know where you are before doing anything.** A video spans days and several sittings. Each one
+keeps a `STATUS.md`; start by running `scripts/video-status.py` against it, which derives the
+completed steps from the filesystem and surfaces the decisions a person wrote down. Read
+`references/status-and-resuming.md` once, then keep the file current — updating it is the last
+thing you do before stopping, never something reconstructed later.
+
 ## Non-negotiables
 
 1. **A claim gets a primary source before it gets a sentence.** Secondary sources are wrong
@@ -80,6 +86,7 @@ Read a file when you reach its stage, not before.
 | `references/04-voice.md` | 6–8 |
 | `references/05-build.md` | 10–11, including the whiteboard hand |
 | `references/06-publish.md` | 12–13 |
+| `references/status-and-resuming.md` | resuming a video, or recording a decision |
 | `references/mistakes.md` | when something behaves oddly — read before debugging |
 
 ## Scripts that ship with this skill
@@ -88,11 +95,12 @@ Self-contained; they do not read anything from a project.
 
 | | |
 |---|---|
+| `scripts/video-status.py` | says which step a video is on, derived from what is on disk |
 | `scripts/check-script.py` | lints narration for the delivery traps that break TTS |
 | `scripts/build-audio-grid.py` | joins per-beat takes, fits languages, writes the frame grid |
 | `scripts/master-audio.py` | gain plus true-peak limiting, iterated to target |
 
-Run any of them with `--help`.
+Run any of them with `--help`. `templates/STATUS.md` is the per-video status file to copy.
 
 ## Formats
 

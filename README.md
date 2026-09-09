@@ -28,6 +28,7 @@ Self-contained — the scripts read nothing from any project.
 
 | | |
 |---|---|
+| `scripts/video-status.py` | says which step a video is on, derived from what is on disk |
 | `scripts/check-script.py` | lints narration for the traps that break TTS |
 | `scripts/build-audio-grid.py` | joins per-beat takes, fits a second language, writes the frame grid |
 | `scripts/master-audio.py` | gain and true-peak limiting, iterated to target |
@@ -37,7 +38,12 @@ Self-contained — the scripts read nothing from any project.
 Read one when you reach its stage, not before.
 
 `01-plan-and-validate` · `02-capture-reference` · `03-script` · `04-voice` · `05-build` ·
-`06-publish` · `mistakes`
+`06-publish` · `status-and-resuming` · `mistakes`
+
+Each video keeps a `STATUS.md` (copy `templates/STATUS.md`). The completed steps are *derived*
+from the filesystem rather than ticked by hand — a checklist drifts within a day — so the file
+carries only what cannot be derived: the angle and why, what was rejected and why, what is
+blocked, and what the owner has not decided.
 
 `mistakes.md` is the catalogue: what went wrong, how it was found, what it cost. Several entries
 look like other problems, so it is worth reading *before* debugging rather than after.
