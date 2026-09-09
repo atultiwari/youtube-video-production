@@ -1,0 +1,66 @@
+# 12–13 · Render and publish
+
+## Render
+
+Shorts render at 2× — 2160×3840 — because platforms allocate more bitrate to a 4K upload and
+type-heavy content starves first.
+
+Verify the delivered file against the loudness target rather than trusting the master: the
+encode is the thing the viewer hears.
+
+## Upload in the browser, not the Data API
+
+For an unaudited API project created after 28 July 2020, every `videos.insert` upload is locked to
+private, and that cannot be changed in the web UI afterwards. The restriction is on the API path
+only — browser uploads are unaffected.
+
+So uploads are driven in a signed-in browser.
+
+## Read every field back
+
+**A typed description can fail silently.** One upload went live carrying the channel's default
+template, placeholder text and all — title, tags and the AI-disclosure radio all landed; only the
+description did not, so nothing looked wrong.
+
+The field is a rich-text div that must be focused and ready before select-all-and-type reaches it.
+A click that lands early is accepted silently and the text goes nowhere. There is no error.
+
+**After filling any form, read the values back out of the DOM and assert on them.** One scripted
+call can check every row on the channel list at once — scan the whole channel for template markers
+before calling an upload run finished, not just the video you were watching.
+
+The same applies to radio buttons: confirm `aria-checked`, not the click's return value. Label
+text is often ambiguous.
+
+## Things that break a batch upload
+
+- **Never press Escape in the upload dialog.** With no autocomplete open it closes the whole
+  dialog and saves a half-filled draft. Click an inert area instead.
+- **Element refs go stale** as the page re-renders, and the window may resize mid-session. Re-find
+  after every navigation or generation rather than reusing coordinates. A click that silently does
+  nothing is usually this.
+- Set the AI-generated-content disclosure on every upload where it applies. Decide it once as a
+  policy rather than per video.
+
+## Metadata
+
+Generate it from a per-video data file rather than writing it by hand, so it cannot drift from the
+video after an edit.
+
+**Every platform limit fails silently rather than rejecting.** Titles over 100 characters are
+truncated in feeds. More than 15 hashtags makes the platform ignore **all** of them, not just the
+excess. Captions are cut mid-sentence at 2,200 characters. The first three hashtags render above
+the title, so their order is a decision. Different platforms want different routing tags, and
+carrying the wrong one signals cross-posting.
+
+## Scheduling and comparisons
+
+If two publishing slots are being compared, hold everything else constant. One comparison ran two
+time slots against each other while the *content* also differed between the groups — the newer
+group's scripts had been rewritten. That gives a signal, not an experiment, and it should be
+reported that way rather than as a finding.
+
+## After publishing
+
+Check the live listing rather than the upload confirmation: scheduled date, visibility, and that
+the description survived. The confirmation dialog reports what was submitted, not what stuck.
