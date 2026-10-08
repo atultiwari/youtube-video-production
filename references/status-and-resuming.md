@@ -24,6 +24,10 @@ that was tried and turned down last week.
 One `STATUS.md` per video, anywhere in the project. Front matter declares where the artefacts
 live, so any layout works and no directory structure is imposed. Copy `templates/STATUS.md`.
 
+Front matter also carries the video's `mode` (`tutorial`, `illustrated` or `hybrid`), which
+decides what step 3 needs: captures, references, or both. A file without one is read as
+`tutorial`, which is what every video before modes was.
+
 ```
 ./scripts/video-status.py path/to/STATUS.md --root /path/to/project
 ```

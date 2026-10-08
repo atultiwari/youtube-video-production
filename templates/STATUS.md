@@ -2,11 +2,13 @@
 video: L-001
 title: Use ChatGPT Better Than 99% of Doctors
 format: longform            # longform | short
+mode: tutorial              # tutorial | illustrated | hybrid  (SKILL.md, step 0)
 languages: [en, hi]         # first is the reference language
 paths:
   script: docs/longform/L-001/VOICEOVER.md
   validation: docs/longform/L-001/validation.md
-  captures: out/longform/L-001/captures
+  captures: out/longform/L-001/captures      # tutorial and hybrid
+  references: docs/longform/L-001/references # illustrated and hybrid
   takes: out/longform/L-001/takes
   grid: out/longform/L-001/beats.json
   composition: src/longform/l001

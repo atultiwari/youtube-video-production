@@ -27,15 +27,25 @@ import re
 import sys
 from pathlib import Path
 
-STEPS = [
-    ("validated", "validation", "2  Validate the claims"),
-    ("captured", "captures", "3  Reconnaissance capture"),
+VALIDATE = ("validated", "validation", "2  Validate the claims")
+CAPTURE = ("captured", "captures", "3  Reconnaissance capture")
+RESEARCH = ("researched", "references", "3  Reference research")
+LATER = [
     ("scripted", "script", "4  Script"),
     ("recorded", "takes", "6  Record the voiceover"),
     ("gridded", "grid", "8  Measure -> grid"),
     ("built", "composition", "10  Build"),
     ("rendered", "renders", "12  Render"),
 ]
+
+# Step 0 of the skill. An illustrated explainer has no app to capture, so step 3 is reference
+# research instead; a hybrid does both. A STATUS.md without `mode:` predates modes, and every
+# video made before them was a screen tutorial.
+MODES = {
+    "tutorial": ("screen tutorial", [VALIDATE, CAPTURE, *LATER]),
+    "illustrated": ("illustrated explainer", [VALIDATE, RESEARCH, *LATER]),
+    "hybrid": ("hybrid", [VALIDATE, RESEARCH, CAPTURE, *LATER]),
+}
 
 
 def front_matter(text: str) -> dict:
@@ -95,11 +105,17 @@ def main() -> int:
     root = args.root or args.status.parent
     paths = {k: (root / v) for k, v in (meta.get("paths") or {}).items()}
 
+    mode = meta.get("mode", "tutorial")
+    if mode not in MODES:
+        raise SystemExit(f"{args.status}: unknown mode {mode!r}; use one of: {', '.join(MODES)}")
+    mode_name, steps = MODES[mode]
+
     print(f"{meta.get('video', '?')} · {meta.get('title', 'untitled')}")
-    print(f"{meta.get('format', '?')} · {', '.join(meta.get('languages', []) or ['?'])}\n")
+    print(f"{meta.get('format', '?')} · {mode_name} · "
+          f"{', '.join(meta.get('languages', []) or ['?'])}\n")
 
     done, next_step = {}, None
-    for key, path_key, label in STEPS:
+    for key, path_key, label in steps:
         path = paths.get(path_key)
         ok = bool(path) and has_content(path)
         done[key] = ok

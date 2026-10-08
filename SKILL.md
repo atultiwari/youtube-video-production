@@ -1,14 +1,17 @@
 ---
 name: youtube-video-production
 description: >-
-  End-to-end runbook for producing a YouTube video — Short or longform — narrated by a cloned
-  TTS voice, built in Remotion, with simulated app screens and hand-drawn whiteboard sequences.
-  Covers the whole order of work: plan, validate claims, capture reference, script, record the
-  voiceover in the browser, master, time, build, render, publish. Use whenever a new video
-  starts ("make a video about X", "new Short", "start the longform"), whenever one resumes
-  ("what's next on that video", "record the voiceover", "build it"), and whenever a video needs
-  screen recordings, simulated interfaces, a whiteboard hand, or a YouTube upload. Self-contained:
-  the scripts it needs ship with it.
+  End-to-end runbook for producing a YouTube video, Short or longform, narrated by a cloned TTS
+  voice and built in Remotion, in one of three modes: a screen tutorial with simulated app
+  screens, an illustrated explainer with drawn pictures (medical and science teaching, Pathology
+  Notes), or a hybrid of the two. Covers the whole order of work: choose the mode, plan, validate
+  claims, gather reference, script, record the voiceover, master, time, build, render, publish.
+  Orchestrates remotion-whiteboard, which does all drawing and hand-writing. Use whenever a new
+  video starts ("make a video about X", "new Short", "start the longform"), whenever one resumes
+  ("what's next on that video", "record the voiceover", "build it"), for any explainer, lecture,
+  whiteboard, infographic, medical or science explainer, or Pathology Notes episode, and whenever
+  a video needs screen recordings, simulated interfaces, a whiteboard hand, or a YouTube upload.
+  Self-contained: the scripts it needs ship with it.
 license: MIT
 metadata:
   author: Dr Atul Tiwari
@@ -21,22 +24,39 @@ metadata:
 A runbook. It answers "what do I do next", in order, and names the failure behind each rule so
 you can argue with it rather than obey it.
 
-Everything here was learned making explainer videos with a cloned voice and a Remotion build.
-None of it is subject-specific — the same order works for a software tutorial, a clinical
-explainer or a product walkthrough.
+Everything here was learned making videos with a cloned voice and a Remotion build. The order
+is the same for every subject; what changes is the **mode**, chosen first.
+
+## 0 · Choose the mode
+
+Decide before anything else, and record it as `mode:` in the video's `STATUS.md`. It changes
+where reference comes from and what the picture is made of.
+
+| | Screen tutorial `tutorial` | Illustrated explainer `illustrated` | Hybrid `hybrid` |
+|---|---|---|---|
+| Teaches | how to use an app or tool | a concept: pathology, physiology, any science | a concept, then the tool that applies it |
+| Step 3 | reconnaissance capture of the app | reference research: atlases, micrographs, real objects | both, per beat |
+| Step 9 | definitive capture | none | for the app beats only |
+| Picture | app shots, built from captured reference | drawn pictures, through `remotion-whiteboard` | each beat in its own kind |
+
+**Choose by what the viewer must see, not by habit.** If no beat needs a real interface, the
+video is illustrated. Before modes existed, every video was steered toward mock app screens:
+an illustrated pathology baseline was sent to "reconnaissance capture" for an app it never
+showed, and a Short on an abstract idea came out as type on a dark ground with no picture at all.
 
 ## The order, and why it is this order
 
 ```
+ 0  Choose the mode           tutorial, illustrated or hybrid
  1  Decide the piece          angle, audience, one idea
  2  Validate the claims       before a word is scripted
- 3  Reconnaissance capture    look at every screen you intend to show
+ 3  Reference                 capture the app, or research what to draw
  4  Script                    then lint it
  5  ── APPROVAL GATE ──       a human reads the script before a take is spent
  6  Record the voiceover      browser TTS, one take per beat
  7  Master                    to the delivery target
  8  Measure → grid            the takes decide every timing
- 9  Definitive capture        record the exact flows the script now calls for
+ 9  Definitive capture        tutorial and hybrid: the exact flows the script calls for
 10  Build                     Remotion, against the measured grid
 11  Stills review             one frame per beat, before any render
 12  Render
@@ -48,11 +68,11 @@ placed from the *measured* duration of real audio. Never from an estimate — a 
 estimate was 25% wrong on a real script, and 89 words were cut to fix a runtime that was never
 over. See `references/mistakes.md`.
 
-**Capture twice, deliberately.** Reconnaissance capture (step 3) comes *before* the script,
-because you cannot write "and it shows you the tier beside each plan" until you have seen
-whether it does. Definitive capture (step 9) comes *after*, when you know the exact flow to
-record. Doing it once, in the middle, produces both a script that promises things the app does
-not do and footage that misses what the script needs.
+**Capture twice, deliberately** (tutorial and hybrid). Reconnaissance capture (step 3) comes
+*before* the script, because you cannot write "and it shows you the tier beside each plan" until
+you have seen whether it does. Definitive capture (step 9) comes *after*, when you know the exact
+flow. Doing it once, in the middle, produces a script that promises things the app does not do
+and footage that misses what the script needs.
 
 **One human gate.** Step 5. Scripts are cheap to change and takes are not.
 
@@ -66,13 +86,28 @@ thing you do before stopping, never something reconstructed later.
 
 1. **A claim gets a primary source before it gets a sentence.** Secondary sources are wrong
    often enough that this is not optional.
-2. **Simulated interfaces are built from captured reference, never from memory.** Three rebuilds
-   of one app's composer were wrong until the real thing was measured.
+2. **Simulated interfaces are built from captured reference, never from memory** (tutorial,
+   hybrid). Three rebuilds of one app's composer were wrong until the real thing was measured.
 3. **Invented output is labelled on screen** — `Simulated — illustrative only`.
 4. **Nothing private appears in any frame** — not in a demo, not in a sidebar, not in reference
    captured from a live account.
 5. **Read written form fields back** before believing them. Typed values fail silently.
 6. **Never hand-edit a timing file.** It is generated from the takes.
+
+## Skills it orchestrates
+
+This skill decides what happens, and when. The making belongs to other skills; do not repeat
+their content here.
+
+| Skill | Its job in a video |
+|---|---|
+| `remotion-whiteboard` | **Required for anything drawn or hand-written:** strokes, written text, the pen and the hand. Install its toolkit into the video project once: `node ~/.claude/skills/remotion-whiteboard/scripts/install.mjs <project>` |
+| `motion-design` | easing and choreography for elements that are not drawn |
+| `remotion-best-practices` | Remotion API usage |
+
+**If `remotion-whiteboard` is not available, stop at the build step and say so.** Do not
+improvise a hand or a drawing component. In v2 the hand worked only because one project
+happened to hold a copy of the whiteboard skill; outside it there was no engine.
 
 ## Where the detail lives
 
@@ -81,7 +116,7 @@ Read a file when you reach its stage, not before.
 | File | Stage |
 |---|---|
 | `references/01-plan-and-validate.md` | 1–2 |
-| `references/02-capture-reference.md` | 3 and 9 |
+| `references/02-capture-reference.md` | 3 and 9: capture, or reference research when illustrated |
 | `references/03-script.md` | 4–5, including the channel asks |
 | `references/04-voice.md` | 6–8 |
 | `references/05-build.md` | 10–11, including the whiteboard hand |

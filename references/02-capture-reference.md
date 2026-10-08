@@ -1,5 +1,8 @@
 # 3 and 9 · Capturing reference and footage
 
+**Screen tutorial and hybrid only.** An illustrated explainer has no app to capture; it does
+[reference research](#illustrated-mode-reference-research-instead) at step 3 and has no step 9.
+
 Two passes, and the split matters.
 
 ## Pass 1 — reconnaissance, before the script
@@ -76,3 +79,19 @@ ffmpeg analysis beats browser screenshots.
   one transition fires the detector over several frames and the raw count triples.
 - **Window bounds** in a screen recording: scan rows and columns for the dark region's edges, then
   `crop=w:h:x:y` to drop the desktop surround.
+
+## Illustrated mode: reference research instead
+
+Step 3 still comes before the script, for the same reason: you cannot write well about what a
+picture will show until you have looked at the real thing.
+
+- **Look at the real thing.** Micrographs, atlas plates, gross specimens, and the everyday object
+  a metaphor will borrow from.
+- **Keep it in the video's `references` folder**, the path declared in `STATUS.md`: the images
+  you looked at, their sources, and a line on what each one settles. `video-status.py` counts a
+  non-empty folder as step 3 done.
+- **Reference is for looking, and nothing from it ships by default.** An image goes on screen
+  only with its licence recorded beside it: your own slides first, then openly licensed sources.
+  No atlas screenshots. This is the live-account rule above, applied to books and websites.
+
+A hybrid video does both: research for its concept beats, capture for its app beats.

@@ -1,5 +1,11 @@
 # 10–11 · Build, and review with stills
 
+**Mode matters here.** The sections on app shots (*Never show a whole interface* and *Showing
+detail: magnify over a blur*) apply to tutorial videos and to the app beats of a hybrid. In an
+illustrated video, or a hybrid's concept beats, the picture is drawn with `remotion-whiteboard`
+(see *The whiteboard hand*). Illustrated-mode art direction, storyboard and motion rules are not
+written yet: they come from the v3 pilot's log, not from guesses.
+
 ## Timing comes from the takes
 
 `beats.json` is generated from measured take durations. Beat components get no duration of their
@@ -33,7 +39,7 @@ holding past ten.
 A first build averaged one cut every **16 seconds**. That alone was most of what "not engaging"
 meant. Budget several shots per beat, not one.
 
-## Never show a whole interface
+## Never show a whole interface (app shots)
 
 The reference does not do it once. Every app shot is **pushed in on the region of interest**, so
 type appears two to three times the size it is in the product. Complete, accurate, unreadable
@@ -41,7 +47,7 @@ screens are worth nothing on a laptop.
 
 Where the whole screen matters, move the frame — do not ask the viewer's eye to hunt.
 
-## Showing detail: magnify over a blur
+## Showing detail: magnify over a blur (app shots)
 
 The move that carries this genre: blur the app back to texture, darken it, and lay a **framed
 card** over it — gradient border, a header strip naming what is being shown, near-black body,
@@ -65,6 +71,18 @@ avatar, that job still needs doing:
 
 ## The whiteboard hand
 
+**`remotion-whiteboard` is the drawing engine, and it is required.** Everything drawn or
+hand-written in a video (strokes, written text, the pen, the hand) is built with its components.
+Install its toolkit into the video project once, then set the house colours in its `tokens.ts`:
+
+```
+node ~/.claude/skills/remotion-whiteboard/scripts/install.mjs <project>
+```
+
+If that skill is not installed, **stop here and say so**; do not improvise a hand or a drawing
+component. This file decides *when* to draw and with *which* pen; that skill decides *how*, and
+its rules win on drawn elements.
+
 Dry stretches — definitions, regulations, a list of principles — should be **written, not
 typeset**. Watching a rule being written is a different experience from being shown one, and it
 costs only the seconds the words were going to take anyway. It is also the thing a screen-recording
@@ -84,15 +102,12 @@ tell"*.
 the first amateur tell on the list. Size the hand from the frame, not from the component's default
 — one default left a cut-off sleeve floating when the nib sat halfway down a 1080 frame. The nib
 sits near the asset's top, so roughly 93% of the hand hangs below the contact point; size from
-that, then check a still.
+that, then check a still. In `remotion-whiteboard` that is the `handSize` prop:
+`(frameHeight - nibY) / 0.93`, plus a margin.
 
-**Rotation pivots on the nib**, so a tilting wrist never drags the contact point off the line. And
-the nib position must be *measured* in the asset, not guessed, or ink appears where the pen is not
-touching.
-
-Write real type, not plotter glyphs: trace the pen along a single-line font's skeleton while
-revealing the real typeface underneath. A 1960s plotter face has no weight and no hinting, and is
-barely readable at speed — which a caption-driven format cannot afford.
+The engine already handles the rest: the nib measured in the asset, rotation about the nib, and
+real type written along a single-line skeleton rather than plotter glyphs. Do not re-implement
+any of them in a video project.
 
 ## Labelling
 

@@ -1,26 +1,35 @@
 # youtube-video-production
 
-An end-to-end runbook for producing a YouTube video — Short or longform — narrated by a cloned
-TTS voice, built in Remotion, with simulated app screens and hand-drawn whiteboard sequences.
+An end-to-end runbook for producing a YouTube video, Short or longform, narrated by a cloned TTS
+voice and built in Remotion. It works in three modes: a **screen tutorial** with simulated app
+screens, an **illustrated explainer** with drawn pictures, or a **hybrid** of the two.
 
 It answers *"what do I do next"*, in order, and names the failure behind each rule so you can
-argue with it rather than obey it. Nothing in it is subject-specific: the same order works for a
-software tutorial, a clinical explainer or a product walkthrough.
+argue with it rather than obey it. The order is the same for every subject; the mode, chosen
+first, changes where reference comes from and what the picture is made of.
 
 ## The order
 
 ```
+ 0  Choose the mode           5  ── APPROVAL GATE ──      10  Build
  1  Decide the piece          6  Record the voiceover      11  Stills review
  2  Validate the claims       7  Master                    12  Render
- 3  Reconnaissance capture    8  Measure → grid            13  Publish
+ 3  Reference                 8  Measure → grid            13  Publish
  4  Script                    9  Definitive capture
- 5  ── APPROVAL GATE ──      10  Build
 ```
 
 Two things about that order are deliberate and were learned the hard way. **Voice comes before
 picture**, because the take is the clock — a word-count estimate was 25% wrong on a real script.
-And **capture happens twice**: reconnaissance before the script, because you cannot write what an
-app shows until you have seen it, and the definitive recording after, when you know the flow.
+And in a tutorial **capture happens twice**: reconnaissance before the script, because you cannot
+write what an app shows until you have seen it, and the definitive recording after, when you know
+the flow. An illustrated explainer does reference research at step 3 instead, and has no step 9.
+
+## Skills it works with
+
+It decides what happens and when; other skills do the making. **`remotion-whiteboard` is
+required** for anything drawn or hand-written. Its installer puts the toolkit into each video
+project, and the build stops if the skill is missing. `motion-design` covers easing for
+non-drawn elements, and `remotion-best-practices` covers the Remotion API.
 
 ## What ships with it
 
