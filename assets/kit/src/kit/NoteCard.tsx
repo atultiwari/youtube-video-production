@@ -23,6 +23,8 @@ export interface Note {
   readonly underline?: { readonly phrase: string; readonly at: number };
   /** Where the pointer lands, in picture coordinates. */
   readonly anchor?: readonly [number, number];
+  /** When the pointer draws: a `pointStep`'s start, after the feature is drawn. Default: after typing. */
+  readonly pointAt?: number;
 }
 
 const clamp01 = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
@@ -131,7 +133,7 @@ export const NoteCard: React.FC<{
   return (
     <div style={{ position: "absolute", inset: 0, opacity: gone }}>
       {note?.anchor && box.from ? (
-        <Pointer key={index} from={box.from} anchor={note.anchor} at={note.at + typeFrames(note.text.length, fps) + 4} color={chapter.accent} vertical={n.pointerFrom === "top"} />
+        <Pointer key={index} from={box.from} anchor={note.anchor} at={note.pointAt ?? note.at + typeFrames(note.text.length, fps) + 4} color={chapter.accent} vertical={n.pointerFrom === "top"} />
       ) : null}
       {kicker && !caption ? (
         <div style={{ position: "absolute", left: n.x, top: n.kickerY, width: n.w }}>

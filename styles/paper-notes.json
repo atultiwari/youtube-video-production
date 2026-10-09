@@ -208,6 +208,11 @@
     "a micrograph or schematic without its label (stain and magnification, or 'simplified picture')",
     "text under the layout's minimum size",
     "a number the viewer might act on drawn by hand: numbers are typeset",
-    "a picture event smaller than about 70 x 70 px, or fading in slower than 6 frames, counted as the line's event"
+    "a picture event smaller than about 70 x 70 px, or fading in slower than 6 frames, counted as the line's event",
+    "a symbol with no words: a '?' or an unlabelled circle is the one mark a muted viewer cannot read",
+    "a Latin or technical term without its meaning beside it (functio laesa \u00b7 loss of function)",
+    "a number before the measure it belongs to is named (define SG before SG > 1.020)",
+    "a stamp or label in a fixed corner, away from the thing it marks",
+    "a channel ask in the middle of a chapter: asks go at a beat boundary or the end card"
   ]
 }

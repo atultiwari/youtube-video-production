@@ -12,7 +12,7 @@ import { Film } from "./Film";
 import { Heading } from "./Heading";
 import { NoteCard } from "./NoteCard";
 import { Dots, Hatch, Ink, Label, Picture, Ring, Wash } from "./Picture";
-import { noteStep, sequence } from "./sequence";
+import { noteStep, pointStep, sequence } from "./sequence";
 import { arrow, P } from "./shapes";
 import { CHAPTERS, chapter, MOTION, TISSUE, useLayout } from "./style";
 
@@ -49,19 +49,21 @@ const DemoBeat: React.FC = () => {
   const lumen = [...walls[0], ...[...walls[1]].reverse()];
   const tissue = P.rect(0, y + 150, w, picture.h - y - 170, 18);
   const s = useMemo(() => {
-    const note = (i: number) => noteStep(`n${i}`, b.line(i), NOTES[i], fps, MOTION.typeCps, MOTION.pointerFrames);
+    const note = (i: number) => noteStep(`n${i}`, b.line(i), NOTES[i], fps, MOTION.typeCps);
     return sequence([
       { id: "heading", at: 0, dur: Math.round("Kit demo".length * MOTION.writeFramesPerChar) },
       { id: "vessel", at: 0, dur: 30 },        // walls, then the lumen fills: one place
       note(0),
-      { id: "cells", at: b.word("red", 0), dur: 26 },
+      { id: "cells", at: b.word("red", 0), dur: 26, where: [w / 2, y] },
+      pointStep("p0", MOTION.pointerFrames),  // after the cells, so it lands on them
       note(1),
-      { id: "tissue", at: b.word("wall", 1), dur: 18 },
-      { id: "leak", at: b.word("escapes", 1), dur: 26 },
-      { id: "ring", at: b.word("tissue", 1), dur: MOTION.ringFrames },
-      { id: "stamp", at: 0, dur: 14 },
+      { id: "tissue", at: b.word("wall", 1), dur: 18, where: [w / 2, y + 300] },
+      { id: "leak", at: b.word("escapes", 1), dur: 26, where: [w / 2, y + 200] },
+      pointStep("p1", MOTION.pointerFrames),
+      { id: "ring", at: b.word("tissue", 1), dur: MOTION.ringFrames, where: [w / 2, y + 240] },
+      { id: "stamp", at: 0, dur: 14, where: [w / 2, y + 240] },
     ]);
-  }, [b, fps]);
+  }, [b, fps, w, y]);
   return (
     <>
       <Heading text="Kit demo" at={s.heading.from} color={C.accent} />
@@ -79,10 +81,10 @@ const DemoBeat: React.FC = () => {
         <Ring cx={w / 2} cy={y + 240} rx={190} ry={80} at={s.ring.from} id="ring" color={C.accent} />
       </Picture>
       <NoteCard chapter={C} kicker="What leaks?" kickerAt={s.n0.from} notes={[
-        { at: s.n0.from, text: NOTES[0], underline: { phrase: "red cells", at: s.n0.from }, anchor: [w / 2, y] },
-        { at: s.n1.from, text: NOTES[1], underline: { phrase: "into the tissue", at: s.n1.from }, anchor: [w / 2, y + 240] },
+        { at: s.n0.from, pointAt: s.p0.from, text: NOTES[0], underline: { phrase: "red cells", at: s.n0.from }, anchor: [w / 2, y] },
+        { at: s.n1.from, pointAt: s.p1.from, text: NOTES[1], underline: { phrase: "into the tissue", at: s.n1.from }, anchor: [w / 2, y + 240] },
       ]} />
-      <Stamp text="exudate" at={s.stamp.from} color={C.accent} />
+      <Stamp text="exudate" at={s.stamp.from} color={C.accent} x={picture.x + w / 2 + 230} y={picture.y + y + 300} />
     </>
   );
 };

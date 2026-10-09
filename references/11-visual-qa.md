@@ -56,6 +56,22 @@ levels) over at least 0.25% of the frame, about a 70 × 70 px patch at 1080p. ff
 between consecutive frames, so it reported "static" while a still showed three neutrophils
 drifting to the wall. Baselines and pilot were re-measured with the same detector.
 
+## Mute review: does it explain itself?
+
+The last check before a render is a person, or an agent, watching **with the sound off**. Copy
+`templates/MUTE-REVIEW.md` into a fresh agent with the silent video's path; it extracts frames,
+watches in order, and reports what it learned, where it did not know where to look, and what it
+could not understand. Compare its list with the script's key points.
+
+On the pilot (2026-10-09) the review found what no tool did: labels appearing in four corners in
+turn, stamps pulling the eye away, pointers drawn to empty paper, a "?" and an unlabelled ring
+of circles nobody could read, Latin left untranslated. A muted viewer learned nearly every point
+from both the old and the sequenced version, but only the sequenced one stopped being faulted
+for things happening at once.
+
+Pass: every key point recovered, no moment of "did not know where to look" that lasts a beat,
+nothing on screen the reviewer could not name.
+
 ## Score it
 
 Score the 2-second sheet against `docs/v3-rubric.md` (in the skills repo), with the numbers

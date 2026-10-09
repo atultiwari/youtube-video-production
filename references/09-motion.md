@@ -57,6 +57,15 @@ const s = sequence([
   then its label. The underline draws as its phrase is typed; the pointer after the text.
 - **A heading can be a line's note.** If a line only names the chapter, the pen-written heading
   says it; do not type the same words beside it.
+- **The pointer lands on something.** A note's pointer is its own step (`pointStep`), placed
+  after the step that draws the feature. Drawn straight after the note, it ended on blank paper
+  four times in one video (mute review, 2026-10-09).
+- **Give the eye time to travel.** One at a time is not enough when consecutive steps are far
+  apart: four labels in four corners within two seconds lost a muted viewer. Steps carry
+  `where` (picture coordinates) and `sequence()` adds up to 14 frames to cross the picture.
+  Better still, order steps so each lands near the last.
+- **Say it where it applies.** A stamp in a fixed corner pulled the eye away from the drawing
+  every time; a verdict or a name is a label (with a highlight) on the thing it names.
 - **Lateness is the price.** A step may start after its cue word. With word-timed narration,
   keep it under about a second: shorten notes, merge steps, or cut decorative ones. An event
   added only to fill time is the first to go.
