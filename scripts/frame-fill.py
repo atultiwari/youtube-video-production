@@ -29,7 +29,9 @@ def fill(path: Path) -> float:
     im = Image.open(path).convert("RGB").filter(ImageFilter.GaussianBlur(1.2))
     a = np.asarray(im).astype(int)
     h = a.shape[0]
-    scale = h / 1080
+    # Margins are in 1080p units of the frame's short side, so a 1080 x 1920 Short is measured
+    # with the same 110 / 70 px as a 1920 x 1080 frame.
+    scale = min(a.shape[0], a.shape[1]) / 1080
     a = a[int(TOP * scale): h - int(BOTTOM * scale), int(a.shape[1] * LEFT):]
     ground = np.median(a.reshape(-1, 3), axis=0)
     mask = (np.abs(a - ground).max(axis=2) > THRESHOLD).astype(np.uint8) * 255

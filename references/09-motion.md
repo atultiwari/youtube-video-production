@@ -26,7 +26,7 @@ All are constants in the style's `motion` block (`style.json`), read by the kit.
 
 The rubric's criterion 5, and the most common way an otherwise good frame dies. Measured:
 
-- v2 builds sat static (no event for 4 s or more) for **61%** (longform) and **58%** (Short)
+- v2 builds sat static (no event for 4 s or more) for **52%** (longform) and **53%** (Short)
   of their runtime, even with a cut on every line.
 - The pilot's first build, with drawings and notes but no rule, still sat static for **35%**.
   The gaps were always the same place: after a line's note finished typing, until the next line.

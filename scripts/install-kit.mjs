@@ -36,8 +36,13 @@ const fail = (m) => {
 };
 
 const args = process.argv.slice(2);
-const project = path.resolve(args.find((a) => !a.startsWith("--") && args[args.indexOf(a) - 1] !== "--style") ?? ".");
-const styleName = args.includes("--style") ? args[args.indexOf("--style") + 1] : "paper-notes";
+const styleArg = (() => {
+  const eq = args.find((a) => a.startsWith("--style="));
+  if (eq) return eq.slice("--style=".length);
+  return args.includes("--style") ? args[args.indexOf("--style") + 1] : null;
+})();
+const project = path.resolve(args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--style") ?? ".");
+const styleName = styleArg ?? "paper-notes";
 
 // 1. A Remotion project --------------------------------------------------------------
 const pkgPath = path.join(project, "package.json");
@@ -50,7 +55,7 @@ if (!src) fail(`no Root.tsx under src/, remotion/ or app/ in ${project}.`);
 const stylePath = path.join(SKILL, "styles", `${styleName}.json`);
 if (!fs.existsSync(stylePath)) fail(`no style "${styleName}" (have: ${fs.readdirSync(path.join(SKILL, "styles")).map((f) => f.replace(".json", "")).join(", ")}).`);
 const style = JSON.parse(fs.readFileSync(stylePath, "utf8"));
-say(`Remotion project: ${project} (remotion ${remotionVersion}), style ${styleName}`);
+say(`Remotion project: ${project} (remotion ${remotionVersion})${styleArg ? `, requested style ${styleArg}` : ""}`);
 
 // 2. remotion-whiteboard: the drawing engine ----------------------------------------
 if (!fs.existsSync(path.join(src, "whiteboard", "index.ts"))) {
@@ -77,41 +82,53 @@ if (!fs.existsSync(path.join(src, "whiteboard", "index.ts"))) {
 const kitDest = path.join(src, "kit");
 fs.mkdirSync(kitDest, { recursive: true });
 let copied = 0;
+const changed = [];
 for (const f of fs.readdirSync(path.join(KIT, "src", "kit"))) {
-  fs.copyFileSync(path.join(KIT, "src", "kit", f), path.join(kitDest, f));
+  const to = path.join(kitDest, f);
+  const from = path.join(KIT, "src", "kit", f);
+  if (fs.existsSync(to) && !fs.readFileSync(to).equals(fs.readFileSync(from))) changed.push(f);
+  fs.copyFileSync(from, to);
   copied += 1;
 }
+if (changed.length) say(`  updated from the skill (local edits to these are replaced): ${changed.join(", ")}`);
 const styleDest = path.join(kitDest, "style.json");
-if (fs.existsSync(styleDest) && JSON.parse(fs.readFileSync(styleDest, "utf8")).name !== styleName) {
-  say(`  style.json: kept the project's "${JSON.parse(fs.readFileSync(styleDest, "utf8")).name}" (delete it to switch to ${styleName})`);
-} else if (!fs.existsSync(styleDest)) {
+if (!fs.existsSync(styleDest)) {
   fs.copyFileSync(stylePath, styleDest);
   say(`  style.json: ${styleName}`);
 } else {
-  say("  style.json: kept the project's copy");
+  const kept = JSON.parse(fs.readFileSync(styleDest, "utf8")).name;
+  if (styleArg && kept !== styleArg) say(`  style.json: kept the project's "${kept}" (delete src/kit/style.json to switch to ${styleArg})`);
+  else say(`  style.json: kept the project's "${kept}"`);
 }
 say(`Kit → ${path.relative(project, kitDest)}/ (${copied} files)`);
+// Everything below follows the style the project actually has, not the --style default, so a
+// plain re-run never re-themes a sketchbook project as paper-notes.
+const effective = JSON.parse(fs.readFileSync(styleDest, "utf8"));
 
 // 4. Theme the pen and ink from the style -----------------------------------------------
 const tokensPath = path.join(src, "whiteboard", "tokens.ts");
 let tokens = fs.readFileSync(tokensPath, "utf8");
+const missedTokens = [];
 const setToken = (key, value) => {
-  tokens = tokens.replace(new RegExp(`(\\n  ${key}: )"[^"]*"`), `$1"${value}"`);
+  const re = new RegExp(`(\\n  ${key}: )"[^"]*"`);
+  if (!re.test(tokens)) missedTokens.push(key);
+  tokens = tokens.replace(re, `$1"${value}"`);
 };
-setToken("line", style.ink.line);
-setToken("dim", style.ink.soft);
-setToken("accent", style.ink.line);
-setToken("paper", style.chapters[Object.keys(style.chapters)[0]].ground);
-setToken("surface", style.ink.card);
-setToken("border", style.ink.cardEdge);
-setToken("body", style.marker.body);
-setToken("rim", style.marker.rim);
+setToken("line", effective.ink.line);
+setToken("dim", effective.ink.soft);
+setToken("accent", effective.ink.line);
+setToken("paper", effective.chapters[Object.keys(effective.chapters)[0]].ground);
+setToken("surface", effective.ink.card);
+setToken("border", effective.ink.cardEdge);
+setToken("body", effective.marker.body);
+setToken("rim", effective.marker.rim);
 fs.writeFileSync(tokensPath, tokens);
-say("Whiteboard tokens: ink and marker themed from the style");
+if (missedTokens.length) say(`  ! whiteboard tokens not found, set them by hand in tokens.ts: ${missedTokens.join(", ")}`);
+say(`Whiteboard tokens: ink and marker themed from "${effective.name}"`);
 
 // 5. Fonts: local files, so no render depends on the network ----------------------------
 const version = String(remotionVersion).replace(/^[\^~]/, "");
-const fontPkgs = [...new Set([style.fonts.serif.fontsource, style.fonts.sans.fontsource])].map((f) => `@fontsource/${f}`);
+const fontPkgs = [...new Set([effective.fonts.serif.fontsource, effective.fonts.sans.fontsource])].map((f) => `@fontsource/${f}`);
 const missing = ["@remotion/fonts", ...fontPkgs].filter((p) => !fs.existsSync(path.join(project, "node_modules", p)));
 if (missing.length) {
   say(`Adding ${missing.join(", ")}`);
@@ -122,7 +139,7 @@ if (missing.length) {
 const fontDir = path.join(project, "public", "fonts");
 fs.mkdirSync(fontDir, { recursive: true });
 let faces = 0;
-for (const font of [style.fonts.serif, style.fonts.sans]) {
+for (const font of [effective.fonts.serif, effective.fonts.sans]) {
   const faceList = [...font.weights.map((w) => [w, "normal"]), ...font.italic.map((w) => [w, "italic"])];
   for (const [w, st] of faceList) {
     const file = `${font.fontsource}-latin-${w}-${st}.woff2`;
@@ -132,7 +149,7 @@ for (const font of [style.fonts.serif, style.fonts.sans]) {
     faces += 1;
   }
 }
-say(`Fonts → public/fonts/ (${faces} faces, ${[style.fonts.serif.licence]} — OFL allows bundling)`);
+say(`Fonts → public/fonts/ (${faces} faces; licences: ${[...new Set([effective.fonts.serif.licence, effective.fonts.sans.licence])].join(", ")})`);
 
 // 6. Tools ----------------------------------------------------------------------------
 const tools = path.join(project, "tools");
@@ -146,7 +163,7 @@ for (const f of fs.readdirSync(tools)) if (/\.(sh|py|mjs)$/.test(f)) fs.chmodSyn
 say(`Tools → tools/ (${fs.readdirSync(tools).length} files)`);
 
 // 7. Paper ----------------------------------------------------------------------------
-const grain = path.join(project, "public", style.paper.grain);
+const grain = path.join(project, "public", effective.paper.grain);
 if (!fs.existsSync(grain)) {
   execFileSync("python3", ["-I", path.join(tools, "make-paper.py"), grain, "--width", "1920", "--height", "1920"], { stdio: "inherit" });
 }
@@ -164,10 +181,15 @@ if (!root.includes("kit-demo")) {
       `${indent}  <Composition id="${id}" component={KitDemo} durationInFrames={KIT_DEMO_FRAMES} fps={30} width={${w}} height={${h}} />\n`;
     root = root.replace(opening[0], `${opening[0]}\n${comp("kit-demo", 1920, 1080)}${comp("kit-demo-vertical", 1080, 1920)}`);
     if (!/import\s+\{[^}]*\bComposition\b[^}]*\}\s+from\s+["']remotion["']/.test(root)) root = `import { Composition } from "remotion";\n${root}`;
-    const imports = [...root.matchAll(/^import .*?;$/gm)];
+    // After the last import statement, single- or multi-line, with or without a semicolon.
+    const imports = [...root.matchAll(/^import[\s\S]*?from\s+["'][^"']+["'];?[ \t]*$/gm)];
     const last = imports[imports.length - 1];
-    const at = last.index + last[0].length;
-    root = `${root.slice(0, at)}\nimport { KIT_DEMO_FRAMES, KitDemo } from "./kit/KitDemo";${root.slice(at)}`;
+    if (!last) {
+      say(`Could not place the import in ${rootPath}; add it by hand:\n  import { KIT_DEMO_FRAMES, KitDemo } from "./kit/KitDemo";`);
+    } else {
+      const at = last.index + last[0].length;
+      root = `${root.slice(0, at)}\nimport { KIT_DEMO_FRAMES, KitDemo } from "./kit/KitDemo";${root.slice(at)}`;
+    }
     fs.writeFileSync(rootPath, root);
     say("Registered kit-demo and kit-demo-vertical in Root.tsx");
   }

@@ -21,6 +21,8 @@ import {
 
 interface Box {
   readonly kind: string;
+  /** Lines of text, from the laid-out content height (transforms, padding and border ignored). */
+  readonly lines: number;
   /** Elements in different scopes (two beats mid-dissolve) are never compared. */
   readonly scope: string;
   readonly text: string;
@@ -32,6 +34,17 @@ interface Box {
 }
 
 const ONE_LINE = new Set(["tag", "kicker", "stamp", "heading"]);
+
+/** How many lines an element's text occupies: content height over line height. */
+const lineCount = (el: Element, fallbackHeight: number): number => {
+  // A sizing proxy with no text (the heading's measured box) is one line by construction.
+  if (!(el instanceof HTMLElement) || !(el.textContent ?? "").trim()) return 1;
+  const cs = getComputedStyle(el);
+  const px = (v: string) => parseFloat(v) || 0;
+  const content = el.offsetHeight - px(cs.paddingTop) - px(cs.paddingBottom) - px(cs.borderTopWidth) - px(cs.borderBottomWidth);
+  const lineHeight = cs.lineHeight === "normal" ? px(cs.fontSize) * 1.25 : px(cs.lineHeight);
+  return lineHeight > 0 ? content / lineHeight : fallbackHeight / (px(cs.fontSize) * 1.25 || 1);
+};
 
 const visible = (el: Element): boolean => {
   for (let node: Element | null = el; node; node = node.parentElement) {
@@ -68,6 +81,7 @@ export const QAProbe: React.FC<{ minSize: number }> = ({ minSize }) => {
     // text wraps to one word per line (PILOT-LOG F12). The screenshot waits for this.
     const handle = delayRender("QAProbe measuring");
     const id = requestAnimationFrame(() => {
+      try {
       // The composition root carries data-qa-root; its box is the frame, whatever the page scale.
       const root = document.querySelector("[data-qa-root]");
       if (!root)
@@ -82,6 +96,7 @@ export const QAProbe: React.FC<{ minSize: number }> = ({ minSize }) => {
           const r = el.getBoundingClientRect();
           return {
             kind: el.getAttribute("data-qa") ?? "?",
+            lines: lineCount(el, r.height / scale),
             scope:
               el.closest("[data-qa-scope]")?.getAttribute("data-qa-scope") ??
               "",
@@ -101,7 +116,7 @@ export const QAProbe: React.FC<{ minSize: number }> = ({ minSize }) => {
         if (b.x0 < -2 || b.y0 < -2 || b.x1 > width + 2 || b.y1 > height + 2)
           issues.push(`outside ${b.kind} "${b.text}"`);
         // One-line elements that wrap have run out of room (a long series tag on 9:16).
-        if (b.size && ONE_LINE.has(b.kind) && b.y1 - b.y0 > b.size * 1.9)
+        if (ONE_LINE.has(b.kind) && b.lines > 1.5)
           issues.push(`wraps ${b.kind} "${b.text}"`);
       }
       for (let i = 0; i < boxes.length; i++) {
@@ -120,7 +135,12 @@ export const QAProbe: React.FC<{ minSize: number }> = ({ minSize }) => {
         box: [b.x0, b.y0, b.x1, b.y1].map(Math.round),
       }));
       console.log(`QA ${JSON.stringify({ frame, boxes: rounded, issues })}`);
-      continueRender(handle);
+      } catch (err) {
+        // Report the failure itself, rather than a 30 s delayRender timeout.
+        console.log(`QA ${JSON.stringify({ frame, boxes: [], issues: [`probe failed: ${String(err)}`] })}`);
+      } finally {
+        continueRender(handle);
+      }
     });
     return () => cancelAnimationFrame(id);
   }, [on, frame, width, height, minSize]);

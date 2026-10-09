@@ -24,6 +24,10 @@ const frames =
     ? grid.beats.map((b) => ({ name: `beat-${b.beat}`, frame: b.startFrame + Math.floor(b.durationFrames / 2) }))
     : (() => {
         const step = Math.round(Number(mode.split(":")[1]) * composition.fps);
+        if (!mode.startsWith("every:") || !Number.isFinite(step) || step <= 0) {
+          console.error(`bad mode "${mode}": use midpoints or every:<seconds>`);
+          process.exit(2);
+        }
         return Array.from({ length: Math.ceil(composition.durationInFrames / step) }, (_, i) => ({
           name: `t-${String(i * step).padStart(5, "0")}`,
           frame: i * step,

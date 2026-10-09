@@ -39,7 +39,7 @@ v3 adds the layer that was missing, every number measured in a hand-built pilot
 - **visual QA with numbers**: a layout probe, frame fill, event gaps, a phone test.
 
 Same script, before and after (scored on the rubric in the skills repo's `docs/v3-rubric.md`):
-frame fill 21% → 94%, static runtime 61% → 0%, picture in 5 of 8 beats → 8 of 8, sound none →
+frame fill 21% → 94%, static runtime 52% → 0%, picture in 5 of 8 beats → 8 of 8, sound none →
 effects and a bed at −1 dBTP.
 
 ## Skills it works with

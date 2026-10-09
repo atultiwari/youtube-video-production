@@ -27,7 +27,7 @@ It runs, in the order the checks depend on each other:
 |---|---|---|---|
 | Text overlap, text outside the frame, text under the minimum, one-line text that wraps | `QAProbe` + `tools/qa.mjs` | 0 issues | v2's S-107 had two lines overlapping, and the stills review passed it; the pilot's eyeballed sheets missed label collisions until a probe measured the real layout |
 | Frame fill | `scripts/frame-fill.py` | median content box ≥ 50% | v2: 21% (longform) and 18% (Short) |
-| Event gaps | `scripts/event-gaps.py` | no stretch ≥ 4 s; under 25% at worst | v2: 61% and 58% static |
+| Event gaps | `scripts/event-gaps.py` | no stretch ≥ 4 s; under 25% at worst | v2: 52% and 53% static |
 | Phone test | `scripts/contact-sheet.py --phone` | the note reads at 360 px wide | card headers at 23 px vanished |
 | Contact sheet every 2 s | `scripts/contact-sheet.py` | read it; score against the rubric | label-on-stroke collisions showed only here, never on the beat midpoints |
 

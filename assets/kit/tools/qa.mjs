@@ -28,7 +28,9 @@ const step = Math.round(every * composition.fps);
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "qa-"));
 const results = [];
 const only = args.includes("--frame") ? [Number(args[args.indexOf("--frame") + 1])] : null;
-const frames = only ?? Array.from({ length: Math.ceil(composition.durationInFrames / step) }, (_, i) => i * step);
+// Every `step` frames, and always the last frame (an end card is often only there).
+const sampled = Array.from({ length: Math.ceil(composition.durationInFrames / step) }, (_, i) => i * step);
+const frames = only ?? [...new Set([...sampled, composition.durationInFrames - 1])];
 for (const frame of frames) {
   let report = null;
   await renderStill({

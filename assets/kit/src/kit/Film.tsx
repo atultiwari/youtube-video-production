@@ -8,11 +8,11 @@
  *   const MyVideo: React.FC = () => <Film grid={grid} lines={lines} beats={BEATS} series="…" />;
  */
 
-import React from "react";
-import { AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
+import React, { useEffect, useState } from "react";
+import { AbsoluteFill, Audio, continueRender, delayRender, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 
 import { BeatContext, beatTiming, type Grid, type Lines } from "./beat";
-import { Paper, SeriesTag } from "./Chrome";
+import { fontsReady, Paper, SeriesTag } from "./Chrome";
 import { QAProbe } from "./QAProbe";
 import { chapter, MOTION, useLayout } from "./style";
 
@@ -40,6 +40,15 @@ export const Film: React.FC<{
   narration?: string;
 }> = ({ grid, lines, beats, series, narration }) => {
   const layout = useLayout();
+  const [handle] = useState(() => delayRender("Film: waiting for fonts"));
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    fontsReady.then(() => {
+      setReady(true);
+      continueRender(handle);
+    });
+  }, [handle]);
+  if (!ready) return <AbsoluteFill data-qa-root />;
   return (
     <AbsoluteFill data-qa-root>
       {beats.map(({ id, chapter: name, Component }, i) => {

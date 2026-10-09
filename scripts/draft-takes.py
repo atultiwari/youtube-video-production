@@ -37,7 +37,7 @@ def parse(script: Path) -> list[dict]:
         heading = re.match(r"^##\s+(\d+)\s*·\s*(.+)$", line)
         if heading:
             beats.append({"beat": heading.group(1), "title": heading.group(2), "lines": []})
-        elif line and beats and not line.startswith(("#", ">", "<!--")):
+        elif line and beats and not line.startswith(("#", ">", "<!--", "-")):
             beats[-1]["lines"].append(line)
     if not beats:
         raise SystemExit(f"no '## NN · Title' beats found in {script}")
@@ -45,7 +45,22 @@ def parse(script: Path) -> list[dict]:
 
 
 def words(text: str) -> int:
-    return len(re.findall(r"[A-Za-z']+", text))
+    # Same tokens as the kit, check-storyboard.py and word-timestamps.py, digits included.
+    return len(re.findall(r"[A-Za-z0-9']+", text.replace("\u2019", "'").replace("\u2018", "'")))
+
+
+MIN_LINE = 0.5  # seconds: a line of one number ("42.") still takes time to say
+
+
+def is_real_take(path: Path) -> bool:
+    """A wav with any sound in it: a recording, which a draft must never overwrite."""
+    import wave
+    try:
+        with wave.open(str(path)) as w:
+            data = w.readframes(w.getnframes())
+    except (wave.Error, EOFError):
+        return True
+    return any(b != 0 for b in data)
 
 
 def silent(path: Path, seconds: float) -> None:
@@ -68,19 +83,24 @@ def main() -> int:
 
     beats = parse(args.script)
     args.takes.mkdir(parents=True, exist_ok=True)
+    real = [p.name for p in args.takes.glob("en-*.wav") if is_real_take(p)]
+    if real:
+        raise SystemExit(f"{args.takes} holds real takes ({', '.join(real[:3])}...): point --takes at a "
+                         "separate draft folder, e.g. out/A/draft-takes. Nothing was deleted.")
     for old in args.takes.glob("en-*.wav"):
         old.unlink()
 
     paste, out, total_words = [], [], 0
     for beat in beats:
         counts = [words(l) for l in beat["lines"]]
-        seconds = sum(counts) * 60 / WPM
+        durs = [max(MIN_LINE, n * 60 / WPM) for n in counts]
+        seconds = sum(durs)
         silent(args.takes / f"en-{beat['beat']}.wav", seconds)
         offset, lines = 0.0, []
-        for text, n in zip(beat["lines"], counts):
-            lines.append({"text": text, "start": round(offset, 3),
-                          "duration": round(n * 60 / WPM, 3)})
-            offset += n * 60 / WPM
+        for text, dur in zip(beat["lines"], durs):
+            lines.append({"text": text.replace("\u2019", "'").replace("\u2018", "'"), "start": round(offset, 3),
+                          "duration": round(dur, 3)})
+            offset += dur
         out.append({"beat": beat["beat"], "title": beat["title"], "lines": lines})
         paste.extend(beat["lines"])
         total_words += sum(counts)

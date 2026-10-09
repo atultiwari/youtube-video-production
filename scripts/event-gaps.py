@@ -30,30 +30,59 @@ W, H, RATE = 480, 270, 2
 PIXEL, AREA = 24, 0.0025
 
 
-def samples(video: str) -> np.ndarray:
-    raw = subprocess.run(
-        ["ffmpeg", "-v", "error", "-i", video, "-vf", f"fps={RATE},scale={W}:{H}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
-        capture_output=True, check=True).stdout
-    return np.frombuffer(raw, np.uint8).reshape(-1, H, W, 3).astype(np.int16)
+def events(video: str) -> np.ndarray:
+    """events[i] is True when sample i+1 differs visibly from sample i.
 
-
-def events(frames: np.ndarray) -> np.ndarray:
-    """events[i] is True when sample i+1 differs visibly from sample i."""
-    diff = np.abs(frames[1:] - frames[:-1]).max(axis=3) > PIXEL
-    return diff.mean(axis=(1, 2)) >= AREA
+    Streams the video from ffmpeg and keeps only the previous sample, so memory does not grow
+    with length (a whole 10-minute video in memory was about 2.5 GB)."""
+    size = W * H * 3
+    proc = subprocess.Popen(["ffmpeg", "-v", "error", "-i", video, "-vf", f"fps={RATE},scale={W}:{H}",
+                             "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+    assert proc.stdout is not None
+    flags: list[bool] = []
+    prev = None
+    while True:
+        chunk = proc.stdout.read(size)
+        if len(chunk) < size:
+            break
+        cur = np.frombuffer(chunk, np.uint8).reshape(H, W, 3).astype(np.int16)
+        if prev is not None:
+            flags.append(bool((np.abs(cur - prev).max(axis=2) > PIXEL).mean() >= AREA))
+        prev = cur
+    if proc.wait() != 0:
+        raise SystemExit(f"ffmpeg could not read {video}")
+    return np.array(flags, dtype=bool)
 
 
 def stretches(flags: np.ndarray, minimum: float) -> list[tuple[float, float]]:
+    """Runs of static comparisons. k static comparisons in a row mean k + 1 identical samples,
+    spanning k / RATE seconds: that, and no more, is the stretch."""
     out, run_start = [], None
     for i, flag in enumerate(list(flags) + [True]):
         if not flag and run_start is None:
             run_start = i
         elif flag and run_start is not None:
-            dur = (i - run_start + 1) / RATE  # comparisons span one extra interval
+            dur = (i - run_start) / RATE
             if dur >= minimum:
                 out.append((run_start / RATE, dur))
             run_start = None
     return out
+
+
+def locate(start: float, grid: dict, lines: dict) -> str:
+    """Which beat and line a stretch starting at `start` seconds falls in."""
+    fps = grid["fps"]
+    for b in grid["beats"]:
+        b0 = b["startFrame"] / fps
+        if b0 <= start < b0 + b["durationFrames"] / fps:
+            local = start - b0
+            beat_lines = lines[b["beat"]]
+            before = [i for i, l in enumerate(beat_lines) if l["start"] <= local + 1e-6]
+            if not before:
+                return f"beat {b['beat']} before line 0"
+            idx = before[-1]
+            return f"beat {b['beat']} line {idx} (+{local - beat_lines[idx]['start']:.1f}s)"
+    return "?"
 
 
 def main() -> int:
@@ -66,16 +95,9 @@ def main() -> int:
     grid = json.load(open(grid_path))
     lines = {b["beat"]: b["lines"] for b in json.load(open(lines_path))["beats"]}
     fps, total = grid["fps"], grid["totalFrames"] / grid["fps"]
-    found = stretches(events(samples(video)), minimum)
+    found = stretches(events(video), minimum)
     for start, dur in found:
-        where = "?"
-        for b in grid["beats"]:
-            b0 = b["startFrame"] / fps
-            if b0 <= start < b0 + b["durationFrames"] / fps:
-                local = start - b0
-                idx = max(i for i, l in enumerate(lines[b["beat"]]) if l["start"] <= local + 1e-6)
-                where = f"beat {b['beat']} line {idx} (+{local - lines[b['beat']][idx]['start']:.1f}s)"
-        print(f"{start:7.1f}s  {dur:4.1f}s  {where}")
+        print(f"{start:7.1f}s  {dur:4.1f}s  {locate(start, grid, lines)}")
     static = sum(d for _, d in found)
     print(f"\n{len(found)} static stretches >= {minimum}s, {static:.1f}s of {total:.1f}s ({static / total * 100:.0f}%)")
     return 0

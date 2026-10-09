@@ -29,6 +29,12 @@ from pathlib import Path
 WORD = re.compile(r"[A-Za-z0-9']+")
 
 
+def plain(text: str) -> str:
+    """Curly apostrophes as straight ones, so "Don\u2019t" is one word, as the transcript has it.
+    The same normalisation is in draft-takes.py, check-storyboard.py and the kit's beat.ts."""
+    return text.replace("\u2019", "'").replace("\u2018", "'")
+
+
 def script_beats(script: Path) -> list[dict]:
     beats: list[dict] = []
     for raw in script.read_text().splitlines():
@@ -37,7 +43,7 @@ def script_beats(script: Path) -> list[dict]:
         if heading:
             beats.append({"beat": heading.group(1), "title": heading.group(2), "lines": []})
         elif line and beats and not line.startswith(("#", ">", "<!--", "-")):
-            beats[-1]["lines"].append(line)
+            beats[-1]["lines"].append(plain(line))
     if not beats:
         raise SystemExit(f"no '## NN · Title' beats in {script}")
     return beats
@@ -60,19 +66,22 @@ def transcribe(audio: Path, model: str, language: str) -> list[dict]:
 
 
 def take_for(takes: Path, beat: str, lang: str) -> Path:
-    parts = sorted(takes.glob(f"{lang}-{beat}*.wav"))
+    # en-01.wav, or parts en-01a.wav, en-01b.wav (build-audio-grid's convention); never en-010.wav.
+    parts = sorted(p for p in takes.glob(f"{lang}-{beat}*.wav") if re.fullmatch(rf"{lang}-{beat}[a-z]?", p.stem))
     if not parts:
         raise SystemExit(f"no take for beat {beat} in {takes}")
     if len(parts) == 1:
         return parts[0]
-    joined = Path(tempfile.mkdtemp()) / f"{lang}-{beat}.wav"
+    joined = Path(tempfile.mkdtemp(prefix="word-timestamps-")) / f"{lang}-{beat}.wav"
     listing = joined.with_suffix(".txt")
-    listing.write_text("".join(f"file '{p.resolve()}'\n" for p in parts))
+    quote = lambda p: str(p.resolve()).replace("'", "'\\''")  # noqa: E731  (concat-list quoting)
+    listing.write_text("".join(f"file '{quote(p)}'\n" for p in parts))
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy", str(joined)], check=True)
     return joined
 
 
 def align(lines: list[str], heard: list[dict]) -> tuple[list[dict], float]:
+    lines = [plain(text) for text in lines]
     script_words = [(i, w) for i, text in enumerate(lines) for w in WORD.findall(text)]
     a = [norm(w) for _, w in script_words]
     b = [norm(h["word"]) for h in heard]

@@ -102,6 +102,9 @@ export const NoteCard: React.FC<{
   const { fps } = useVideoConfig();
   const layout = useLayout();
   const caption = STYLE.notes === "caption";
+  for (let i = 1; i < notes.length; i++) {
+    if (notes[i].at < notes[i - 1].at) throw new Error(`NoteCard: notes must be in time order ("${notes[i].text}" starts before the note above it)`);
+  }
   const index = notes.reduce((found, n, i) => (n.at <= frame ? i : found), -1);
   const note = index >= 0 ? notes[index] : null;
   const shown = note ? Math.floor(((frame - note.at) * MOTION.typeCps) / fps) : 0;

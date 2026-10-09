@@ -16,6 +16,7 @@ import { FONTS, INK, MOTION, STYLE, useLayout, type Chapter } from "./style";
  * stalled the root component (pilot-01, F13). Local files make every render reproducible offline.
  */
 const loaded = new Set<string>();
+const loading: Promise<void>[] = [];
 for (const font of [STYLE.fonts.serif, STYLE.fonts.sans]) {
   const faces = [
     ...font.weights.map((w) => ({ weight: w, style: "normal" as const })),
@@ -25,7 +26,7 @@ for (const font of [STYLE.fonts.serif, STYLE.fonts.sans]) {
     const key = `${font.family}:${face.weight}:${face.style}`;
     if (loaded.has(key)) continue;
     loaded.add(key);
-    loadFont({
+    const promise = loadFont({
       family: font.family,
       url: staticFile(`fonts/${font.fontsource}-latin-${face.weight}-${face.style}.woff2`),
       weight: face.weight,
@@ -33,8 +34,16 @@ for (const font of [STYLE.fonts.serif, STYLE.fonts.sans]) {
     }).catch((err: unknown) => {
       throw new Error(`could not load ${key}: ${String(err)} (re-run install-kit.mjs to copy the fonts)`);
     });
+    loading.push(promise);
   }
 }
+
+/**
+ * Resolves when every face is loaded. `Film` renders nothing until then: remotion-whiteboard
+ * measures glyph widths once and caches them, so a heading measured against a fallback font
+ * would keep the wrong pen path for the whole render.
+ */
+export const fontsReady: Promise<void> = Promise.all(loading).then(() => undefined);
 
 const clamp01 = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
@@ -67,7 +76,7 @@ export const Kicker: React.FC<{ chapter: Chapter; text: string; at?: number }> =
   return (
     <div style={{ opacity: interpolate(frame, [at, at + 8], [0, 1], clamp01) }}>
       <div data-qa="kicker" data-qa-size={layout.type.kicker}
-        style={{ fontFamily: FONTS.sans, fontWeight: 600, fontSize: layout.type.kicker, color: INK.line }}>{text}</div>
+        style={{ display: "inline-block", fontFamily: FONTS.sans, fontWeight: 600, fontSize: layout.type.kicker, color: INK.line }}>{text}</div>
       <div style={{ width: 52, height: 6, borderRadius: 3, background: chapter.accent, marginTop: 12,
         transform: `scaleX(${interpolate(frame, [at + 4, at + 14], [0, 1], clamp01)})`, transformOrigin: "left" }} />
     </div>

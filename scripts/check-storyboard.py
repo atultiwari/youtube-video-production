@@ -30,6 +30,10 @@ NOTE = re.compile(r"^\s*-\s*line\s+(\d+)\s*:\s*(.+)$")
 WORDS = re.compile(r"[A-Za-z0-9']+")
 
 
+def plain(text: str) -> str:
+    return text.replace("\u2019", "'").replace("\u2018", "'")
+
+
 def parse(text: str) -> tuple[dict, list[dict]]:
     meta: dict = {}
     if text.startswith("---"):
@@ -63,7 +67,7 @@ def parse(text: str) -> tuple[dict, list[dict]]:
 
 
 def word_time(line: dict, word: str) -> float | None:
-    words = WORDS.findall(line["text"])
+    words = WORDS.findall(plain(line["text"]))
     index = next((i for i, w in enumerate(words) if w.lower().startswith(word.lower())), None)
     if index is None:
         return None
@@ -91,9 +95,15 @@ def check(meta: dict, beats: list[dict], lines: dict | None, max_gap: float) -> 
         for i in spoken_lines:
             if not any(e["line"] == i for e in b["events"]):
                 problems.append(f"{tag} line {i}: no picture event. Each spoken line needs one, on a cue word.")
+        if lines and b["beat"] not in by_beat:
+            problems.append(f"{tag}: not in lines.json, so its timing was not checked (re-run draft-takes.py or word-timestamps.py)")
+            continue
         if b["beat"] not in by_beat:
             continue
         beat_lines = by_beat[b["beat"]]
+        if not beat_lines:
+            problems.append(f"{tag}: no lines in lines.json")
+            continue
         times: list[float] = [beat_lines[n["line"]]["start"] for n in b["notes"] if n["line"] < len(beat_lines)]
         for e in b["events"]:
             if e["line"] >= len(beat_lines):
@@ -108,8 +118,9 @@ def check(meta: dict, beats: list[dict], lines: dict | None, max_gap: float) -> 
         marks = sorted(set([0.0, *times, end]))
         for a, z in zip(marks, marks[1:]):
             if z - a > max_gap:
-                line = max(i for i, l in enumerate(beat_lines) if l["start"] <= a + 1e-6)
-                problems.append(f"{tag} line {line}: no visual event for {z - a:.1f} s (from {a:.1f} s to {z:.1f} s in the beat)")
+                before = [i for i, l in enumerate(beat_lines) if l["start"] <= a + 1e-6]
+                where = f"line {before[-1]}" if before else "before line 0"
+                problems.append(f"{tag} {where}: no visual event for {z - a:.1f} s (from {a:.1f} s to {z:.1f} s in the beat)")
     return problems
 
 

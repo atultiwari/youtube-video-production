@@ -41,7 +41,8 @@ export interface BeatTiming {
   readonly word: (word: string, i: number) => number;
 }
 
-const wordsOf = (text: string): string[] => text.match(/[A-Za-z0-9']+/g) ?? [];
+/** Curly apostrophes as straight ones, the same as draft-takes.py and word-timestamps.py. */
+const wordsOf = (text: string): string[] => text.replace(/[\u2018\u2019]/g, "'").match(/[A-Za-z0-9']+/g) ?? [];
 
 export const beatTiming = (grid: Grid, lines: Lines, id: string): BeatTiming => {
   const slot = grid.beats.find((b) => b.beat === id);
@@ -56,7 +57,8 @@ export const beatTiming = (grid: Grid, lines: Lines, id: string): BeatTiming => 
     const l = beatLines[i];
     if (!l) throw new Error(`beat ${id} has no line ${i}`);
     const words = wordsOf(l.text);
-    const index = words.findIndex((x) => x.toLowerCase().startsWith(w.toLowerCase()));
+    const cue = w.replace(/[\u2018\u2019]/g, "'").toLowerCase();
+    const index = words.findIndex((x) => x.toLowerCase().startsWith(cue));
     if (index < 0) throw new Error(`beat ${id} line ${i}: "${w}" is not spoken in "${l.text}"`);
     // Exact when the takes have been transcribed; a word-share estimate in a draft grid
     // (off by a median 1.3 s per word on a real take).

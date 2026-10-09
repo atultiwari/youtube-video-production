@@ -56,31 +56,51 @@ ZONES = {
 }
 
 
-def frames(video: Path) -> tuple[np.ndarray, float]:
-    probe = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate",
-                            "-of", "csv=p=0", str(video)], capture_output=True, text=True, check=True).stdout.strip()
-    num, den = (int(x) for x in probe.split("/"))
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"scale={W}:{H}", "-f", "rawvideo",
-                          "-pix_fmt", "gray", "-"], capture_output=True, check=True).stdout
-    return np.frombuffer(raw, np.uint8).reshape(-1, H, W).astype(np.int16), num / den
+def probe(video: Path) -> tuple[int, int, float]:
+    out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                          "stream=width,height,r_frame_rate", "-of", "csv=p=0", str(video)],
+                         capture_output=True, text=True, check=True).stdout.strip()
+    w, h, rate = out.split(",")
+    num, den = (int(x) for x in rate.split("/"))
+    return int(w), int(h), num / den
 
 
 def detect(video: Path, picture: tuple[float, ...] | None, note: tuple[float, ...] | None) -> dict:
-    f, fps = frames(video)
-    probe = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
-                            "-of", "csv=p=0", str(video)], capture_output=True, text=True, check=True).stdout.strip()
-    vw, vh = (int(v) for v in probe.split(","))
+    """Per-frame changed share in the picture zone, the note zone and the whole frame.
+
+    Streams frames from ffmpeg and keeps only the previous one: holding the whole video was
+    about 39 MB per second of video (12 GB for five minutes)."""
+    vw, vh, fps = probe(video)
     zones = ZONES["16:9" if vw >= vh else "9:16"]
     picture, note = picture or zones["picture"], note or zones["note"]
-    changed = np.abs(np.diff(f, axis=0)) > PIXEL
 
-    def zone(z: tuple[float, ...]) -> np.ndarray:
+    def box(z: tuple[float, ...]) -> tuple[slice, slice]:
         x0, y0, x1, y1 = z
-        return changed[:, int(H * y0):int(H * y1), int(W * x0):int(W * x1)].mean(axis=(1, 2))
+        return slice(int(H * y0), int(H * y1)), slice(int(W * x0), int(W * x1))
 
-    pic = zone(picture)
-    note_all = zone(note)
-    whole = changed.mean(axis=(1, 2))
+    pic_box, note_box = box(picture), box(note)
+    proc = subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"scale={W}:{H}", "-f", "rawvideo",
+                             "-pix_fmt", "gray", "-"], stdout=subprocess.PIPE)
+    assert proc.stdout is not None
+    pic_l, note_l, whole_l = [], [], []
+    prev = None
+    count = 0
+    while True:
+        chunk = proc.stdout.read(W * H)
+        if len(chunk) < W * H:
+            break
+        count += 1
+        cur = np.frombuffer(chunk, np.uint8).reshape(H, W).astype(np.int16)
+        if prev is not None:
+            changed = np.abs(cur - prev) > PIXEL
+            pic_l.append(changed[pic_box].mean())
+            note_l.append(changed[note_box].mean())
+            whole_l.append(changed.mean())
+        prev = cur
+    if proc.wait() != 0 or count < 2:
+        raise SystemExit(f"ffmpeg could not read frames from {video}")
+    pic, note_all, whole = np.array(pic_l), np.array(note_l), np.array(whole_l)
+    duration = count / fps
 
     drawing = ((pic > 0.00004) & (pic < 0.006)).astype(float)
     events: list[dict] = []
@@ -105,7 +125,7 @@ def detect(video: Path, picture: tuple[float, ...] | None, note: tuple[float, ..
             add("thump", t, 0.6)
         elif note_all[i] > 0.0004:
             add("tick", t, 1 / 14, 0.6 + 0.4 * np.random.default_rng(i).random())
-    return {"fps": fps, "duration": len(f) / fps, "drawing": drawing.tolist(), "events": events}
+    return {"fps": fps, "duration": duration, "drawing": drawing.tolist(), "events": events}
 
 
 # ---------------------------------------------------------------- synthesis
@@ -224,6 +244,9 @@ def level(x: np.ndarray, target: float, scratch: Path, name: str) -> np.ndarray:
     write_wav(scratch, x)
     gain = 10 ** ((target - loudness(scratch)) / 20)
     safe = 0.89 / (np.max(np.abs(x)) or 1.0)
+    if np.max(np.abs(x)) == 0:
+        print(f"  {name}: silent (nothing to place)")
+        return x
     if gain > safe:
         print(f"  {name}: peaks allow {20 * np.log10(safe / gain):+.1f} dB short of {target} LUFS; kept peak-safe")
         gain = safe

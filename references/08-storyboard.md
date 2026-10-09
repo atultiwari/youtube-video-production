@@ -24,7 +24,7 @@ Rules, each from a measured failure:
 | Every beat has a picture; text is the caption, not the content | v2's Short had no picture in any beat; v2's longform had none in three of eight |
 | One idea per frame: one note per spoken line | the note is read while the line is spoken |
 | Every spoken line gets at least one **sizeable** picture event on a cue word | pilot: gaps sat exactly where a line's note had finished typing and nothing else moved |
-| No stretch over 4 s without a visual event | the rubric's measure; v2 builds sat static for 61% of the runtime |
+| No stretch over 4 s without a visual event | the rubric's measure; v2 builds sat static for over half the runtime (52%, 53%) |
 | An event is big (≥ about 70 × 70 px changed) and quick (≤ 6 frames to arrive) | a 42 px label, a thin arrow or an 18-frame fade does not register as an event (pilot F6, F7) |
 
 Then lint it:

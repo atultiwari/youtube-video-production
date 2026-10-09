@@ -113,7 +113,7 @@ beat finds bugs, not collisions. *Run the QA probe; read the 2-second sheet.*
 **Label collisions showed only on the 2-second sheet.** On the v3 pilot, every label that landed
 on a stroke, a stamp or a tag was invisible on the beat midpoints. *Midpoints are not enough.*
 
-**A cut on every line still left 61% of the runtime static.** And a hand-built picture with no
+**A cut on every line still left 52% of the runtime static.** And a hand-built picture with no
 rule left 35%: the gaps sat wherever a note had finished typing. *Plan one sizeable picture
 event per spoken line, on a cue word (`check-storyboard.py`).*
 

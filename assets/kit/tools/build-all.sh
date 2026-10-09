@@ -10,20 +10,20 @@
 #   5. stills: beat midpoints and every 2 s, contact sheets, phone sheet, frame fill
 set -euo pipefail
 comp=$1; key=$2; shift 2
-narration=""
-if [[ "${1:-}" == "--narration" ]]; then narration="--narration $2"; fi
+narration=()
+if [[ "${1:-}" == "--narration" ]]; then narration=(--narration "$2"); fi
 grid=public/$key/grid/beats.json; lines=public/$key/lines.json; out=out/$key
 mkdir -p "$out"
 
 echo "== QA"
-node tools/qa.mjs "$comp" --every 1 --json "$out/qa.json" | grep -v '^\[Tab' | tail -1
+# Every issue is printed; the run stops here if there are any.
+node tools/qa.mjs "$comp" --every 1 --json "$out/qa.json" | grep -v '^\[Tab' 
 echo "== measure render"
 npx remotion render "$comp" "$out/measure.mp4" --scale=0.25 --muted --props='{"measure":true}' --log=error
 echo "== event gaps"
 python3 -I tools/event-gaps.py "$out/measure.mp4" "$grid" "$lines" | tee "$out/event-gaps.txt" | tail -1
 echo "== sound"
-# shellcheck disable=SC2086
-python3 -I tools/sound-design.py "$out/measure.mp4" --out "$out/sound" --beats "$grid" $narration
+python3 -I tools/sound-design.py "$out/measure.mp4" --out "$out/sound" --beats "$grid" ${narration[@]+"${narration[@]}"}
 echo "== full render"
 npx remotion render "$comp" "$out/$comp-silent.mp4" --muted --log=error
 ffmpeg -v error -y -i "$out/$comp-silent.mp4" -i "$out/sound/mix.wav" -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k \
