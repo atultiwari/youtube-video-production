@@ -83,6 +83,10 @@ other check passed; in the pilot, three rings did the same.
   `where` (picture coordinates) and `sequence()` adds up to 14 frames to cross the picture.
   Better still, order steps so each lands near the last. Inside one step, nothing lands in two
   far-apart places at once: two labels set on the same frame in opposite corners are two steps.
+- **A list goes in one region.** Items set around a picture, each where it belongs (five
+  signs in five corners), arrive one at a time and still send the eye around the frame: two
+  muted reviewers in a row lost the thread there. Stack a list in one place, or draw each
+  item's connector to the picture as the item arrives, so the eye has a path.
 - **Say it where it applies.** A stamp in a fixed corner pulled the eye away from the drawing
   every time; a verdict or a name is a label (with a highlight) on the thing it names.
 - **Lateness is the price.** A step may start after its cue word. With word-timed narration,
