@@ -163,6 +163,12 @@ export const Label: React.FC<{
 };
 
 /** Filled dots (proteins, granules) that pop in one after another. */
+/**
+ * Frames a run of `Dots` takes from its first dot to its last settling: give the step that owns
+ * it at least this `dur`, or the last dots keep landing while the next step starts elsewhere.
+ */
+export const dotsFrames = (count: number, every = 2): number => Math.max(0, count - 1) * every + 7;
+
 export const Dots: React.FC<{ points: readonly (readonly [number, number])[]; r: number; color: string; at: number; every?: number }> = ({
   points, r, color, at, every = 2,
 }) => {
@@ -198,8 +204,10 @@ export const Between: React.FC<{ from: number; to: number; children: React.React
   from, to, children, fade = 6,
 }) => {
   const frame = useCurrentFrame();
-  if (frame < from || frame > to) return null;
-  const o = Math.min(interpolate(frame, [from, from + fade], [0, 1], clamp01), interpolate(frame, [to - fade, to], [1, 0], clamp01));
+  // Fades out *after* `to`, not before: `to` is the next step's start, and fading early would
+  // move this place while the previous step (often a note) is still the focus.
+  if (frame < from || frame > to + fade) return null;
+  const o = Math.min(interpolate(frame, [from, from + fade], [0, 1], clamp01), interpolate(frame, [to, to + fade], [1, 0], clamp01));
   return <div style={{ position: "absolute", inset: 0, opacity: o }}>{children}</div>;
 };
 

@@ -7,12 +7,12 @@ import React, { useMemo } from "react";
 import { useVideoConfig } from "remotion";
 
 import { useBeat, type Grid, type Lines } from "./beat";
-import { SimplifiedTag, Stamp } from "./Chrome";
+import { SimplifiedTag } from "./Chrome";
 import { Film } from "./Film";
 import { Heading } from "./Heading";
 import { NoteCard } from "./NoteCard";
-import { Dots, Hatch, Ink, Label, Picture, Ring, Wash } from "./Picture";
-import { noteStep, pointStep, sequence } from "./sequence";
+import { Dots, dotsFrames, Hatch, Ink, Label, Picture, Ring, Wash } from "./Picture";
+import { fits, FOCUS_GAP, noteStep, pointStep, sequence } from "./sequence";
 import { arrow, P } from "./shapes";
 import { CHAPTERS, chapter, MOTION, TISSUE, useLayout } from "./style";
 
@@ -50,24 +50,25 @@ const DemoBeat: React.FC = () => {
   const tissue = P.rect(0, y + 150, w, picture.h - y - 170, 18);
   const s = useMemo(() => {
     const note = (i: number) => noteStep(`n${i}`, b.line(i), NOTES[i], fps, MOTION.typeCps);
-    return sequence([
+    return fits(sequence([
       { id: "heading", at: 0, dur: Math.round("Kit demo".length * MOTION.writeFramesPerChar) },
       { id: "vessel", at: 0, dur: 30 },        // walls, then the lumen fills: one place
       note(0),
       { id: "cells", at: b.word("red", 0), dur: 26, where: [w / 2, y] },
-      pointStep("p0", MOTION.pointerFrames),  // after the cells, so it lands on them
+      pointStep("p0", MOTION.pointerFrames, "cells"),  // names its target: it lands on the cells
       note(1),
       { id: "tissue", at: b.word("wall", 1), dur: 18, where: [w / 2, y + 300] },
-      { id: "leak", at: b.word("escapes", 1), dur: 26, where: [w / 2, y + 200] },
-      pointStep("p1", MOTION.pointerFrames),
-      { id: "ring", at: b.word("tissue", 1), dur: MOTION.ringFrames, where: [w / 2, y + 240] },
-      { id: "stamp", at: 0, dur: 14, where: [w / 2, y + 240] },
-    ]);
-  }, [b, fps, w, y]);
+      // The arrow, its highlight and the protein dots: one place; dur covers the last dot.
+      { id: "leak", at: b.word("escapes", 1), dur: 16 + dotsFrames(3), where: [w / 2, y + 200] },
+      pointStep("p1", MOTION.pointerFrames, "leak"),
+      // The ring, then the name of what it rings, on it: a label in place, not a corner stamp.
+      { id: "ring", at: b.word("tissue", 1), dur: MOTION.ringFrames + 4, where: [w / 2, y + 240] },
+    ], FOCUS_GAP, [picture.w, picture.h]), b.durationInFrames, b.id);
+  }, [b, fps, w, y, picture.w, picture.h]);
   return (
     <>
       <Heading text="Kit demo" at={s.heading.from} color={C.accent} />
-      <SimplifiedTag at={s.vessel.to} />
+      <SimplifiedTag />
       <Picture>
         <Ink strokes={walls} from={s.vessel.from} durationInFrames={20} id="walls" />
         <Wash shape={lumen} color={TISSUE.plasma} at={s.vessel.from + 18} id="lumen" alpha={0.6} />
@@ -79,12 +80,12 @@ const DemoBeat: React.FC = () => {
         <Wash shape={P.blob(w / 2, y + 240, 160, 60, "hl", 0.08)} color={C.wash} at={s.leak.from + 12} id="hl" alpha={0.8} highlight />
         <Dots points={[[w / 2 - 60, y + 230], [w / 2, y + 250], [w / 2 + 60, y + 225]]} r={8} color={TISSUE.protein} at={s.leak.from + 16} />
         <Ring cx={w / 2} cy={y + 240} rx={190} ry={80} at={s.ring.from} id="ring" color={C.accent} />
+        <Label text="exudate" x={w / 2 + 290} y={y + 250} at={s.ring.from + MOTION.ringFrames} color={C.accent} anchor="start" />
       </Picture>
       <NoteCard chapter={C} kicker="What leaks?" kickerAt={s.n0.from} notes={[
         { at: s.n0.from, pointAt: s.p0.from, text: NOTES[0], underline: { phrase: "red cells", at: s.n0.from }, anchor: [w / 2, y] },
         { at: s.n1.from, pointAt: s.p1.from, text: NOTES[1], underline: { phrase: "into the tissue", at: s.n1.from }, anchor: [w / 2, y + 240] },
       ]} />
-      <Stamp text="exudate" at={s.stamp.from} color={C.accent} x={picture.x + w / 2 + 230} y={picture.y + y + 300} />
     </>
   );
 };

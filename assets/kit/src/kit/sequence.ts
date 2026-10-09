@@ -101,3 +101,19 @@ export const pointStep = (id: string, pointerFrames: number, target?: string): S
 
 /** The most a step waited past its cue: a large value means the beat is overfull. */
 export const maxLate = (s: Sequence): number => Math.max(0, ...s.__steps.map((id) => s[id].late));
+
+/**
+ * Throws if any step ends after the beat does. Call it on every beat's sequence:
+ * `const s = fits(sequence([...]), b.durationInFrames, b.id)`. An overfull beat pushes its last
+ * steps past the cut, where they are never seen, and no other check notices (brief B: a label
+ * silently never rendered while QA, focus-check and event-gaps all passed).
+ */
+export const fits = (s: Sequence, durationInFrames: number, beat: string): Sequence => {
+  const over = s.__steps.filter((id) => s[id].to > durationInFrames);
+  if (over.length > 0) {
+    const worst = over.map((id) => `"${id}" ends at ${s[id].to}`).join(", ");
+    throw new Error(`beat ${beat} is overfull: ${worst}, after the beat ends at ${durationInFrames}. ` +
+      "Cut or shorten a step, move a cue earlier, or lengthen the beat.");
+  }
+  return s;
+};

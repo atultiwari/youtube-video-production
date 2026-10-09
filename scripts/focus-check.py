@@ -23,6 +23,8 @@ longer than 0.5 s. With --grid/--lines it says where the worst runs are.
 It also counts **far arrivals**: split moments, however brief, whose regions are more than a
 third of the frame's diagonal apart (two labels popping up in opposite corners at once). Too
 short to be sustained, they still sent a muted viewer's eye two ways (pilot, round 2). Target: 0.
+With --grid, arrivals on a beat change (0.2 s before to 0.6 s after a beat starts) are the cut
+and the new beat's chrome, not a split, and are not counted.
 """
 from __future__ import annotations
 
@@ -38,6 +40,7 @@ CELL = 10  # px at 480 wide: 48 x 27 cells
 PIXEL = 24
 MIN_CELLS = 3
 TRANSITION = 0.25  # share of the frame changing at once: a cut or a dissolve
+CUT_BEFORE, CUT_AFTER = 0.2, 0.6  # s around a beat start that belong to the cut
 FAR = 1 / 3  # share of the frame diagonal: regions this far apart compete for the eye
 
 
@@ -93,6 +96,14 @@ def spread(centres: list[tuple[float, float]]) -> float:
     return d / float(np.hypot(H // CELL, W // CELL))
 
 
+def on_cut(t: float, grid: dict | None) -> bool:
+    """Is time t part of a beat change?"""
+    if not grid:
+        return False
+    starts = [b["startFrame"] / grid["fps"] for b in grid["beats"]][1:]
+    return any(s0 - CUT_BEFORE <= t <= s0 + CUT_AFTER for s0 in starts)
+
+
 def locate(t: float, grid: dict | None, lines: dict | None) -> str:
     if not grid or not lines:
         return ""
@@ -106,6 +117,28 @@ def locate(t: float, grid: dict | None, lines: dict | None) -> str:
     return ""
 
 
+def write_sheet(video: Path, times: list[float], out: Path) -> None:
+    """Each far arrival as a tile: the frame, with what changes in the next 0.15 s in red."""
+    from PIL import Image, ImageDraw
+
+    def grab(t: float) -> np.ndarray:
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", str(video), "-frames:v", "1",
+                              "-vf", f"scale={W}:{H}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                             capture_output=True, check=True).stdout
+        return np.frombuffer(raw, np.uint8).reshape(H, W, 3)
+
+    cols = 4
+    sheet = Image.new("RGB", (W * cols, H * ((len(times) + cols - 1) // cols)), "white")
+    for i, t in enumerate(times):
+        a, b = grab(t), grab(t + 0.15)
+        tile = b.copy()
+        tile[np.abs(b.astype(int).mean(2) - a.astype(int).mean(2)) > PIXEL] = (220, 0, 0)
+        im = Image.fromarray(tile)
+        ImageDraw.Draw(im).text((6, 6), f"{t:.1f}s", fill=(0, 0, 200))
+        sheet.paste(im, ((i % cols) * W, (i // cols) * H))
+    sheet.save(out)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("video", type=Path)
@@ -113,6 +146,7 @@ def main() -> int:
     ap.add_argument("--lines", type=Path)
     ap.add_argument("--rate", type=int, default=10)
     ap.add_argument("--json", type=Path, help="write per-sample region counts here")
+    ap.add_argument("--sheet", type=Path, help="write a PNG of each far arrival, what changed in red")
     args = ap.parse_args()
     grid = json.loads(args.grid.read_text()) if args.grid else None
     lines = {b["beat"]: b["lines"] for b in json.loads(args.lines.read_text())["beats"]} if args.lines else None
@@ -134,8 +168,9 @@ def main() -> int:
             start = i
         elif not s and start is not None:
             runs.append((start * dt, (i - start) * dt))
-            if any(far[start:i]):
-                far_at.append(start * dt)
+            hits = [j for j in range(start, i) if far[j] and not on_cut(j * dt, grid)]
+            if hits:
+                far_at.append(hits[0] * dt)
             start = None
     runs.sort(key=lambda r: -r[1])
     for t, d in runs[:8]:
@@ -150,6 +185,8 @@ def main() -> int:
           f"longest {longest:.1f} s; max regions at once {c.max() if len(c) else 0}")
     where = ", ".join(f"{t:.1f}s {locate(t, grid, lines)}".strip() for t in far_at[:40])
     print(f"far arrivals {len(far_at)} (two places over 1/3 of the frame apart at once){': ' + where if where else ''}")
+    if args.sheet and far_at:
+        write_sheet(args.video, far_at[:16], args.sheet)
     if args.json:
         args.json.write_text(json.dumps({"rate": args.rate, "regions": c.tolist()}))
     return 0

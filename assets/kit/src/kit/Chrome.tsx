@@ -107,6 +107,10 @@ export const Stamp: React.FC<{ text: string; at: number; color: string; x?: numb
 };
 
 /** Marks a schematic as simplified, so a still cannot pass for a micrograph. */
+/**
+ * Leave `at` at 0: the tag arrives with the beat, as part of the cut. Faded in later, it lands
+ * with the first note or drawing and is a second place to look (pilot and brief B, 2026-10-09).
+ */
 export const SimplifiedTag: React.FC<{ at?: number }> = ({ at = 0 }) => {
   const frame = useCurrentFrame();
   const layout = useLayout();

@@ -41,29 +41,45 @@ handoffs of under half a second), still with no static stretch.
 whichever is later, with a 4-frame pause between:
 
 ```tsx
-const s = sequence([
+const s = fits(sequence([
   { id: "heading", at: 0, dur: 56 },
-  noteStep("n0", b.line(0), NOTES[0], fps, MOTION.typeCps, MOTION.pointerFrames),
-  { id: "red", at: b.word("red", 1), dur: 30 },   // stroke, then its label: one place
+  noteStep("n0", b.line(0), NOTES[0], fps, MOTION.typeCps),
+  { id: "red", at: b.word("red", 0), dur: 30, where: [250, 420] },  // stroke, then its label
+  pointStep("p0", MOTION.pointerFrames, "red"),                       // lands on the red line
   ...
-]);
+], FOCUS_GAP, [layout.picture.w, layout.picture.h]), b.durationInFrames, b.id);
 <Ink from={s.red.from} … />  <Label at={s.red.from + 18} … />
 ```
+
+Pass the picture's own size on 9:16 (the default is the 16:9 picture), and always wrap the
+sequence in `fits()`: it throws when a beat is overfull and its last steps would land after the
+cut, where nobody sees them. Without it, a label silently never appeared in brief B and every
+other check passed; in the pilot, three rings did the same.
 
 - **A step is one place.** A wash filling the shape just drawn, and its label, belong to that
   step. Things in two places are two steps, even if they are "the same idea" (three cells
   drifting to the wall are three steps).
+- **A step's `dur` covers everything in it.** The last of 22 dots landing one frame apart, or a
+  `Between` fading out, is still that step. Use `dotsFrames(count, every)` for a run of dots.
+  `Between` fades out *after* its `to`, so the old drawing goes as part of the next step.
 - **Reading order within a line:** the note first (the claim), then the picture that shows it,
-  then its label. The underline draws as its phrase is typed; the pointer after the text.
+  then its label. The underline grows as its phrase is typed (never on its own afterwards: it
+  then lands while the next step draws elsewhere); the pointer after the picture.
 - **A heading can be a line's note.** If a line only names the chapter, the pen-written heading
   says it; do not type the same words beside it.
-- **The pointer lands on something.** A note's pointer is its own step (`pointStep`), placed
-  after the step that draws the feature. Drawn straight after the note, it ended on blank paper
-  four times in one video (mute review, 2026-10-09).
+- **The pointer lands on something.** A note's pointer is its own step,
+  `pointStep(id, frames, target)`, where `target` is the step that draws what the note's
+  `anchor` points at; `sequence()` throws if that step has not come first. Placed by hand it
+  ended on blank paper four times in one video, then four more after a fix, each time because
+  the anchor named a later step than the one the pointer followed (mute reviews, 2026-10-09).
+- **Chrome arrives with the beat.** The "Simplified" tag, the chapter tag and the kicker show
+  from the beat's first frame, as part of the cut. Faded in later, they land with the first note
+  and are a second place to look (the pilot and brief B both measured it).
 - **Give the eye time to travel.** One at a time is not enough when consecutive steps are far
   apart: four labels in four corners within two seconds lost a muted viewer. Steps carry
   `where` (picture coordinates) and `sequence()` adds up to 14 frames to cross the picture.
-  Better still, order steps so each lands near the last.
+  Better still, order steps so each lands near the last. Inside one step, nothing lands in two
+  far-apart places at once: two labels set on the same frame in opposite corners are two steps.
 - **Say it where it applies.** A stamp in a fixed corner pulled the eye away from the drawing
   every time; a verdict or a name is a label (with a highlight) on the thing it names.
 - **Lateness is the price.** A step may start after its cue word. With word-timed narration,
