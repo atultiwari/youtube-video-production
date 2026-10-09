@@ -26,8 +26,8 @@ script; an illustrated explainer does reference research at step 3 and has no st
 ## v3: the design layer
 
 v2 made videos that were correct and well timed, and looked like type on an empty dark ground.
-v3 adds the layer that was missing, every number measured in a hand-built pilot
-(`pathology-notes/pilot-01-acute-inflammation`), not chosen by taste:
+v3 adds the layer that was missing, every number measured in a hand-built pilot and two
+agent-built rebuilds, not chosen by taste:
 
 - **a house style as data** (`styles/*.json`): paper, chapter colours sampled from a reference,
   a type scale with minimums, layout grids for 16:9 and 9:16;
@@ -36,11 +36,15 @@ v3 adds the layer that was missing, every number measured in a hand-built pilot
   `remotion-whiteboard`;
 - **word-level timing** from the real takes;
 - **sound design** from the picture, levelled under the voice;
-- **visual QA with numbers**: a layout probe, frame fill, event gaps, a phone test.
+- **one focus at a time**: steps drawn in reading order, never two places at once; pointers
+  checked against what they point at; beats that overflow refuse to render;
+- **visual QA with numbers**: a layout probe, split focus and far arrivals, frame fill, event
+  gaps, a phone test, and a **mute review**: a fresh agent watches the video with the sound off
+  and reports what it learned and where it lost the thread.
 
-Same script, before and after (scored on the rubric in the skills repo's `docs/v3-rubric.md`):
-frame fill 21% → 94%, static runtime 52% → 0%, picture in 5 of 8 beats → 8 of 8, sound none →
-effects and a bed at −1 dBTP.
+Same script, before and after (`references/rubric.md`): frame fill 21% → 94%, static runtime
+52% → 2%, picture in 5 of 8 beats → 8 of 8, sound none → effects and a bed at −1 dBTP. Time
+spent drawing in two places at once: 17% → 2.4% (pilot), 27% → 3.2% (an agent-built Short).
 
 ## Skills it works with
 
@@ -55,10 +59,10 @@ Self-contained: the scripts read nothing from a project they are not pointed at.
 
 | | |
 |---|---|
-| `scripts/` | status, script and storyboard lints, draft grid, audio grid, mastering, word timing, kit install, sound design, frame fill, event gaps, contact sheets, YouTube chapters |
+| `scripts/` | status, script and storyboard lints, draft grid, audio grid, mastering, word timing, kit install, sound design, focus check, frame fill, event gaps, contact sheets, YouTube chapters |
 | `assets/kit/` | Remotion components and build/QA tools, copied into a project by `install-kit.mjs` |
 | `styles/` | `paper-notes` (piloted) and `sketchbook` (not yet piloted) |
-| `templates/` | `STATUS.md`, `STORYBOARD.md` |
+| `templates/` | `STATUS.md`, `STORYBOARD.md`, `MUTE-REVIEW.md` |
 
 ## Reference files
 
@@ -66,7 +70,7 @@ Read one when you reach its stage, not before.
 
 `01-plan-and-validate` · `02-capture-reference` · `03-script` · `04-voice` · `05-build` ·
 `06-publish` · `07-art-direction` · `08-storyboard` · `09-motion` · `10-sound` · `11-visual-qa` ·
-`12-pathology-visuals` · `13-longform` · `status-and-resuming` · `mistakes`
+`12-pathology-visuals` · `13-longform` · `rubric` · `status-and-resuming` · `mistakes`
 
 Each video keeps a `STATUS.md` (copy `templates/STATUS.md`). The completed steps are *derived*
 from the filesystem rather than ticked by hand — a checklist drifts within a day — so the file

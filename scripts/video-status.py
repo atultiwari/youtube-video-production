@@ -94,18 +94,29 @@ def has_content(path: Path) -> bool:
 
 
 def voiced(path: Path) -> bool:
-    """Takes with sound in them. Draft takes (draft-takes.py) are silence: timing, not a voice."""
+    """Takes with sound in them. Draft takes (draft-takes.py) are silence: timing, not a voice.
+
+    Reads 8-, 16-, 24- and 32-bit PCM, the whole file. A wav it cannot decode (float, compressed)
+    is counted as a recording: a draft is always 16-bit PCM, so only a real take looks like that.
+    """
     import wave
     for wav in sorted(path.glob("*.wav")) if path.is_dir() else []:
         try:
             with wave.open(str(wav)) as w:
-                if w.getsampwidth() != 2:
-                    return True
-                data = w.readframes(min(w.getnframes(), w.getframerate() * 5))
+                width, frames = w.getsampwidth(), w.readframes(w.getnframes())
         except (wave.Error, EOFError):
-            continue
-        samples = memoryview(data).cast("h")
-        if any(abs(x) > 300 for x in samples):
+            return True
+        limit = 0.01 * (1 << (8 * width - 1))
+        if width == 1:
+            loud = any(abs(x - 128) > limit for x in frames)
+        elif width in (2, 4):
+            from array import array
+            samples = array("h" if width == 2 else "i", frames[: len(frames) - len(frames) % width])
+            loud = bool(samples) and max(map(abs, samples)) > limit
+        else:  # 24-bit: stop at the first loud sample
+            loud = any(abs(int.from_bytes(frames[i:i + width], "little", signed=True)) > limit
+                       for i in range(0, len(frames) - width + 1, width))
+        if loud:
             return True
     return False
 
@@ -116,10 +127,20 @@ def step_done(path_key: str, paths: dict[str, Path], meta: dict) -> tuple[bool, 
     if path_key == "@gate2":
         return bool(meta.get("gate2")), "" if meta.get("gate2") else "   (record `gate2: <date>` in STATUS.md)"
     if path_key == "@qa":
-        ok = bool(renders) and all((renders / f).exists() for f in ("qa.json", "focus.txt"))
-        return ok, ""
+        if renders is None:
+            return False, "   (no renders path declared)"
+        report = renders / "qa.json"
+        if not (report.exists() and (renders / "focus.txt").exists()):
+            return False, ""
+        try:
+            issues = sum(len(f.get("issues", [])) for f in json.loads(report.read_text()))
+        except (ValueError, AttributeError, TypeError):
+            return False, "   (qa.json unreadable)"
+        return issues == 0, "" if issues == 0 else f"   ({issues} QA issues open)"
     if path_key == "@render":
-        ok = bool(renders) and renders.exists() and any(
+        if renders is None:
+            return False, "   (no renders path declared)"
+        ok = renders.exists() and any(
             f.suffix == ".mp4" and f.stem not in ("measure",) and not f.stem.endswith("-silent")
             for f in renders.iterdir())
         return ok, ""

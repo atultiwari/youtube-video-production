@@ -61,7 +61,7 @@ const Pointer: React.FC<{ from: [number, number]; anchor: readonly [number, numb
 };
 
 /** Text typed in place: untyped characters keep their space, so nothing reflows. */
-const Typed: React.FC<{ text: string; shown: number; underline?: Note["underline"]; typedAt: number; color: string }> = ({
+const Typed: React.FC<{ text: string; shown: number; underline?: Note["underline"]; color: string }> = ({
   text, shown, underline, color,
 }) => {
   const visible = (from: number, to: number) => {
@@ -74,6 +74,7 @@ const Typed: React.FC<{ text: string; shown: number; underline?: Note["underline
     );
   };
   if (!underline) return visible(0, text.length);
+  if (!underline.phrase) throw new Error(`underline in the note "${text}" has an empty phrase`);
   const start = text.indexOf(underline.phrase);
   if (start < 0) throw new Error(`underline "${underline.phrase}" is not in the note "${text}"`);
   const end = start + underline.phrase.length;
@@ -105,6 +106,11 @@ export const NoteCard: React.FC<{
   const { fps } = useVideoConfig();
   const layout = useLayout();
   const caption = STYLE.notes === "caption";
+  for (const n of notes) {
+    // `anchor: s.p0.where` is undefined when the target step has no `where`: say so, rather than
+    // silently drawing no pointer.
+    if (n.pointAt !== undefined && !n.anchor) throw new Error(`NoteCard: "${n.text}" has pointAt but no anchor (give its target step a where)`);
+  }
   for (let i = 1; i < notes.length; i++) {
     if (notes[i].at < notes[i - 1].at) throw new Error(`NoteCard: notes must be in time order ("${notes[i].text}" starts before the note above it)`);
   }
@@ -125,7 +131,7 @@ export const NoteCard: React.FC<{
       boxShadow: caption ? "none" : "0 2px 0 rgba(43,39,35,0.08)",
     }}>
       {caption ? null : <div style={{ width: 40, height: 5, borderRadius: 3, background: chapter.accent, marginBottom: 16 }} />}
-      {note ? <Typed text={note.text} shown={shown} underline={note.underline} typedAt={note.at} color={chapter.accent} /> : " "}
+      {note ? <Typed text={note.text} shown={shown} underline={note.underline} color={chapter.accent} /> : " "}
     </div>
   );
   return (

@@ -121,16 +121,20 @@ def write_sheet(video: Path, times: list[float], out: Path) -> None:
     """Each far arrival as a tile: the frame, with what changes in the next 0.15 s in red."""
     from PIL import Image, ImageDraw
 
-    def grab(t: float) -> np.ndarray:
+    def grab(t: float) -> np.ndarray | None:
         raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", str(video), "-frames:v", "1",
                               "-vf", f"scale={W}:{H}", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
-                             capture_output=True, check=True).stdout
-        return np.frombuffer(raw, np.uint8).reshape(H, W, 3)
+                             capture_output=True).stdout
+        return np.frombuffer(raw, np.uint8).reshape(H, W, 3) if len(raw) == W * H * 3 else None
 
     cols = 4
     sheet = Image.new("RGB", (W * cols, H * ((len(times) + cols - 1) // cols)), "white")
     for i, t in enumerate(times):
-        a, b = grab(t), grab(t + 0.15)
+        a = grab(t)
+        if a is None:
+            continue
+        b = grab(t + 0.15)
+        b = a if b is None else b   # the arrival is on the last frame
         tile = b.copy()
         tile[np.abs(b.astype(int).mean(2) - a.astype(int).mean(2)) > PIXEL] = (220, 0, 0)
         im = Image.fromarray(tile)
@@ -186,7 +190,11 @@ def main() -> int:
     where = ", ".join(f"{t:.1f}s {locate(t, grid, lines)}".strip() for t in far_at[:40])
     print(f"far arrivals {len(far_at)} (two places over 1/3 of the frame apart at once){': ' + where if where else ''}")
     if args.sheet and far_at:
-        write_sheet(args.video, far_at[:16], args.sheet)
+        # A picture to look at, never a reason to stop a build.
+        try:
+            write_sheet(args.video, far_at[:16], args.sheet)
+        except Exception as error:  # noqa: BLE001 - Pillow missing, an unreadable frame, a full disk
+            print(f"(no sheet written: {error})")
     if args.json:
         args.json.write_text(json.dumps({"rate": args.rate, "regions": c.tolist()}))
     return 0
