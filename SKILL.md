@@ -15,8 +15,8 @@ description: >-
 license: MIT
 metadata:
   author: Dr Atul Tiwari
-  version: "2.0.0"
-  measuredOn: "2026-09-09"
+  version: "3.0.0"
+  measuredOn: "2026-10-10"
 ---
 
 # Making a video, end to end
@@ -56,7 +56,7 @@ illustrated. Without modes, a pathology baseline was sent to capture an app it n
  9  Definitive capture        tutorial and hybrid: the exact flows the script calls for
 10  Build                     the kit (illustrated) or app shots (tutorial), on the grid
 10b Sound                     effects from the picture, a bed, ducked under the voice
-11  Visual QA                 probe, one focus, fill, event gaps, phone test, a 2-s sheet
+11  Visual QA                 probe, one focus, fill, event gaps, a 2-s sheet, a mute review
 12  Render
 13  Publish                   metadata, chapters, upload, schedule
 ```
@@ -65,19 +65,18 @@ illustrated. Without modes, a pathology baseline was sent to capture an app it n
 the *measured* audio, then from each word's transcribed time. A word-count estimate was 25%
 wrong on a whole script, and a median 1.3 s off per word. See `references/mistakes.md`.
 
-**Capture twice** (tutorial and hybrid): reconnaissance before the script, so it promises only
+**Capture twice** (tutorial, hybrid): reconnaissance before the script, so it promises only
 what the app does; the definitive recording after, when the flow is known.
 
-**One focus at a time.** Draw or write in one place at a time, in reading order: the note,
-then the picture, then its label. The order tells the story, even with the sound off
-(09-motion.md); `focus-check.py` measures it.
+**One focus at a time.** One place drawn or written at a time, in reading order: the note, the
+picture, its label, then the pointer. The video must teach with the sound off: `focus-check.py`
+measures it, a fresh agent watching it muted tests it (09-motion.md, 11-visual-qa.md).
 
-**Two human gates.** Gate 1, the script: cheap to change, takes are not. Gate 2, the look: a
-storyboard and three key-frame stills, approved before every beat is built. v2 had no Gate 2,
-and both its test videos came out as type on an empty dark ground.
+**Two human gates.** Gate 1, the script: cheap to change, takes are not. Gate 2, the look, on
+key-frame stills before every beat is built: without it, v2 made type on an empty dark ground.
 
-**Know where you are first.** Run `scripts/video-status.py` on the video's `STATUS.md`
-(`references/status-and-resuming.md`); update the file last thing before stopping.
+**Know where you are first**: `scripts/video-status.py` on the video's `STATUS.md`
+(status-and-resuming.md); update the file last thing before stopping.
 
 ## Non-negotiables
 
@@ -104,9 +103,7 @@ and both its test videos came out as type on an empty dark ground.
 **If `remotion-whiteboard` is not available, stop at the build step and say so**; never
 improvise a drawing component. `install-kit.mjs` enforces it.
 
-## Where the detail lives
-
-Read a file when you reach its stage, not before.
+## Where the detail lives: read each file at its stage, not before
 
 | File | Stage |
 |---|---|
@@ -126,9 +123,7 @@ Read a file when you reach its stage, not before.
 | `references/status-and-resuming.md` | resuming a video, or recording a decision |
 | `references/mistakes.md` | when something behaves oddly: read before debugging |
 
-## Scripts that ship with this skill
-
-Each takes `--help`. They read nothing from a project they are not pointed at.
+## Scripts that ship with it: each takes `--help`, and reads only the project it is given
 
 | Stage | Scripts |
 |---|---|
@@ -136,17 +131,17 @@ Each takes `--help`. They read nothing from a project they are not pointed at.
 | 4–5a | `check-script.py` (TTS traps), `check-storyboard.py` (picture per beat, cue words, gaps) |
 | 5b | `draft-takes.py` (a draft grid before the takes exist, for key frames only) |
 | 7–8 | `master-audio.py`, `build-audio-grid.py`, `word-timestamps.py` (exact word times) |
-| 10 | `install-kit.mjs` (the kit, a style, fonts, tools), `make-paper.py` |
+| 10 | `install-kit.mjs <project>` (the kit, a style, fonts, tools), `make-paper.py` |
 | 10b | `sound-design.py` |
 | 11 | `focus-check.py`, `frame-fill.py`, `event-gaps.py`, `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/build-all.sh` |
 | 13 | `chapters.py` (YouTube chapters from the grid) |
 
-Templates: `templates/STATUS.md`, `templates/STORYBOARD.md`. Styles: `styles/*.json`.
+Templates: `STATUS.md`, `STORYBOARD.md`, `MUTE-REVIEW.md` in `templates/`. Styles: `styles/*.json`.
 
 ## Formats
 
-**Short**: 1080×1920, delivered at 2160×3840 (a 4K upload gets more bitrate). 26–56 seconds,
-one idea, the opening line decides everything. Keep the bottom 360 px clear for the Shorts UI.
+**Short**: 1080×1920, delivered at 2160×3840 (`build-all.sh --deliver-4k`). 26–56 seconds, one
+idea; the first line and the first frame decide everything. Bottom 360 px clear for the UI.
 
 **Longform**: 1920×1080 at 30fps; seven to twelve minutes, or 15–30 for an illustrated lecture
 built in 3–5 minute chapters (13-longform.md). Optional second language as an alternate track.
