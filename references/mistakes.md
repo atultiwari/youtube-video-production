@@ -27,6 +27,18 @@ that did not apply to cloned voices; a quieter line elsewhere carried the true n
 one was believed and stated confidently before the truncation was noticed. *Check the counter
 against your own count on every paste.*
 
+**Draft timing put words a median 1.3 s from where they were spoken.** Word share of a line at
+179 wpm, checked against a real take's transcribed word times (S-107, 157 words): 90th
+percentile 2.6 s, worst 3.1 s. An underline that lands a second late has missed. *Transcribe the
+takes (`word-timestamps.py`) before the final build.*
+
+**An effects stem clipped on its way to its loudness target.** 63 samples at 0 dBFS, from the
+stamp thumps; the mix limiter could not remove the inter-sample overs it made (−0.1 dBTP).
+*Level a stem only as far as its peaks allow, and verify true peak after limiting.*
+
+**Ducking at the obvious settings made the music vanish.** Threshold 0.1, ratio 3 pulled the
+bed 6.8 dB, to 20 dB under speech. *Measure the duck with a speech-like signal; 4 dB was right.*
+
 ## Delivery
 
 **"Compute." and "Generalisation." each fused into the next word.** A one- or two-word heading
@@ -69,6 +81,51 @@ read 77% done. *Linear for processes.*
 
 **Set type appeared before the hand-written heading it belonged to.** Anything beside written text
 needs an explicit start frame.
+
+**Fonts fetched at render time stalled the whole composition.** `@remotion/google-fonts` loads
+from Google during each render; twice a render timed out "waiting for root component to load".
+*Load fonts from local files (`install-kit.mjs` copies them from Fontsource, OFL).*
+
+**A QA probe in a layout effect measured a frame with no width.** The composition wrapper is
+sized after layout effects run; every right-anchored tag "wrapped" to one word per line at
+x −443. *Measure one animation frame later, holding the screenshot with `delayRender`.*
+
+**Re-running remotion-whiteboard's installer overwrote the project's tokens.ts**, the one file
+a project is told to edit. Fixed in that repo: it now keeps the project's copy.
+
+**A centred `WrittenText` with no `x` centred on 0**, half off the frame. Fixed in
+remotion-whiteboard: it now centres on the viewBox.
+
+**Composition props are serialised**, so a shot list of render functions arrived as nothing.
+*Wrap `Film` in a component that binds its own data.*
+
+**SciPy's compiled modules failed to load on macOS.** *The sound script uses numpy only.*
+
+## Picture (v3)
+
+**Both v2 test videos used a sixth of the frame.** Measured median content box: 21% (longform),
+18% (Short). Dark cards of text on a dark ground, no picture in most beats, and the stills
+review passed them, because it had no standard. *Score stills against the rubric, with numbers.*
+
+**The stills review passed two lines of text overlapping (S-107).** Looking at one frame per
+beat finds bugs, not collisions. *Run the QA probe; read the 2-second sheet.*
+
+**Label collisions showed only on the 2-second sheet.** On the v3 pilot, every label that landed
+on a stroke, a stamp or a tag was invisible on the beat midpoints. *Midpoints are not enough.*
+
+**A cut on every line still left 61% of the runtime static.** And a hand-built picture with no
+rule left 35%: the gaps sat wherever a note had finished typing. *Plan one sizeable picture
+event per spoken line, on a cue word (`check-storyboard.py`).*
+
+**Small or slow events do not register.** A 42 px label, a thin arrow, an 18-frame fade: to a
+detector and to the eye. *Events are about 70 × 70 px and arrive within 6 frames.*
+
+**ffmpeg's freezedetect reported "static" while three cells drifted across the frame.** It
+averages change over the whole frame between consecutive frames. *Measure changed area, 0.5 s
+apart (`event-gaps.py`); re-measure the baseline with the same ruler before comparing.*
+
+**A chapter tag that repeated the heading put the same words twice in one frame.** *One series
+tag per video; the heading carries the chapter.*
 
 ## Publishing
 

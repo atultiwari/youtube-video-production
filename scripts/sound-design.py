@@ -3,7 +3,7 @@
 music bed, levelled under the voice.
 
     python3 -I tools/sound-design.py <measure.mp4> --out out/sound [--narration voice.wav]
-        [--beats beats.json] [--picture 0.05,0.62] [--note 0.64,0.95] [--seed 11]
+        [--beats beats.json] [--picture x0,y0,x1,y1] [--note x0,y0,x1,y1] [--seed 11]
 
 <measure.mp4> is the video rendered with decorative motion held still
 (`--props='{"measure":true}'`), at any scale. Every frame is compared with the one before:
@@ -48,6 +48,14 @@ MUSIC_LUFS, SFX_LUFS = -22.0, -24.0
 
 # ---------------------------------------------------------------- analysis
 
+# Zones as fractions of the frame (x0, y0, x1, y1), from the kit's layouts: on 16:9 the picture
+# is left and the note right; on 9:16 the picture is above and the note below.
+ZONES = {
+    "16:9": {"picture": (0.05, 0.10, 0.62, 0.95), "note": (0.64, 0.10, 0.95, 0.95)},
+    "9:16": {"picture": (0.06, 0.15, 0.94, 0.55), "note": (0.06, 0.58, 0.94, 0.81)},
+}
+
+
 def frames(video: Path) -> tuple[np.ndarray, float]:
     probe = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=r_frame_rate",
                             "-of", "csv=p=0", str(video)], capture_output=True, text=True, check=True).stdout.strip()
@@ -57,13 +65,21 @@ def frames(video: Path) -> tuple[np.ndarray, float]:
     return np.frombuffer(raw, np.uint8).reshape(-1, H, W).astype(np.int16), num / den
 
 
-def detect(video: Path, picture: tuple[float, float], note: tuple[float, float]) -> dict:
+def detect(video: Path, picture: tuple[float, ...] | None, note: tuple[float, ...] | None) -> dict:
     f, fps = frames(video)
+    probe = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                            "-of", "csv=p=0", str(video)], capture_output=True, text=True, check=True).stdout.strip()
+    vw, vh = (int(v) for v in probe.split(","))
+    zones = ZONES["16:9" if vw >= vh else "9:16"]
+    picture, note = picture or zones["picture"], note or zones["note"]
     changed = np.abs(np.diff(f, axis=0)) > PIXEL
-    px0, px1 = (int(W * v) for v in picture)
-    nx0, nx1 = (int(W * v) for v in note)
-    pic = changed[:, int(H * 0.1):, px0:px1].mean(axis=(1, 2))
-    note_all = changed[:, int(H * 0.1):, nx0:nx1].mean(axis=(1, 2))
+
+    def zone(z: tuple[float, ...]) -> np.ndarray:
+        x0, y0, x1, y1 = z
+        return changed[:, int(H * y0):int(H * y1), int(W * x0):int(W * x1)].mean(axis=(1, 2))
+
+    pic = zone(picture)
+    note_all = zone(note)
     whole = changed.mean(axis=(1, 2))
 
     drawing = ((pic > 0.00004) & (pic < 0.006)).astype(float)
@@ -255,14 +271,14 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--narration", type=Path)
     ap.add_argument("--beats", type=Path, help="beats.json: a whoosh on every beat boundary")
-    ap.add_argument("--picture", default="0.05,0.62")
-    ap.add_argument("--note", default="0.64,0.95")
+    ap.add_argument("--picture", help="picture zone x0,y0,x1,y1 as fractions (default: from the video's shape)")
+    ap.add_argument("--note", help="note zone x0,y0,x1,y1 as fractions (default: from the video's shape)")
     ap.add_argument("--seed", type=int, default=11)
     args = ap.parse_args()
     if not args.video.exists():
         raise SystemExit(f"no such video: {args.video}")
     args.out.mkdir(parents=True, exist_ok=True)
-    zone = lambda s: tuple(float(v) for v in s.split(","))  # noqa: E731
+    zone = lambda s: tuple(float(v) for v in s.split(",")) if s else None  # noqa: E731
 
     analysis = detect(args.video, zone(args.picture), zone(args.note))
     if args.beats:

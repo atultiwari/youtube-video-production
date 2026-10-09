@@ -30,22 +30,27 @@ from pathlib import Path
 VALIDATE = ("validated", "validation", "2  Validate the claims")
 CAPTURE = ("captured", "captures", "3  Reconnaissance capture")
 RESEARCH = ("researched", "references", "3  Reference research")
-LATER = [
-    ("scripted", "script", "4  Script"),
+SCRIPT = ("scripted", "script", "4  Script")
+STORYBOARD = ("storyboarded", "storyboard", "5a  Storyboard")
+RECORD = [
     ("recorded", "takes", "6  Record the voiceover"),
     ("gridded", "grid", "8  Measure -> grid"),
     ("built", "composition", "10  Build"),
-    ("rendered", "renders", "12  Render"),
 ]
+SOUND = ("sounded", "sound", "10b  Sound")
+RENDER = ("rendered", "renders", "12  Render")
 
 # Step 0 of the skill. An illustrated explainer has no app to capture, so step 3 is reference
 # research instead; a hybrid does both. A STATUS.md without `mode:` predates modes, and every
 # video made before them was a screen tutorial.
+# The storyboard (5a) is for drawn pictures, so tutorials have none. Sound (10b) is for every
+# mode, but only checked when STATUS.md declares a `sound` path: older files predate it.
 MODES = {
-    "tutorial": ("screen tutorial", [VALIDATE, CAPTURE, *LATER]),
-    "illustrated": ("illustrated explainer", [VALIDATE, RESEARCH, *LATER]),
-    "hybrid": ("hybrid", [VALIDATE, RESEARCH, CAPTURE, *LATER]),
+    "tutorial": ("screen tutorial", [VALIDATE, CAPTURE, SCRIPT, *RECORD, SOUND, RENDER]),
+    "illustrated": ("illustrated explainer", [VALIDATE, RESEARCH, SCRIPT, STORYBOARD, *RECORD, SOUND, RENDER]),
+    "hybrid": ("hybrid", [VALIDATE, RESEARCH, CAPTURE, SCRIPT, STORYBOARD, *RECORD, SOUND, RENDER]),
 }
+OPTIONAL = {"storyboard", "sound"}
 
 
 def front_matter(text: str) -> dict:
@@ -117,6 +122,8 @@ def main() -> int:
     done, next_step = {}, None
     for key, path_key, label in steps:
         path = paths.get(path_key)
+        if path is None and path_key in OPTIONAL:
+            continue
         ok = bool(path) and has_content(path)
         done[key] = ok
         mark = "done" if ok else "    "

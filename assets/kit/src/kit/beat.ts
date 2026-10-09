@@ -18,10 +18,14 @@ export interface LineTiming {
   readonly text: string;
   readonly start: number;
   readonly duration: number;
+  /** Exact word starts (seconds into the beat), from word-timestamps.py. Absent in a draft grid. */
+  readonly words?: readonly { readonly word: string; readonly start: number }[];
 }
 
 export interface Lines {
-  readonly wpm: number;
+  /** "draft" (draft-takes.py, word-count timing) or "word-timestamps" (transcribed takes). */
+  readonly source?: string;
+  readonly wpm?: number;
   readonly beats: readonly { beat: string; title: string; lines: readonly LineTiming[] }[];
 }
 
@@ -54,6 +58,10 @@ export const beatTiming = (grid: Grid, lines: Lines, id: string): BeatTiming => 
     const words = wordsOf(l.text);
     const index = words.findIndex((x) => x.toLowerCase().startsWith(w.toLowerCase()));
     if (index < 0) throw new Error(`beat ${id} line ${i}: "${w}" is not spoken in "${l.text}"`);
+    // Exact when the takes have been transcribed; a word-share estimate in a draft grid
+    // (off by a median 1.3 s per word on a real take).
+    const exact = l.words?.[index];
+    if (exact) return Math.round(exact.start * grid.fps);
     return line(i) + Math.round((index / words.length) * l.duration * grid.fps);
   };
   return { id, startFrame: slot.startFrame, durationInFrames: slot.durationFrames, fps: grid.fps, lines: beatLines, line, word };

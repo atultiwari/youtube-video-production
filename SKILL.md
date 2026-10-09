@@ -21,11 +21,8 @@ metadata:
 
 # Making a video, end to end
 
-A runbook. It answers "what do I do next", in order, and names the failure behind each rule so
-you can argue with it rather than obey it.
-
-Everything here was learned making videos with a cloned voice and a Remotion build. The order
-is the same for every subject; what changes is the **mode**, chosen first.
+A runbook: "what do I do next", in order, with the failure behind each rule so you can argue
+with it rather than obey it. The order is the same for every subject; the **mode** changes.
 
 ## 0 · Choose the mode
 
@@ -39,48 +36,44 @@ where reference comes from and what the picture is made of.
 | Step 9 | definitive capture | none | for the app beats only |
 | Picture | app shots, built from captured reference | drawn pictures, through `remotion-whiteboard` | each beat in its own kind |
 
-**Choose by what the viewer must see, not by habit.** If no beat needs a real interface, the
-video is illustrated. Before modes existed, every video was steered toward mock app screens:
-an illustrated pathology baseline was sent to "reconnaissance capture" for an app it never
-showed, and a Short on an abstract idea came out as type on a dark ground with no picture at all.
+**Choose by what the viewer must see, not by habit.** If no beat needs a real interface, it is
+illustrated. Without modes, a pathology baseline was sent to capture an app it never showed.
 
 ## The order, and why it is this order
 
 ```
- 0  Choose the mode           tutorial, illustrated or hybrid
+ 0  Choose the mode           tutorial, illustrated or hybrid; and the style
  1  Decide the piece          angle, audience, one idea
  2  Validate the claims       before a word is scripted
  3  Reference                 capture the app, or research what to draw
  4  Script                    then lint it
- 5  ── APPROVAL GATE ──       a human reads the script before a take is spent
+ 5  ── GATE 1 ──              a human reads the script before a take is spent
+ 5a Storyboard                illustrated: one picture per beat, events on cue words
+ 5b Key frames ── GATE 2 ──   the owner approves the look, on stills
  6  Record the voiceover      browser TTS, one take per beat
  7  Master                    to the delivery target
- 8  Measure → grid            the takes decide every timing
+ 8  Measure → grid → words    the takes decide every timing, to the word
  9  Definitive capture        tutorial and hybrid: the exact flows the script calls for
-10  Build                     Remotion, against the measured grid
-11  Stills review             one frame per beat, before any render
+10  Build                     the kit (illustrated) or app shots (tutorial), on the grid
+10b Sound                     effects from the picture, a bed, ducked under the voice
+11  Visual QA                 probe, fill, event gaps, phone test, a still every 2 s
 12  Render
-13  Publish                   metadata, upload, schedule
+13  Publish                   metadata, chapters, upload, schedule
 ```
 
-**Voice before picture.** The take is the clock. Every beat boundary, animation and cut is
-placed from the *measured* duration of real audio. Never from an estimate — a word-count
-estimate was 25% wrong on a real script, and 89 words were cut to fix a runtime that was never
-over. See `references/mistakes.md`.
+**Voice before picture.** The take is the clock: every beat, animation and cut is placed from
+the *measured* audio, then from each word's transcribed time. A word-count estimate was 25%
+wrong on a whole script, and a median 1.3 s off per word. See `references/mistakes.md`.
 
-**Capture twice, deliberately** (tutorial and hybrid). Reconnaissance capture (step 3) comes
-*before* the script, because you cannot write "and it shows you the tier beside each plan" until
-you have seen whether it does. Definitive capture (step 9) comes *after*, when you know the exact
-flow. Doing it once, in the middle, produces a script that promises things the app does not do
-and footage that misses what the script needs.
+**Capture twice** (tutorial and hybrid): reconnaissance before the script, so it promises only
+what the app does; the definitive recording after, when the flow is known.
 
-**One human gate.** Step 5. Scripts are cheap to change and takes are not.
+**Two human gates.** Gate 1, the script: cheap to change, takes are not. Gate 2, the look: a
+storyboard and three key-frame stills, approved before every beat is built. v2 had no Gate 2,
+and both its test videos came out as type on an empty dark ground.
 
-**Know where you are before doing anything.** A video spans days and several sittings. Each one
-keeps a `STATUS.md`; start by running `scripts/video-status.py` against it, which derives the
-completed steps from the filesystem and surfaces the decisions a person wrote down. Read
-`references/status-and-resuming.md` once, then keep the file current — updating it is the last
-thing you do before stopping, never something reconstructed later.
+**Know where you are first.** Run `scripts/video-status.py` on the video's `STATUS.md`
+(`references/status-and-resuming.md`); update the file last thing before stopping.
 
 ## Non-negotiables
 
@@ -88,26 +81,24 @@ thing you do before stopping, never something reconstructed later.
    often enough that this is not optional.
 2. **Simulated interfaces are built from captured reference, never from memory** (tutorial,
    hybrid). Three rebuilds of one app's composer were wrong until the real thing was measured.
-3. **Invented output is labelled on screen** — `Simulated — illustrative only`.
-4. **Nothing private appears in any frame** — not in a demo, not in a sidebar, not in reference
-   captured from a live account.
+3. **Invented output is labelled on screen** (`Simulated — illustrative only`); schematics say
+   `Simplified picture`.
+4. **Nothing private appears in any frame**: not in a demo, a sidebar, live-account reference,
+   or a slide label (12-pathology-visuals.md).
 5. **Read written form fields back** before believing them. Typed values fail silently.
-6. **Never hand-edit a timing file.** It is generated from the takes.
+6. **Never hand-edit a timing file** (`beats.json`, `lines.json`). They are generated.
 
 ## Skills it orchestrates
 
-This skill decides what happens, and when. The making belongs to other skills; do not repeat
-their content here.
-
-| Skill | Its job in a video |
+| Skill or kit | Its job in a video |
 |---|---|
-| `remotion-whiteboard` | **Required for anything drawn or hand-written:** strokes, written text, the pen and the hand. Install its toolkit into the video project once: `node ~/.claude/skills/remotion-whiteboard/scripts/install.mjs <project>` |
+| this skill's kit | `node <skill>/scripts/install-kit.mjs <project> --style paper-notes`: components, style, fonts, QA and build tools. Installs `remotion-whiteboard`'s toolkit first. |
+| `remotion-whiteboard` | **Required for anything drawn or hand-written**: strokes, written text, the pen. |
 | `motion-design` | easing and choreography for elements that are not drawn |
 | `remotion-best-practices` | Remotion API usage |
 
-**If `remotion-whiteboard` is not available, stop at the build step and say so.** Do not
-improvise a hand or a drawing component. In v2 the hand worked only because one project
-happened to hold a copy of the whiteboard skill; outside it there was no engine.
+**If `remotion-whiteboard` is not available, stop at the build step and say so**; never
+improvise a drawing component. `install-kit.mjs` enforces it.
 
 ## Where the detail lives
 
@@ -118,32 +109,43 @@ Read a file when you reach its stage, not before.
 | `references/01-plan-and-validate.md` | 1–2 |
 | `references/02-capture-reference.md` | 3 and 9: capture, or reference research when illustrated |
 | `references/03-script.md` | 4–5, including the channel asks |
+| `references/07-art-direction.md` | 0 (the style) and 5a–10: the house style, as data |
+| `references/08-storyboard.md` | 5a–5b, Gate 2 |
 | `references/04-voice.md` | 6–8 |
-| `references/05-build.md` | 10–11, including the whiteboard hand |
+| `references/09-motion.md` | 8 (word timing) and 10: arrivals, events every 2–4 s |
+| `references/05-build.md` | 10, tutorial shots and the whiteboard hand |
+| `references/10-sound.md` | 10b |
+| `references/11-visual-qa.md` | 11 |
+| `references/12-pathology-visuals.md` | 3 and 10, for medical pictures |
+| `references/13-longform.md` | videos over 12 minutes, chapters |
 | `references/06-publish.md` | 12–13 |
 | `references/status-and-resuming.md` | resuming a video, or recording a decision |
-| `references/mistakes.md` | when something behaves oddly — read before debugging |
+| `references/mistakes.md` | when something behaves oddly: read before debugging |
 
 ## Scripts that ship with this skill
 
-Self-contained; they do not read anything from a project.
+Each takes `--help`. They read nothing from a project they are not pointed at.
 
-| | |
+| Stage | Scripts |
 |---|---|
-| `scripts/video-status.py` | says which step a video is on, derived from what is on disk |
-| `scripts/check-script.py` | lints narration for the delivery traps that break TTS |
-| `scripts/build-audio-grid.py` | joins per-beat takes, fits languages, writes the frame grid |
-| `scripts/master-audio.py` | gain plus true-peak limiting, iterated to target |
+| status | `video-status.py` (which step a video is on, by mode) |
+| 4–5a | `check-script.py` (TTS traps), `check-storyboard.py` (picture per beat, cue words, gaps) |
+| 5b | `draft-takes.py` (a draft grid before the takes exist, for key frames only) |
+| 7–8 | `master-audio.py`, `build-audio-grid.py`, `word-timestamps.py` (exact word times) |
+| 10 | `install-kit.mjs` (the kit, a style, fonts, tools), `make-paper.py` |
+| 10b | `sound-design.py` |
+| 11 | `frame-fill.py`, `event-gaps.py`, `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/build-all.sh` |
+| 13 | `chapters.py` (YouTube chapters from the grid) |
 
-Run any of them with `--help`. `templates/STATUS.md` is the per-video status file to copy.
+Templates: `templates/STATUS.md`, `templates/STORYBOARD.md`. Styles: `styles/*.json`.
 
 ## Formats
 
-**Short** — 1080×1920, delivered at 2160×3840 (both platforms give a 4K upload more bitrate, and
-type-heavy content starves first). 26–56 seconds. One idea. The opening line decides everything.
+**Short**: 1080×1920, delivered at 2160×3840 (a 4K upload gets more bitrate). 26–56 seconds,
+one idea, the opening line decides everything. Keep the bottom 360 px clear for the Shorts UI.
 
-**Longform** — 1920×1080 at 30fps, seven to twelve minutes. Optional second audio language as an
-alternate track on the same upload, fitted to one shared frame grid.
+**Longform**: 1920×1080 at 30fps; seven to twelve minutes, or 15–30 for an illustrated lecture
+built in 3–5 minute chapters (13-longform.md). Optional second language as an alternate track.
 
 ## What is dated
 

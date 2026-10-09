@@ -1,10 +1,16 @@
 # 10–11 · Build, and review with stills
 
-**Mode matters here.** The sections on app shots (*Never show a whole interface* and *Showing
-detail: magnify over a blur*) apply to tutorial videos and to the app beats of a hybrid. In an
-illustrated video, or a hybrid's concept beats, the picture is drawn with `remotion-whiteboard`
-(see *The whiteboard hand*). Illustrated-mode art direction, storyboard and motion rules are not
-written yet: they come from the v3 pilot's log, not from guesses.
+**Mode matters here.** The sections marked *(tutorial)* apply to tutorial videos and to the app
+beats of a hybrid. An illustrated video, or a hybrid's concept beats, is built from the kit
+(`scripts/install-kit.mjs`): one picture per beat built up on cue words, a note card, the house
+style as data. Read 07-art-direction.md, 08-storyboard.md and 09-motion.md for it; this file
+keeps what both modes share (timing, stills, gotchas) and the tutorial shots.
+
+**The kit in one paragraph.** `Film` places beats on the grid, each on its chapter's paper with
+the series tag. A beat calls `useBeat()` for `line(i)` and `word("cue", i)` frames, draws inside
+`<Picture>` with `Ink`, `Wash`, `Hatch`, `Ring`, `Label`, `Dots`, `Drift`, and writes notes with
+`<NoteCard>`. Wrap `Film` in your own component (composition props are serialised, so beats
+cannot be passed as props). Copy the shape of `src/kit/KitDemo.tsx`.
 
 ## Timing comes from the takes
 
@@ -26,11 +32,15 @@ npx remotion still <composition-id> out.png --frame=N
 
 Seconds instead of minutes, same answer.
 
-**Before calling a build done, render one still at the midpoint of every beat.** It is cheap and
-it catches the beats you have not been looking at. Two real bugs were found this way that
-spot-checking missed.
+**Before calling a build done, render one still at the midpoint of every beat**, then one every
+2 s, and run the checks in 11-visual-qa.md. Midpoints caught two bugs spot-checking missed; the
+2-second sheet caught every label collision the midpoints missed.
 
-## Cut far more often than feels necessary
+## Cut far more often than feels necessary (tutorial)
+
+In an illustrated video the picture changes by being built, not by cutting: the v3 pilot held
+one picture per beat for 20–40 s and still never went 4 s without a visual event. There, cut at
+beat boundaries and plan events instead (09-motion.md). The rule below is for screen recordings.
 
 Measured on a well-performing 8:28 reference: **103 distinct cuts — one every 4.9 seconds**,
 median shot **4.1s**. Half the shots under four seconds, three quarters under six, only twice
@@ -39,7 +49,7 @@ holding past ten.
 A first build averaged one cut every **16 seconds**. That alone was most of what "not engaging"
 meant. Budget several shots per beat, not one.
 
-## Never show a whole interface (app shots)
+## Never show a whole interface (tutorial)
 
 The reference does not do it once. Every app shot is **pushed in on the region of interest**, so
 type appears two to three times the size it is in the product. Complete, accurate, unreadable
@@ -47,7 +57,7 @@ screens are worth nothing on a laptop.
 
 Where the whole screen matters, move the frame — do not ask the viewer's eye to hunt.
 
-## Showing detail: magnify over a blur (app shots)
+## Showing detail: magnify over a blur (tutorial)
 
 The move that carries this genre: blur the app back to texture, darken it, and lay a **framed
 card** over it — gradient border, a header strip naming what is being shown, near-black body,
@@ -56,7 +66,7 @@ text at forty-odd pixels, and a stroke underlining the exact phrase.
 Backgrounds: **pure black for app shots.** A decorative gradient belongs to window-framed shots;
 when the frame pushes into an interface the ground goes to black.
 
-## What replaces a presenter
+## What replaces a presenter (tutorial)
 
 Most videos in this genre keep a circular talking head in a corner, and it is doing one job:
 keeping something alive in frame so a static screen recording does not feel static. Without an

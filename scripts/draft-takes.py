@@ -89,7 +89,7 @@ def main() -> int:
     args.paste.parent.mkdir(parents=True, exist_ok=True)
     args.paste.write_text("\n\n".join(paste) + "\n")
     args.lines.parent.mkdir(parents=True, exist_ok=True)
-    args.lines.write_text(json.dumps({"wpm": WPM, "beats": out}, indent=2) + "\n")
+    args.lines.write_text(json.dumps({"source": "draft", "wpm": WPM, "beats": out}, indent=2) + "\n")
     secs = total_words * 60 / WPM
     print(f"\n{total_words} words = {secs:.1f}s at {WPM} wpm ({int(secs // 60)}:{secs % 60:04.1f})")
     return 0
