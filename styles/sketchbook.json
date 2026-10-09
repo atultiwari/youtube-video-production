@@ -1,6 +1,6 @@
 {
   "name": "sketchbook",
-  "status": "not piloted: numbers from the biopsy build's source (romeailab/claude-code-build/biopsy-journey/js/sketch.js, scenes-*.js) and colours sampled from its render. Pilot it before relying on it.",
+  "status": "not piloted on a real video: numbers from the biopsy build's source (romeailab/claude-code-build/biopsy-journey) and colours sampled from its render. Installs and passes the QA probe on the kit demo at 16:9 and 9:16 (2026-10-09). Pilot it before relying on it.",
   "source": "From Biopsy to Diagnosis (85 s, Claude Code): cream paper, handwriting font, watercolour washes, a drawing pen, numbered captions in a strip at the bottom.",
   "pen": "marker",
   "notes": "caption",
@@ -91,9 +91,9 @@
       "margin": 96,
       "picture": {
         "x": 160,
-        "y": 130,
+        "y": 170,
         "w": 1600,
-        "h": 800
+        "h": 780
       },
       "note": {
         "x": 460,
@@ -107,7 +107,7 @@
       },
       "simplifiedTag": {
         "x": 96,
-        "y": 40,
+        "y": 36,
         "text": "Simplified picture"
       },
       "stamp": {
