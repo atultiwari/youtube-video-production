@@ -69,7 +69,10 @@ other check passed; in the pilot, three rings did the same.
   says it; do not type the same words beside it.
 - **The pointer lands on something.** A note's pointer is its own step,
   `pointStep(id, frames, target)`, where `target` is the step that draws what the note's
-  `anchor` points at; `sequence()` throws if that step has not come first. Placed by hand it
+  `anchor` points at; `sequence()` throws if that step has not come first. Give the target a
+  `where` and use `anchor: s.p0.where`, so the pointer ends exactly where its target is drawn.
+  Target the step that *shows the idea*: the filled tube, the packed cells, not the empty
+  outline drawn before them (mute round 3: "points at an empty tube"). Placed by hand it
   ended on blank paper four times in one video, then four more after a fix, each time because
   the anchor named a later step than the one the pointer followed (mute reviews, 2026-10-09).
 - **Chrome arrives with the beat.** The "Simplified" tag, the chapter tag and the kicker show

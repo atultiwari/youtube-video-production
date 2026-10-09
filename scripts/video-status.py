@@ -32,13 +32,16 @@ CAPTURE = ("captured", "captures", "3  Reconnaissance capture")
 RESEARCH = ("researched", "references", "3  Reference research")
 SCRIPT = ("scripted", "script", "4  Script")
 STORYBOARD = ("storyboarded", "storyboard", "5a  Storyboard")
+# Gate 2 is the owner's decision, not a file: STATUS.md records it as `gate2: <date>`.
+GATE2 = ("approved", "@gate2", "5b  Key frames, Gate 2")
 RECORD = [
     ("recorded", "takes", "6  Record the voiceover"),
     ("gridded", "grid", "8  Measure -> grid"),
     ("built", "composition", "10  Build"),
 ]
 SOUND = ("sounded", "sound", "10b  Sound")
-RENDER = ("rendered", "renders", "12  Render")
+QA = ("checked", "@qa", "11  Visual QA")
+RENDER = ("rendered", "@render", "12  Render")
 
 # Step 0 of the skill. An illustrated explainer has no app to capture, so step 3 is reference
 # research instead; a hybrid does both. A STATUS.md without `mode:` predates modes, and every
@@ -46,9 +49,9 @@ RENDER = ("rendered", "renders", "12  Render")
 # The storyboard (5a) is for drawn pictures, so tutorials have none. Sound (10b) is for every
 # mode, but only checked when STATUS.md declares a `sound` path: older files predate it.
 MODES = {
-    "tutorial": ("screen tutorial", [VALIDATE, CAPTURE, SCRIPT, *RECORD, SOUND, RENDER]),
-    "illustrated": ("illustrated explainer", [VALIDATE, RESEARCH, SCRIPT, STORYBOARD, *RECORD, SOUND, RENDER]),
-    "hybrid": ("hybrid", [VALIDATE, RESEARCH, CAPTURE, SCRIPT, STORYBOARD, *RECORD, SOUND, RENDER]),
+    "tutorial": ("screen tutorial", [VALIDATE, CAPTURE, SCRIPT, *RECORD, SOUND, QA, RENDER]),
+    "illustrated": ("illustrated explainer", [VALIDATE, RESEARCH, SCRIPT, STORYBOARD, GATE2, *RECORD, SOUND, QA, RENDER]),
+    "hybrid": ("hybrid", [VALIDATE, RESEARCH, CAPTURE, SCRIPT, STORYBOARD, GATE2, *RECORD, SOUND, QA, RENDER]),
 }
 OPTIONAL = {"storyboard", "sound"}
 
@@ -90,6 +93,42 @@ def has_content(path: Path) -> bool:
     return path.stat().st_size > 0
 
 
+def voiced(path: Path) -> bool:
+    """Takes with sound in them. Draft takes (draft-takes.py) are silence: timing, not a voice."""
+    import wave
+    for wav in sorted(path.glob("*.wav")) if path.is_dir() else []:
+        try:
+            with wave.open(str(wav)) as w:
+                if w.getsampwidth() != 2:
+                    return True
+                data = w.readframes(min(w.getnframes(), w.getframerate() * 5))
+        except (wave.Error, EOFError):
+            continue
+        samples = memoryview(data).cast("h")
+        if any(abs(x) > 300 for x in samples):
+            return True
+    return False
+
+
+def step_done(path_key: str, paths: dict[str, Path], meta: dict) -> tuple[bool, str]:
+    """Is a step done, and a note on why not when it is worth saying."""
+    renders = paths.get("renders")
+    if path_key == "@gate2":
+        return bool(meta.get("gate2")), "" if meta.get("gate2") else "   (record `gate2: <date>` in STATUS.md)"
+    if path_key == "@qa":
+        ok = bool(renders) and all((renders / f).exists() for f in ("qa.json", "focus.txt"))
+        return ok, ""
+    if path_key == "@render":
+        ok = bool(renders) and renders.exists() and any(
+            f.suffix == ".mp4" and f.stem not in ("measure",) and not f.stem.endswith("-silent")
+            for f in renders.iterdir())
+        return ok, ""
+    path = paths.get(path_key)
+    if path_key == "takes" and path is not None and has_content(path) and not voiced(path):
+        return False, "   (draft takes only: silent timing, not a recording)"
+    return bool(path) and has_content(path), "" if path else "   (no path declared)"
+
+
 def section(text: str, name: str) -> list[str]:
     match = re.search(rf"^##\s+{re.escape(name)}\s*$(.*?)(?=^##\s|\Z)", text, re.M | re.S)
     if not match:
@@ -121,17 +160,15 @@ def main() -> int:
 
     done, next_step = {}, None
     for key, path_key, label in steps:
-        path = paths.get(path_key)
-        if path is None and path_key in OPTIONAL:
+        if paths.get(path_key) is None and path_key in OPTIONAL:
             continue
-        ok = bool(path) and has_content(path)
+        ok, note = step_done(path_key, paths, meta)
         done[key] = ok
         mark = "done" if ok else "    "
         if not ok and next_step is None:
             next_step = label
             mark = "NEXT"
-        where = "" if path else "   (no path declared)"
-        print(f"  [{mark}] {label}{where}")
+        print(f"  [{mark}] {label}{note}")
 
     # The grid is the one artefact worth reading rather than merely counting.
     grid = paths.get("grid")

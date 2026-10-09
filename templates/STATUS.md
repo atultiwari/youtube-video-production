@@ -4,6 +4,7 @@ title: Use ChatGPT Better Than 99% of Doctors
 format: longform            # longform | short
 mode: tutorial              # tutorial | illustrated | hybrid  (SKILL.md, step 0)
 languages: [en, hi]         # first is the reference language
+gate2:              # date the owner approved the key frames (illustrated, hybrid)
 paths:
   script: docs/longform/L-001/VOICEOVER.md
   storyboard: docs/longform/L-001/STORYBOARD.md  # illustrated and hybrid

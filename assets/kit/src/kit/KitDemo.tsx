@@ -59,7 +59,7 @@ const DemoBeat: React.FC = () => {
       note(1),
       { id: "tissue", at: b.word("wall", 1), dur: 18, where: [w / 2, y + 300] },
       // The arrow, its highlight and the protein dots: one place; dur covers the last dot.
-      { id: "leak", at: b.word("escapes", 1), dur: 16 + dotsFrames(3), where: [w / 2, y + 200] },
+      { id: "leak", at: b.word("escapes", 1), dur: 16 + dotsFrames(3), where: [w / 2, y + 240] },
       pointStep("p1", MOTION.pointerFrames, "leak"),
       // The ring, then the name of what it rings, on it: a label in place, not a corner stamp.
       { id: "ring", at: b.word("tissue", 1), dur: MOTION.ringFrames + 4, where: [w / 2, y + 240] },
@@ -83,8 +83,8 @@ const DemoBeat: React.FC = () => {
         <Label text="exudate" x={w / 2 + 290} y={y + 250} at={s.ring.from + MOTION.ringFrames} color={C.accent} anchor="start" />
       </Picture>
       <NoteCard chapter={C} kicker="What leaks?" kickerAt={s.n0.from} notes={[
-        { at: s.n0.from, pointAt: s.p0.from, text: NOTES[0], underline: { phrase: "red cells", at: s.n0.from }, anchor: [w / 2, y] },
-        { at: s.n1.from, pointAt: s.p1.from, text: NOTES[1], underline: { phrase: "into the tissue", at: s.n1.from }, anchor: [w / 2, y + 240] },
+        { at: s.n0.from, pointAt: s.p0.from, text: NOTES[0], underline: { phrase: "red cells", at: s.n0.from }, anchor: s.p0.where },
+        { at: s.n1.from, pointAt: s.p1.from, text: NOTES[1], underline: { phrase: "into the tissue", at: s.n1.from }, anchor: s.p1.where },
       ]} />
     </>
   );

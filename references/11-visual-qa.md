@@ -9,7 +9,7 @@ empty and, in one, text overlapping text. This is the same step with a standard.
 In a project with the kit installed:
 
 ```
-tools/build-all.sh <composition> <key> [--narration public/<key>/grid/en-narration.wav]
+tools/build-all.sh <composition> <key> [--narration public/<key>/grid/en-narration.wav] [--deliver-4k]
 ```
 
 It runs, in the order the checks depend on each other:
@@ -74,5 +74,5 @@ nothing on screen the reviewer could not name.
 
 ## Score it
 
-Score the 2-second sheet against `docs/v3-rubric.md` (in the skills repo), with the numbers
+Score the 2-second sheet against `rubric.md`, with the numbers
 above as evidence, and add any new failure to `mistakes.md`.

@@ -36,6 +36,20 @@ const fail = (m) => {
 };
 
 const args = process.argv.slice(2);
+const USAGE = `Install the v3 component kit into a Remotion project.
+
+  node <skill>/scripts/install-kit.mjs <project> [--style paper-notes|sketchbook]
+
+<project> is required (use . for the current directory). Idempotent: re-running updates the kit
+and tools and changes nothing else.`;
+if (args.includes("--help") || args.includes("-h")) {
+  console.log(USAGE);
+  process.exit(0);
+}
+if (!args.some((a, i) => !a.startsWith("--") && args[i - 1] !== "--style")) {
+  console.log(USAGE);
+  process.exit(2);
+}
 const styleArg = (() => {
   const eq = args.find((a) => a.startsWith("--style="));
   if (eq) return eq.slice("--style=".length);

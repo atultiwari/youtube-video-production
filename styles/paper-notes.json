@@ -92,7 +92,8 @@
     "nucleus": "#4B3F8F",
     "eosin": "#EBA3BE",
     "skin": "#E9C2A6",
-    "skinShade": "#D49C80"
+    "skinShade": "#D49C80",
+    "skinTones": ["#F6D7C3", "#E9C2A6", "#D2A07C", "#B07A55", "#8A5A3B", "#5E3A26"]
   },
   "paper": {
     "grain": "paper/grain.png",

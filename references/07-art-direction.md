@@ -2,7 +2,7 @@
 
 v2 had a production process and almost no design layer: every frame was a dark card on a dark
 ground, a sixth of the frame used, no picture. This file is the design layer. Every number
-here was measured in the v3 pilot (`pathology-notes/pilot-01-acute-inflammation/PILOT-LOG.md`),
+here was measured in the v3 pilot (an 8-beat longform built and watched muted three times),
 not chosen by taste; the reason for each rule is the failure that produced it.
 
 ## The style is data
@@ -29,15 +29,20 @@ the biopsy sketchbook build (the drawing).
 - **Picture left, note right (16:9); picture above, note below (9:16).** The picture zone is
   the content; the note is its caption.
 - **A note card**: serif, typed in at 32 characters a second, the key phrase underlined in the
-  chapter accent on the frame it is spoken, joined to the exact spot by a pointer line.
+  chapter accent as it is typed, joined by a pointer line to the feature, once that is drawn.
 - **Ink with a hand in it**: a jittered stroke plus a faint second pass, drawn on by a marker
   pen; held frames re-jitter 8 times a second (line boil) so nothing is ever frozen.
 - **Watercolour washes** under the ink, **hatching** for shade and tissue.
 - **A pen-written heading** carries the chapter ("1 · Vasodilation"); one constant **series
   tag** top right carries the video. Repeating the chapter in the tag put the same words twice
   in one frame (pilot D5).
-- **Stamps** for a verdict or a date ("Lewis · 1927", "= the wheal"); **"Simplified picture"**
-  on every schematic, so no still can pass for a micrograph.
+- **A verdict or a name is a label on the thing it marks**, not a stamp in a corner: muted
+  viewers lost the drawing every time a stamp pulled the eye away, and could not say who
+  "Lewis · 1927" was (pilot, rounds 1–2). **"Simplified picture"** on every schematic, from the
+  beat's first frame, so no still can pass for a micrograph.
+- **Skin in more than one tone.** `tissue.skinTones` is a six-step ramp, light to dark; when
+  people or patients are drawn, use several. Brief B needed the darkest tones for its point
+  (models trained on light skin) and the style had one.
 
 ## Numbers that matter
 
@@ -62,6 +67,13 @@ From the `never` list in each style, each one a failure seen:
 - text under the layout's minimum;
 - a number the viewer might act on drawn by hand: numbers are typeset (remotion-whiteboard);
 - a picture event that is small or slow, counted as the line's event (see 09-motion.md).
+- a symbol with no words: a "?" or an unlabelled circle is the one mark a muted viewer cannot read;
+- a Latin or technical term without its meaning beside it ("functio laesa · loss of function");
+- a number before its measure is named (define SG before "SG > 1.020");
+- a stamp or label in a fixed corner, away from the thing it marks;
+- a channel ask in the middle of a chapter: asks go at a beat boundary or on the end card.
+
+The last five came from watching the pilot with the sound off (`templates/MUTE-REVIEW.md`).
 
 ## Fonts
 

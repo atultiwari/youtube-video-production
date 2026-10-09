@@ -119,7 +119,7 @@ Read a file when you reach its stage, not before.
 | `references/09-motion.md` | 8 (word timing) and 10: arrivals, events every 2–4 s |
 | `references/05-build.md` | 10, tutorial shots and the whiteboard hand |
 | `references/10-sound.md` | 10b |
-| `references/11-visual-qa.md` | 11 |
+| `references/11-visual-qa.md`, `references/rubric.md` | 11 |
 | `references/12-pathology-visuals.md` | 3 and 10, for medical pictures |
 | `references/13-longform.md` | videos over 12 minutes, chapters |
 | `references/06-publish.md` | 12–13 |

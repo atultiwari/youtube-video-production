@@ -13,7 +13,7 @@ With `--lines` (from draft-takes.py, or regenerated from the real takes):
 - no stretch of a beat goes longer than `--max-gap` seconds (default 4) without a visual event.
   Event times use the kit's own formula: line start + the word's share of the line.
 
-Exit status 1 if anything is flagged. Every rule names a measured failure: see the v3 pilot log.
+Exit status 1 if anything is flagged. Every rule names a measured failure: see references/08-storyboard.md.
 """
 from __future__ import annotations
 

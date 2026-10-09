@@ -27,6 +27,10 @@ Rules, each from a measured failure:
 | Every spoken line gets at least one **sizeable** picture event on a cue word | pilot: gaps sat exactly where a line's note had finished typing and nothing else moved |
 | No stretch over 4 s without a visual event | the rubric's measure; v2 builds sat static for over half the runtime (52%, 53%) |
 | An event is big (≥ about 70 × 70 px changed) and quick (≤ 6 frames to arrive) | a 42 px label, a thin arrow or an 18-frame fade does not register as an event (pilot F6, F7) |
+| **Short:** frame 0 already shows the hook (the picture or the question), never blank paper | the scroll decides on the first frame; brief B opened on paper and a series tag |
+| **Short:** a pen-written heading on the first beat at most; after that the note carries the beat | at 3.5 frames a character, a heading plus a note filled most of a 6–8 s beat and pushed a label past the cut (brief B) |
+| **Short:** hold the closing card 1.5 s (`build-audio-grid.py --end-hold 1.5`) | without it the closing question was on screen for under a second |
+| **9:16:** a pointer needs about a second before the next note replaces it; in a tighter beat, drop it and label the feature on the picture | brief B's pointers only flashed, and a muted viewer read them as glitches |
 
 Then lint it:
 

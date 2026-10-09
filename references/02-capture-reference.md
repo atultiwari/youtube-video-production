@@ -87,6 +87,10 @@ picture will show until you have looked at the real thing.
 
 - **Look at the real thing.** Micrographs, atlas plates, gross specimens, and the everyday object
   a metaphor will borrow from.
+- **An abstract topic has a real thing too.** For a concept with no specimen (how a model learns,
+  a statistic, a bias), the real thing is the primary paper's own figures and numbers, and the
+  everyday object the metaphor borrows from (a stack of case files, a tally sheet). Note which
+  figure a chart is redrawn from; brief B redrew its bars from the paper, not from memory.
 - **Keep it in the video's `references` folder**, the path declared in `STATUS.md`: the images
   you looked at, their sources, and a line on what each one settles. `video-status.py` counts a
   non-empty folder as step 3 done.

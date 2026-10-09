@@ -44,6 +44,9 @@ def fill(path: Path) -> float:
 
 
 def main() -> int:
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print(__doc__)
+        return 0
     if len(sys.argv) < 2:
         print(__doc__)
         return 2

@@ -78,7 +78,8 @@
     "nucleus": "#6D4C93",
     "eosin": "#EBB8C2",
     "skin": "#F0CFC2",
-    "skinShade": "#D4B2AD"
+    "skinShade": "#D4B2AD",
+    "skinTones": ["#F6D7C3", "#E9C2A6", "#D2A07C", "#B07A55", "#8A5A3B", "#5E3A26"]
   },
   "paper": {
     "grain": "paper/grain.png",
@@ -192,6 +193,11 @@
     "handwriting for anything longer than a caption: Caveat is hard to read in long lines",
     "dark mock-UI or app chrome in an illustrated video",
     "a frame of text with no picture",
-    "a number the viewer might act on drawn by hand: numbers are typeset"
+    "a number the viewer might act on drawn by hand: numbers are typeset",
+    "a symbol with no words: a '?' or an unlabelled circle is the one mark a muted viewer cannot read",
+    "a Latin or technical term without its meaning beside it (functio laesa · loss of function)",
+    "a number before the measure it belongs to is named (define SG before SG > 1.020)",
+    "a stamp or label in a fixed corner, away from the thing it marks",
+    "a channel ask in the middle of a chapter: asks go at a beat boundary or the end card"
   ]
 }

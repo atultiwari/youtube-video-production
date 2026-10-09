@@ -86,6 +86,9 @@ def locate(start: float, grid: dict, lines: dict) -> str:
 
 
 def main() -> int:
+    if "-h" in sys.argv or "--help" in sys.argv:
+        print(__doc__)
+        return 0
     args = [a for a in sys.argv[1:] if not a.startswith("--") and not a.replace(".", "").isdigit()]
     if len(args) != 3:
         print(__doc__)

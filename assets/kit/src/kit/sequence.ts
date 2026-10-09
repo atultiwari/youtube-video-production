@@ -40,6 +40,11 @@ export interface Slot {
   readonly to: number;
   /** How many frames after its cue the step had to wait. */
   readonly late: number;
+  /**
+   * Where the step happens; for a pointer, its target's place. Use it as the note's `anchor`
+   * (`anchor: s.p0.where`) so the pointer cannot end anywhere but on what it points at.
+   */
+  readonly where?: readonly [number, number];
 }
 
 export type Sequence = Readonly<Record<string, Slot>> & { readonly __steps: readonly string[] };
@@ -77,7 +82,7 @@ export const sequence = (
       ? Math.round((EYE_TRAVEL * Math.hypot(where[0] - last[0], where[1] - last[1])) / diagonal)
       : 0;
     const from = Math.max(step.at, free + travel);
-    out[step.id] = { from, to: from + step.dur, late: from - step.at };
+    out[step.id] = where ? { from, to: from + step.dur, late: from - step.at, where } : { from, to: from + step.dur, late: from - step.at };
     free = from + step.dur + gap;
     last = where ?? last;
   }

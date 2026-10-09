@@ -71,6 +71,9 @@ def main() -> int:
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--tail", type=float, default=0.45,
                         help="pad per beat so a cut never lands on the last syllable")
+    parser.add_argument("--end-hold", type=float, default=0.0,
+                        help="extra seconds on the last beat, so a closing card or question can be "
+                             "read (Shorts: 1.5)")
     parser.add_argument("--rate", type=int, default=48000)
     args = parser.parse_args()
 
@@ -126,6 +129,8 @@ def main() -> int:
             longest = max(longest, length[(lang, beat)])
             print(f"{beat:<6}{ref:>8.1f}s{raw:>8.1f}s{tempo:>8.3f}x{longest - ref:>9.1f}s")
         slots[beat] = int(round((longest + args.tail) * args.fps))
+    if args.end_hold > 0:
+        slots[beats[-1]] += int(round(args.end_hold * args.fps))
     print()
 
     grid, frame = [], 0
