@@ -19,7 +19,7 @@ export interface Note {
   /** Local frame the note starts typing. */
   readonly at: number;
   readonly text: string;
-  /** Phrase to underline, and the frame it is spoken. */
+  /** Phrase to underline; it is underlined as it is typed (`at` is kept for older beats). */
   readonly underline?: { readonly phrase: string; readonly at: number };
   /** Where the pointer lands, in picture coordinates. */
   readonly anchor?: readonly [number, number];
@@ -62,10 +62,8 @@ const Pointer: React.FC<{ from: [number, number]; anchor: readonly [number, numb
 
 /** Text typed in place: untyped characters keep their space, so nothing reflows. */
 const Typed: React.FC<{ text: string; shown: number; underline?: Note["underline"]; typedAt: number; color: string }> = ({
-  text, shown, underline, typedAt, color,
+  text, shown, underline, color,
 }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
   const visible = (from: number, to: number) => {
     const cut = Math.max(from, Math.min(to, shown));
     return (
@@ -79,9 +77,9 @@ const Typed: React.FC<{ text: string; shown: number; underline?: Note["underline
   const start = text.indexOf(underline.phrase);
   if (start < 0) throw new Error(`underline "${underline.phrase}" is not in the note "${text}"`);
   const end = start + underline.phrase.length;
-  // Lands on the spoken word, but never before the phrase has been typed.
-  const u0 = Math.max(underline.at, typedAt + typeFrames(end, fps));
-  const u = interpolate(frame, [u0, u0 + MOTION.underlineFrames], [0, 1], clamp01);
+  // The underline grows with the phrase as it is typed, so it never draws on its own later,
+  // while the next step draws somewhere else (pilot, mute round 2).
+  const u = Math.max(0, Math.min(1, (shown - start) / (end - start)));
   return (
     <>
       {visible(0, start)}

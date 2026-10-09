@@ -19,6 +19,10 @@ Reports the share of the runtime in split focus, and the share in *sustained* sp
 of 0.3 s or more. Shorter runs are handoffs, one step's last frames meeting the next step's
 first, and the eye follows those. Target: sustained split under 5% of the runtime, and no run
 longer than 0.5 s. With --grid/--lines it says where the worst runs are.
+
+It also counts **far arrivals**: split moments, however brief, whose regions are more than a
+third of the frame's diagonal apart (two labels popping up in opposite corners at once). Too
+short to be sustained, they still sent a muted viewer's eye two ways (pilot, round 2). Target: 0.
 """
 from __future__ import annotations
 
@@ -34,6 +38,7 @@ CELL = 10  # px at 480 wide: 48 x 27 cells
 PIXEL = 24
 MIN_CELLS = 3
 TRANSITION = 0.25  # share of the frame changing at once: a cut or a dissolve
+FAR = 1 / 3  # share of the frame diagonal: regions this far apart compete for the eye
 
 
 def frames(video: Path, rate: int):
@@ -50,8 +55,8 @@ def frames(video: Path, rate: int):
         raise SystemExit(f"ffmpeg could not read {video}")
 
 
-def regions(changed: np.ndarray) -> int:
-    """Connected groups of active cells (8-neighbour, after a one-cell dilation)."""
+def regions(changed: np.ndarray) -> list[tuple[float, float]]:
+    """Centres (cell units) of connected groups of active cells (8-neighbour, one-cell dilation)."""
     gh, gw = H // CELL, W // CELL
     cells = changed[: gh * CELL, : gw * CELL].reshape(gh, CELL, gw, CELL).any(axis=(1, 3))
     grown = cells.copy()
@@ -59,24 +64,33 @@ def regions(changed: np.ndarray) -> int:
         for dx in (-1, 0, 1):
             grown |= np.roll(np.roll(cells, dy, axis=0), dx, axis=1)
     seen = np.zeros_like(grown)
-    count = 0
+    centres: list[tuple[float, float]] = []
     for y in range(gh):
         for x in range(gw):
             if not grown[y, x] or seen[y, x]:
                 continue
-            stack, size = [(y, x)], 0
+            stack, size, sy, sx = [(y, x)], 0, 0, 0
             seen[y, x] = True
             while stack:
                 cy, cx = stack.pop()
-                size += int(cells[cy, cx])
+                if cells[cy, cx]:
+                    size, sy, sx = size + 1, sy + cy, sx + cx
                 for ny in (cy - 1, cy, cy + 1):
                     for nx in (cx - 1, cx, cx + 1):
                         if 0 <= ny < gh and 0 <= nx < gw and grown[ny, nx] and not seen[ny, nx]:
                             seen[ny, nx] = True
                             stack.append((ny, nx))
             if size >= MIN_CELLS:
-                count += 1
-    return count
+                centres.append((sy / size, sx / size))
+    return centres
+
+
+def spread(centres: list[tuple[float, float]]) -> float:
+    """Largest distance between two region centres, as a share of the frame diagonal."""
+    if len(centres) < 2:
+        return 0.0
+    d = max(float(np.hypot(a[0] - b[0], a[1] - b[1])) for i, a in enumerate(centres) for b in centres[i + 1:])
+    return d / float(np.hypot(H // CELL, W // CELL))
 
 
 def locate(t: float, grid: dict | None, lines: dict | None) -> str:
@@ -102,22 +116,26 @@ def main() -> int:
     args = ap.parse_args()
     grid = json.loads(args.grid.read_text()) if args.grid else None
     lines = {b["beat"]: b["lines"] for b in json.loads(args.lines.read_text())["beats"]} if args.lines else None
-    counts, prev = [], None
+    counts, far, prev = [], [], None
     for cur in frames(args.video, args.rate):
         if prev is not None:
             changed = np.abs(cur - prev) > PIXEL
-            counts.append(1 if changed.mean() > TRANSITION else regions(changed))
+            found = [(0.0, 0.0)] if changed.mean() > TRANSITION else regions(changed)
+            counts.append(len(found))
+            far.append(spread(found) > FAR)
         prev = cur
     c = np.array(counts)
     split = c >= 2
     active = c >= 1
     dt = 1 / args.rate
-    runs, start = [], None
+    runs, start, far_at = [], None, []
     for i, s in enumerate(list(split) + [False]):
         if s and start is None:
             start = i
         elif not s and start is not None:
             runs.append((start * dt, (i - start) * dt))
+            if any(far[start:i]):
+                far_at.append(start * dt)
             start = None
     runs.sort(key=lambda r: -r[1])
     for t, d in runs[:8]:
@@ -130,6 +148,8 @@ def main() -> int:
     print(f"\nsustained split focus {sustained / max(total, 1e-9) * 100:.1f}% of the runtime (runs >= 0.3 s); "
           f"all split {share_all:.0f}% ({share_active:.0f}% of the time anything moves); "
           f"longest {longest:.1f} s; max regions at once {c.max() if len(c) else 0}")
+    where = ", ".join(f"{t:.1f}s {locate(t, grid, lines)}".strip() for t in far_at[:40])
+    print(f"far arrivals {len(far_at)} (two places over 1/3 of the frame apart at once){': ' + where if where else ''}")
     if args.json:
         args.json.write_text(json.dumps({"rate": args.rate, "regions": c.tolist()}))
     return 0

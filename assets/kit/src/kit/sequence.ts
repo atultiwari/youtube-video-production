@@ -28,6 +28,11 @@ export interface Step {
    * whole picture). Notes have no `where`: the note column is home, and the eye returns there.
    */
   readonly where?: readonly [number, number];
+  /**
+   * For a pointer: the step that draws what it points at. That step must come first, or the
+   * pointer lands on blank paper (muted viewer, pilot round 2): `sequence` throws if it does not.
+   */
+  readonly target?: string;
 }
 
 export interface Slot {
@@ -57,18 +62,24 @@ export const sequence = (
 ): Sequence => {
   const out: Record<string, Slot> = {};
   const diagonal = Math.hypot(size[0], size[1]);
+  const places: Record<string, readonly [number, number] | undefined> = {};
   let free = 0;
   let last: readonly [number, number] | undefined;
   for (const step of steps) {
     if (out[step.id]) throw new Error(`sequence: step "${step.id}" is listed twice`);
     if (!(step.dur > 0)) throw new Error(`sequence: step "${step.id}" needs a positive duration`);
-    const travel = last && step.where
-      ? Math.round((EYE_TRAVEL * Math.hypot(step.where[0] - last[0], step.where[1] - last[1])) / diagonal)
+    if (step.target !== undefined && !out[step.target]) {
+      throw new Error(`sequence: pointer "${step.id}" points at "${step.target}", which is not drawn yet: list it after "${step.target}"`);
+    }
+    const where = step.where ?? (step.target !== undefined ? places[step.target] : undefined);
+    places[step.id] = where;
+    const travel = last && where
+      ? Math.round((EYE_TRAVEL * Math.hypot(where[0] - last[0], where[1] - last[1])) / diagonal)
       : 0;
     const from = Math.max(step.at, free + travel);
     out[step.id] = { from, to: from + step.dur, late: from - step.at };
     free = from + step.dur + gap;
-    last = step.where ?? last;
+    last = where ?? last;
   }
   return Object.assign(out, { __steps: steps.map((s) => s.id) }) as Sequence;
 };
@@ -82,9 +93,11 @@ export const noteStep = (id: string, at: number, text: string, fps: number, type
 
 /**
  * The pointer from a note to its feature, placed after the step that draws the feature, so it
- * lands on something. Drawn first, it ended on blank paper (muted viewers, 2026-10-09).
+ * lands on something. Drawn first, it ended on blank paper (muted viewers, 2026-10-09). Name the
+ * `target` step (the one that draws what the note's `anchor` points at) and `sequence` checks it.
  */
-export const pointStep = (id: string, pointerFrames: number): Step => ({ id, at: 0, dur: pointerFrames });
+export const pointStep = (id: string, pointerFrames: number, target?: string): Step =>
+  target === undefined ? { id, at: 0, dur: pointerFrames } : { id, at: 0, dur: pointerFrames, target };
 
 /** The most a step waited past its cue: a large value means the beat is overfull. */
 export const maxLate = (s: Sequence): number => Math.max(0, ...s.__steps.map((id) => s[id].late));
