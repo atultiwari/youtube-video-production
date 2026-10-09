@@ -28,7 +28,8 @@ The rubric's criterion 5, and the most common way an otherwise good frame dies. 
 
 - v2 builds sat static (no event for 4 s or more) for **52%** (longform) and **53%** (Short)
   of their runtime, even with a cut on every line.
-- The pilot's first build, with drawings and notes but no rule, still sat static for **35%**.
+- The pilot's first build, with drawings and notes but no rule, still sat static for **35%**
+  (measured with ffmpeg freezedetect, which undercounts; the true share was higher).
   The gaps were always the same place: after a line's note finished typing, until the next line.
 - With one sizeable picture event per line, and a second on long lines, it reached **0%**.
 
