@@ -1,0 +1,197 @@
+{
+  "name": "sketchbook",
+  "status": "not piloted: numbers from the biopsy build's source (romeailab/claude-code-build/biopsy-journey/js/sketch.js, scenes-*.js) and colours sampled from its render. Pilot it before relying on it.",
+  "source": "From Biopsy to Diagnosis (85 s, Claude Code): cream paper, handwriting font, watercolour washes, a drawing pen, numbered captions in a strip at the bottom.",
+  "pen": "marker",
+  "notes": "caption",
+  "fonts": {
+    "serif": {
+      "family": "Caveat",
+      "fontsource": "caveat",
+      "licence": "OFL-1.1",
+      "weights": [
+        "500",
+        "600",
+        "700"
+      ],
+      "italic": []
+    },
+    "sans": {
+      "family": "Caveat",
+      "fontsource": "caveat",
+      "licence": "OFL-1.1",
+      "weights": [
+        "500",
+        "600",
+        "700"
+      ],
+      "italic": []
+    }
+  },
+  "ink": {
+    "line": "#2D2824",
+    "soft": "#6B5D52",
+    "card": "#F2E2C4",
+    "cardEdge": "#9A5A1E"
+  },
+  "marker": {
+    "body": "#3B3B3B",
+    "rim": "rgba(17,17,17,0.6)"
+  },
+  "chapters": {
+    "haematoxylin": {
+      "accent": "#6D4C93",
+      "ground": "#F3EBDA",
+      "wash": "#B7A6D2"
+    },
+    "eosin": {
+      "accent": "#B2445F",
+      "ground": "#F3EBDA",
+      "wash": "#EBB8C2"
+    },
+    "formalin": {
+      "accent": "#3F6D94",
+      "ground": "#F3EBDA",
+      "wash": "#BCD9EA"
+    },
+    "wax": {
+      "accent": "#9A6A12",
+      "ground": "#F3EBDA",
+      "wash": "#E7C79A"
+    },
+    "slide": {
+      "accent": "#6D3A40",
+      "ground": "#F3EBDA",
+      "wash": "#F0CFC2"
+    },
+    "neutral": {
+      "accent": "#2D2824",
+      "ground": "#F3EBDA",
+      "wash": "#D8CDB8"
+    }
+  },
+  "tissue": {
+    "blood": "#C0392B",
+    "bloodWash": "#F0CFC2",
+    "plasma": "#F3D9A4",
+    "protein": "#826EA7",
+    "nucleus": "#6D4C93",
+    "eosin": "#EBB8C2",
+    "skin": "#F0CFC2",
+    "skinShade": "#D4B2AD"
+  },
+  "paper": {
+    "grain": "paper/grain.png",
+    "vignette": "rgba(90,60,30,0.22)"
+  },
+  "layouts": {
+    "16:9": {
+      "width": 1920,
+      "height": 1080,
+      "margin": 96,
+      "picture": {
+        "x": 160,
+        "y": 130,
+        "w": 1600,
+        "h": 800
+      },
+      "note": {
+        "x": 460,
+        "w": 1000,
+        "centreY": 1006,
+        "kickerY": 0,
+        "pointerFrom": "none"
+      },
+      "tag": {
+        "top": 40
+      },
+      "simplifiedTag": {
+        "x": 96,
+        "y": 40,
+        "text": "Simplified picture"
+      },
+      "stamp": {
+        "x": 1600,
+        "y": 180
+      },
+      "type": {
+        "note": 50,
+        "noteLine": 1.1,
+        "kicker": 40,
+        "tag": 40,
+        "label": 40,
+        "heading": 64,
+        "stamp": 44,
+        "min": 36
+      }
+    },
+    "9:16": {
+      "width": 1080,
+      "height": 1920,
+      "margin": 72,
+      "picture": {
+        "x": 72,
+        "y": 300,
+        "w": 936,
+        "h": 740
+      },
+      "note": {
+        "x": 72,
+        "w": 936,
+        "centreY": 1380,
+        "kickerY": 1140,
+        "pointerFrom": "none"
+      },
+      "tag": {
+        "top": 150
+      },
+      "simplifiedTag": {
+        "x": 72,
+        "y": 1058,
+        "text": "Simplified"
+      },
+      "stamp": {
+        "x": 800,
+        "y": 1090
+      },
+      "safeBottom": 360,
+      "type": {
+        "note": 58,
+        "noteLine": 1.1,
+        "kicker": 48,
+        "tag": 48,
+        "label": 48,
+        "heading": 76,
+        "stamp": 48,
+        "min": 48
+      }
+    }
+  },
+  "stroke": {
+    "standard": 3.2,
+    "cell": 2.6,
+    "vessel": 3.6,
+    "emphasis": 7,
+    "scaffold": 2.4,
+    "jitter": 1.8,
+    "ghostOpacity": 0.32
+  },
+  "motion": {
+    "typeCps": 28,
+    "boilFps": 8,
+    "pointerFrames": 12,
+    "underlineFrames": 9,
+    "groundWashFrames": 18,
+    "highlightWashFrames": 6,
+    "stampFrames": 9,
+    "ringFrames": 14,
+    "beatDissolve": 12,
+    "writeFramesPerChar": 3.5
+  },
+  "never": [
+    "handwriting for anything longer than a caption: Caveat is hard to read in long lines",
+    "dark mock-UI or app chrome in an illustrated video",
+    "a frame of text with no picture",
+    "a number the viewer might act on drawn by hand: numbers are typeset"
+  ]
+}

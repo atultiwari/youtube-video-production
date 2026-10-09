@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+/**
+ * Render a list of stills with one bundle (v2 step 11: one frame per beat, before any render).
+ *
+ *   node tools/stills.mjs <composition> <beats.json> <outDir> midpoints|every:<seconds>
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { bundle } from "@remotion/bundler";
+import { renderStill, selectComposition } from "@remotion/renderer";
+
+const [id, gridPath, outDir, mode] = process.argv.slice(2);
+if (!id || !gridPath || !outDir || !mode) {
+  console.error("usage: node tools/stills.mjs <composition> <beats.json> <outDir> midpoints|every:<seconds>");
+  process.exit(1);
+}
+
+const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts") });
+const composition = await selectComposition({ serveUrl, id });
+const grid = JSON.parse(fs.readFileSync(gridPath, "utf8"));
+
+const frames =
+  mode === "midpoints"
+    ? grid.beats.map((b) => ({ name: `beat-${b.beat}`, frame: b.startFrame + Math.floor(b.durationFrames / 2) }))
+    : (() => {
+        const step = Math.round(Number(mode.split(":")[1]) * composition.fps);
+        return Array.from({ length: Math.ceil(composition.durationInFrames / step) }, (_, i) => ({
+          name: `t-${String(i * step).padStart(5, "0")}`,
+          frame: i * step,
+        }));
+      })();
+
+fs.mkdirSync(outDir, { recursive: true });
+for (const { name, frame } of frames) {
+  await renderStill({ composition, serveUrl, frame, output: path.join(outDir, `${name}.png`) });
+  process.stdout.write(`${name} (${frame})  `);
+}
+console.log(`\n${frames.length} stills → ${outDir}`);

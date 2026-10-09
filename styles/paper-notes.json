@@ -1,0 +1,213 @@
+{
+  "name": "paper-notes",
+  "status": "16:9 piloted (pathology-notes/pilot-01-acute-inflammation, 2026-10-09); 9:16 derived from it, not piloted",
+  "source": "Layout and notes after the Millennium Prize Problems video; drawing after the biopsy sketchbook build. Every number is in the pilot log.",
+  "pen": "marker",
+  "notes": "card",
+  "fonts": {
+    "serif": {
+      "family": "Source Serif 4",
+      "fontsource": "source-serif-4",
+      "licence": "OFL-1.1",
+      "weights": [
+        "400",
+        "500",
+        "600",
+        "700"
+      ],
+      "italic": [
+        "400",
+        "500"
+      ]
+    },
+    "sans": {
+      "family": "Inter",
+      "fontsource": "inter",
+      "licence": "OFL-1.1",
+      "weights": [
+        "500",
+        "600",
+        "700"
+      ],
+      "italic": []
+    }
+  },
+  "ink": {
+    "line": "#2B2723",
+    "soft": "#6B635A",
+    "card": "#FBF8F2",
+    "cardEdge": "#2B2723"
+  },
+  "marker": {
+    "body": "#2E3E4E",
+    "rim": "rgba(43,39,35,0.55)"
+  },
+  "chapters": {
+    "crimson": {
+      "accent": "#DB3568",
+      "ground": "#EEE4DE",
+      "wash": "#E8A3B5"
+    },
+    "amber": {
+      "accent": "#D9A21B",
+      "ground": "#EEE5D4",
+      "wash": "#F0D488"
+    },
+    "blue": {
+      "accent": "#2E77B4",
+      "ground": "#E2E7E8",
+      "wash": "#A9C6DE"
+    },
+    "violet": {
+      "accent": "#7151C5",
+      "ground": "#EAE5E6",
+      "wash": "#C3B4E6"
+    },
+    "green": {
+      "accent": "#439850",
+      "ground": "#E2E8DA",
+      "wash": "#AFD3A8"
+    },
+    "teal": {
+      "accent": "#39A395",
+      "ground": "#E0E8DF",
+      "wash": "#A5D8CE"
+    },
+    "terracotta": {
+      "accent": "#C86F52",
+      "ground": "#F0E4D8",
+      "wash": "#E8B9A3"
+    },
+    "neutral": {
+      "accent": "#2B2723",
+      "ground": "#E8E6DF",
+      "wash": "#D8D2C4"
+    }
+  },
+  "tissue": {
+    "blood": "#C8423B",
+    "bloodWash": "#E79A92",
+    "plasma": "#F3D9A4",
+    "protein": "#7A55C9",
+    "nucleus": "#4B3F8F",
+    "eosin": "#EBA3BE",
+    "skin": "#E9C2A6",
+    "skinShade": "#D49C80"
+  },
+  "paper": {
+    "grain": "paper/grain.png",
+    "vignette": "rgba(90,60,30,0.10)"
+  },
+  "layouts": {
+    "16:9": {
+      "width": 1920,
+      "height": 1080,
+      "margin": 96,
+      "picture": {
+        "x": 96,
+        "y": 150,
+        "w": 1090,
+        "h": 860
+      },
+      "note": {
+        "x": 1236,
+        "w": 588,
+        "centreY": 560,
+        "kickerY": 210,
+        "pointerFrom": "left"
+      },
+      "tag": {
+        "top": 52
+      },
+      "simplifiedTag": {
+        "x": 96,
+        "y": 1006,
+        "text": "Simplified picture"
+      },
+      "stamp": {
+        "x": 1530,
+        "y": 880
+      },
+      "type": {
+        "note": 54,
+        "noteLine": 1.28,
+        "kicker": 38,
+        "tag": 36,
+        "label": 42,
+        "heading": 76,
+        "stamp": 44,
+        "min": 36
+      }
+    },
+    "9:16": {
+      "width": 1080,
+      "height": 1920,
+      "margin": 72,
+      "picture": {
+        "x": 72,
+        "y": 300,
+        "w": 936,
+        "h": 740
+      },
+      "note": {
+        "x": 72,
+        "w": 936,
+        "centreY": 1380,
+        "kickerY": 1140,
+        "pointerFrom": "top"
+      },
+      "tag": {
+        "top": 150
+      },
+      "simplifiedTag": {
+        "x": 72,
+        "y": 1058,
+        "text": "Simplified"
+      },
+      "stamp": {
+        "x": 800,
+        "y": 1090
+      },
+      "safeBottom": 360,
+      "type": {
+        "note": 60,
+        "noteLine": 1.25,
+        "kicker": 48,
+        "tag": 48,
+        "label": 48,
+        "heading": 84,
+        "stamp": 48,
+        "min": 48
+      }
+    }
+  },
+  "stroke": {
+    "standard": 4.5,
+    "cell": 3.4,
+    "vessel": 5,
+    "emphasis": 10,
+    "scaffold": 3,
+    "jitter": 2,
+    "ghostOpacity": 0.32
+  },
+  "motion": {
+    "typeCps": 32,
+    "boilFps": 8,
+    "pointerFrames": 12,
+    "underlineFrames": 9,
+    "groundWashFrames": 18,
+    "highlightWashFrames": 6,
+    "stampFrames": 9,
+    "ringFrames": 14,
+    "beatDissolve": 10,
+    "writeFramesPerChar": 3.5
+  },
+  "never": [
+    "dark mock-UI or app chrome in an illustrated video",
+    "a frame of text with no picture",
+    "a micrograph or schematic without its label (stain and magnification, or 'simplified picture')",
+    "text under the layout's minimum size",
+    "a number the viewer might act on drawn by hand: numbers are typeset",
+    "a picture event smaller than about 70 x 70 px, or fading in slower than 6 frames, counted as the line's event"
+  ]
+}
