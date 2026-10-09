@@ -11,5 +11,6 @@ export { Heading } from "./Heading";
 export { NoteCard, typeFrames, type Note } from "./NoteCard";
 export { Between, Dots, Drift, Hatch, Ink, Label, Picture, Ring, Wash, type InkProps } from "./Picture";
 export { QAProbe } from "./QAProbe";
+export { FOCUS_GAP, maxLate, noteStep, sequence, type Sequence, type Slot, type Step } from "./sequence";
 export { arrow, densify, jitter, P, rng, toPath, type Pt, type Pts } from "./shapes";
 export { CHAPTERS, chapter, FONTS, INK, layoutFor, MOTION, STROKE, STYLE, TISSUE, useLayout, type Chapter, type Layout } from "./style";

@@ -22,6 +22,45 @@ All are constants in the style's `motion` block (`style.json`), read by the kit.
 | Beat change | 10-frame dissolve | |
 | Hold | at least the time to read the note | the note stays until the next line |
 
+## One focus at a time: the first rule
+
+At any moment, **one place** on screen is being drawn, written or arriving. The note is typed;
+then the pointer goes to the feature it names; then the feature is drawn; then its label is set;
+then the next step begins. Nothing is drawn or written in two places at once.
+
+Why it comes first: the first v3 builds never stood still, but they split attention. A picture
+event landed on every line while the note typed beside it and a wash arrived somewhere else.
+The owner watched one and said it plainly: drawing in several places at once distracts, and
+the video should explain itself in sequence, even without the narration. `focus-check.py`
+measured what they saw: the pilot spent 17% of its runtime, and the agent-built Short 27%,
+with two to six places changing at once. Sequenced, the same pilot fell to 3% (all of it
+handoffs of under half a second), still with no static stretch.
+
+**How the kit enforces it.** Each beat lists its steps in reading order and `sequence()` (in
+`src/kit/sequence.ts`) starts each one at its cue word, or when the previous step has finished,
+whichever is later, with a 4-frame pause between:
+
+```tsx
+const s = sequence([
+  { id: "heading", at: 0, dur: 56 },
+  noteStep("n0", b.line(0), NOTES[0], fps, MOTION.typeCps, MOTION.pointerFrames),
+  { id: "red", at: b.word("red", 1), dur: 30 },   // stroke, then its label: one place
+  ...
+]);
+<Ink from={s.red.from} … />  <Label at={s.red.from + 18} … />
+```
+
+- **A step is one place.** A wash filling the shape just drawn, and its label, belong to that
+  step. Things in two places are two steps, even if they are "the same idea" (three cells
+  drifting to the wall are three steps).
+- **Reading order within a line:** the note first (the claim), then the picture that shows it,
+  then its label. The underline draws as its phrase is typed; the pointer after the text.
+- **A heading can be a line's note.** If a line only names the chapter, the pen-written heading
+  says it; do not type the same words beside it.
+- **Lateness is the price.** A step may start after its cue word. With word-timed narration,
+  keep it under about a second: shorten notes, merge steps, or cut decorative ones. An event
+  added only to fill time is the first to go.
+
 ## A visual event every 2–4 seconds
 
 The rubric's criterion 5, and the most common way an otherwise good frame dies. Measured:
@@ -31,7 +70,8 @@ The rubric's criterion 5, and the most common way an otherwise good frame dies. 
 - The pilot's first build, with drawings and notes but no rule, still sat static for **35%**
   (measured with ffmpeg freezedetect, which undercounts; the true share was higher).
   The gaps were always the same place: after a line's note finished typing, until the next line.
-- With one sizeable picture event per line, and a second on long lines, it reached **0%**.
+- With one sizeable picture event per line, and a second on long lines, it reached **0%**,
+  and it stayed at 0% after sequencing: events in turn are still events.
 
 What counts as an event, from the same measurement:
 

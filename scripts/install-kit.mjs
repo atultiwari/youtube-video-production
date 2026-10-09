@@ -155,7 +155,7 @@ say(`Fonts → public/fonts/ (${faces} faces; licences: ${[...new Set([effective
 const tools = path.join(project, "tools");
 fs.mkdirSync(tools, { recursive: true });
 for (const f of fs.readdirSync(path.join(KIT, "tools"))) fs.copyFileSync(path.join(KIT, "tools", f), path.join(tools, f));
-for (const f of ["frame-fill.py", "event-gaps.py", "sound-design.py", "contact-sheet.py", "draft-takes.py", "make-paper.py", "check-storyboard.py"]) {
+for (const f of ["frame-fill.py", "event-gaps.py", "sound-design.py", "contact-sheet.py", "draft-takes.py", "make-paper.py", "check-storyboard.py", "focus-check.py"]) {
   const from = path.join(SKILL, "scripts", f);
   if (fs.existsSync(from)) fs.copyFileSync(from, path.join(tools, f));
 }

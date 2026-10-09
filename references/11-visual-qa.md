@@ -26,6 +26,7 @@ It runs, in the order the checks depend on each other:
 | Check | Tool | Pass | Behind it |
 |---|---|---|---|
 | Text overlap, text outside the frame, text under the minimum, one-line text that wraps | `QAProbe` + `tools/qa.mjs` | 0 issues | v2's S-107 had two lines overlapping, and the stills review passed it; the pilot's eyeballed sheets missed label collisions until a probe measured the real layout |
+| One focus at a time | `scripts/focus-check.py` | sustained split focus (runs ≥ 0.3 s) under 5%; no run over 0.5 s | the first v3 builds drew in up to six places at once: 17% and 27% of their runtime |
 | Frame fill | `scripts/frame-fill.py` | median content box ≥ 50% | v2: 21% (longform) and 18% (Short) |
 | Event gaps | `scripts/event-gaps.py` | no stretch ≥ 4 s; under 25% at worst | v2: 52% and 53% static |
 | Phone test | `scripts/contact-sheet.py --phone` | the note reads at 360 px wide | card headers at 23 px vanished |

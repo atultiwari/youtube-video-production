@@ -10,7 +10,7 @@ import React, { useId, useMemo } from "react";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 
 import { Drawing } from "../whiteboard";
-import { useBoil } from "./beat";
+import { useBoil, useMeasuring } from "./beat";
 import { jitter, P, toPath, type Pts } from "./shapes";
 import { FONTS, INK, MOTION, STROKE, useLayout } from "./style";
 
@@ -59,6 +59,10 @@ export const Ink: React.FC<InkProps> = ({
 }) => {
   const tick = useBoil();
   const view = useView();
+  // The pen is hidden in measure renders: a moving pen reads as two places to focus-check.py
+  // (where it was, where it is), and the stroke it draws already marks the spot.
+  const measuring = useMeasuring();
+  const showPen = pen && !measuring;
   const paths = useMemo(
     () => strokes.map((s, i) => toPath(jitter(s, `${id}:${i}`, jitterAmount, tick), closed)),
     [strokes, id, jitterAmount, tick, closed],
@@ -77,7 +81,7 @@ export const Ink: React.FC<InkProps> = ({
       ) : null}
       <div style={{ position: "absolute", inset: 0 }}>
         <Drawing viewBox={view} paths={paths} from={from} durationInFrames={durationInFrames}
-          stroke={color} strokeWidth={width} showMarker={pen} liftFraction={0.1} markerSize={84} />
+          stroke={color} strokeWidth={width} showMarker={showPen} liftFraction={0.1} markerSize={84} />
       </div>
     </>
   );

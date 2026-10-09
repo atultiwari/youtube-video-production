@@ -21,6 +21,7 @@ Rules, each from a measured failure:
 
 | Rule | Why |
 |---|---|
+| Events are listed in reading order and happen one at a time: the note, then each thing drawn, then its label | drawing in several places at once split attention (owner); 17–27% of runtime measured in split focus before the rule |
 | Every beat has a picture; text is the caption, not the content | v2's Short had no picture in any beat; v2's longform had none in three of eight |
 | One idea per frame: one note per spoken line | the note is read while the line is spoken |
 | Every spoken line gets at least one **sizeable** picture event on a cue word | pilot: gaps sat exactly where a line's note had finished typing and nothing else moved |

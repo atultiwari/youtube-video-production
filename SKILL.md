@@ -56,7 +56,7 @@ illustrated. Without modes, a pathology baseline was sent to capture an app it n
  9  Definitive capture        tutorial and hybrid: the exact flows the script calls for
 10  Build                     the kit (illustrated) or app shots (tutorial), on the grid
 10b Sound                     effects from the picture, a bed, ducked under the voice
-11  Visual QA                 probe, fill, event gaps, phone test, a still every 2 s
+11  Visual QA                 probe, one focus, fill, event gaps, phone test, a 2-s sheet
 12  Render
 13  Publish                   metadata, chapters, upload, schedule
 ```
@@ -67,6 +67,10 @@ wrong on a whole script, and a median 1.3 s off per word. See `references/mistak
 
 **Capture twice** (tutorial and hybrid): reconnaissance before the script, so it promises only
 what the app does; the definitive recording after, when the flow is known.
+
+**One focus at a time.** Draw or write in one place at a time, in reading order: the note,
+then the picture, then its label. The order tells the story, even with the sound off
+(09-motion.md); `focus-check.py` measures it.
 
 **Two human gates.** Gate 1, the script: cheap to change, takes are not. Gate 2, the look: a
 storyboard and three key-frame stills, approved before every beat is built. v2 had no Gate 2,
@@ -134,7 +138,7 @@ Each takes `--help`. They read nothing from a project they are not pointed at.
 | 7–8 | `master-audio.py`, `build-audio-grid.py`, `word-timestamps.py` (exact word times) |
 | 10 | `install-kit.mjs` (the kit, a style, fonts, tools), `make-paper.py` |
 | 10b | `sound-design.py` |
-| 11 | `frame-fill.py`, `event-gaps.py`, `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/build-all.sh` |
+| 11 | `focus-check.py`, `frame-fill.py`, `event-gaps.py`, `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/build-all.sh` |
 | 13 | `chapters.py` (YouTube chapters from the grid) |
 
 Templates: `templates/STATUS.md`, `templates/STORYBOARD.md`. Styles: `styles/*.json`.

@@ -3,6 +3,9 @@
  * spot it describes by a pointer line, with the key phrase underlined in the chapter accent on
  * the frame it is spoken. In a "caption" style (sketchbook) it is a strip with no pointer.
  *
+ * The pointer draws after the note has been typed, never while (one focus at a time): read
+ * the note, then follow the line to the place it names.
+ *
  * A note holds no duration: it starts on a frame from the beat's lines and stays until the next.
  */
 
@@ -128,7 +131,7 @@ export const NoteCard: React.FC<{
   return (
     <div style={{ position: "absolute", inset: 0, opacity: gone }}>
       {note?.anchor && box.from ? (
-        <Pointer key={index} from={box.from} anchor={note.anchor} at={note.at} color={chapter.accent} vertical={n.pointerFrom === "top"} />
+        <Pointer key={index} from={box.from} anchor={note.anchor} at={note.at + typeFrames(note.text.length, fps) + 4} color={chapter.accent} vertical={n.pointerFrom === "top"} />
       ) : null}
       {kicker && !caption ? (
         <div style={{ position: "absolute", left: n.x, top: n.kickerY, width: n.w }}>

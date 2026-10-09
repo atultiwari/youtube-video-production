@@ -4,7 +4,7 @@
 #   tools/build-all.sh <composition> <key> [--narration public/<key>/grid/en-narration.wav]
 #
 #   1. QA probe on a frame every second: text overlap, size, outside the frame. Stops on failure.
-#   2. measure render (decorative motion held still) -> event gaps
+#   2. measure render (decorative motion held still) -> event gaps, and one focus at a time
 #   3. sound design from the measure render (ducked under the narration, if given)
 #   4. full render, muxed with the mix
 #   5. stills: beat midpoints and every 2 s, contact sheets, phone sheet, frame fill
@@ -22,6 +22,8 @@ echo "== measure render"
 npx remotion render "$comp" "$out/measure.mp4" --scale=0.25 --muted --props='{"measure":true}' --log=error
 echo "== event gaps"
 python3 -I tools/event-gaps.py "$out/measure.mp4" "$grid" "$lines" | tee "$out/event-gaps.txt" | tail -1
+echo "== one focus at a time"
+python3 -I tools/focus-check.py "$out/measure.mp4" --grid "$grid" --lines "$lines" | tee "$out/focus.txt" | tail -1
 echo "== sound"
 python3 -I tools/sound-design.py "$out/measure.mp4" --out "$out/sound" --beats "$grid" ${narration[@]+"${narration[@]}"}
 echo "== full render"
