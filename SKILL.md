@@ -1,17 +1,13 @@
 ---
 name: youtube-video-production
 description: >-
-  End-to-end runbook for producing a YouTube video, Short or longform, narrated by a cloned TTS
-  voice and built in Remotion, in one of three modes: a screen tutorial with simulated app
-  screens, an illustrated explainer with drawn pictures (medical and science teaching, Pathology
-  Notes), or a hybrid of the two. Covers the whole order of work: choose the mode, plan, validate
-  claims, gather reference, script, record the voiceover, master, time, build, render, publish.
-  Orchestrates remotion-whiteboard, which does all drawing and hand-writing. Use whenever a new
-  video starts ("make a video about X", "new Short", "start the longform"), whenever one resumes
-  ("what's next on that video", "record the voiceover", "build it"), for any explainer, lecture,
-  whiteboard, infographic, medical or science explainer, or Pathology Notes episode, and whenever
-  a video needs screen recordings, simulated interfaces, a whiteboard hand, or a YouTube upload.
-  Self-contained: the scripts it needs ship with it.
+  End-to-end runbook for a YouTube video, Short or longform, built in Remotion and narrated by a
+  cloned TTS voice, in one of three modes: a screen tutorial with simulated app screens, an
+  illustrated explainer with drawn pictures (medical and science teaching, Pathology Notes), or a
+  hybrid. Covers the order of work: mode, claims, reference, script, voiceover, storyboard, build,
+  sound, visual QA, render, publish; all drawing goes through remotion-whiteboard. Use when a
+  YouTube video or Short starts or resumes ("make a video about X", "new Short", "what's next on
+  that video", "build it"). Not for Manim animation or editing filmed footage.
 license: MIT
 metadata:
   author: Dr Atul Tiwari
