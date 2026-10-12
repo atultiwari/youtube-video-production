@@ -127,6 +127,35 @@ apart (`event-gaps.py`); re-measure the baseline with the same ruler before comp
 **A chapter tag that repeated the heading put the same words twice in one frame.** *One series
 tag per video; the heading carries the chapter.*
 
+**Never static, and still unwatchable.** The first v3 builds put an event on every line while the
+note typed beside it: 17% and 27% of the runtime had two to six places changing at once, and the
+owner could not tell where to look. *One step at a time, in reading order (`sequence()`); measure
+with `focus-check.py`; watch it muted (`templates/MUTE-REVIEW.md`).*
+
+**Sequenced, a muted viewer still got lost, and the split-focus number did not show it.** Brief
+two-place moments, too short to be "sustained": an underline finishing while the next stroke
+began, two labels set on one frame in opposite corners, a `Between` fading out before its step
+ended, the "Simplified" tag fading in with the first note. "Where to look" fell from 3 to 2.
+*Count far arrivals (`focus-check.py --sheet`); underline as the phrase types; chrome arrives
+with the beat; `Between` fades after its end.*
+
+**Pointers landed on blank paper, eight times, after two fixes.** Ordered by hand, a pointer
+followed the right step but its anchor named a later one. *`pointStep(id, frames, target)`
+checks the target came first; `anchor: s.pN.where` takes the target's own place; target the
+step that shows the idea (the filled tube), not its outline.*
+
+**An overfull beat lost its last steps, and every check passed.** Three rings in the pilot and a
+label in brief B were scheduled after the cut. QA, focus-check and event-gaps never saw them.
+*Wrap every sequence in `fits()`; it throws. It caught the kit's own demo on its first run.*
+
+**A list set around a picture scattered the eye, one item at a time.** Five signs in five
+corners, three labels in three: two muted reviewers in a row lost the thread there, after every
+other fix. *A list goes in one region, or each item draws its connector as it arrives.*
+
+**A stamp in a corner pulled the eye off the drawing every time, and "Lewis · 1927" meant nothing
+to a muted viewer.** *A verdict or a name is a label on the thing it marks; terms and symbols get
+their words beside them.*
+
 ## Publishing
 
 **An upload went live with the channel's default description template**, placeholder text
