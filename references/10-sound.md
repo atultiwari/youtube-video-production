@@ -37,7 +37,7 @@ every file and its licence in the validation file.
 | Stem | Level | Why |
 |---|---|---|
 | Voice | −14 LUFS, −1 dBTP (master-audio.py) | unchanged from v2 |
-| Music bed | −24 LUFS, ducked about 5.5 dB under the voice | sits about 15–16 dB under speech, comes back in the pauses; 12 dB under was too close for a cloned voice on a phone speaker |
+| Music bed | −24 LUFS, ducked about 5.5 dB under the voice | measured 14 dB under speech by plain RMS (about 15–16 by LUFS, which discounts the bed's low end), up about 5 dB in pauses; 12 dB under was too close for a cloned voice on a phone speaker |
 | Effects | −24 LUFS, ducked harder | less if their peaks would clip |
 | Mix | true peak ≤ −1 dBTP, verified | |
 

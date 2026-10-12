@@ -13,6 +13,13 @@ scripts/sarvam-tts.py docs/A/script.md --takes out/A/takes --voice svc-...
 Run the dry run first: it prints each take and the character count, which is what is billed:
 about **₹2 per 1,000 characters** (₹0.23 for a 114-character test, 2026-10-12), so a Short is
 about ₹2 and a 4-minute script about ₹7. A request took about 3 s.
+
+**Measured on the first real build (brief B, 2026-10-13):** the clone spoke at about 150 words
+a minute at pace 1.0 (the browser studio's voice ran at 179), so a Short timed by word count ran
+long; pace 1.1 brought 810 characters to 51 s of speech and still sounded natural. Transcribe
+every take (`word-timestamps.py` does): one take said "that rash" as "the trash", and a single
+regeneration fixed it. Master with `master-audio.py --voice-eq` while the clone carries room
+colour.
 The script splits a beat over the 1,000-character cap between sentences (`en-01a.wav`,
 `en-01b.wav`, which `build-audio-grid.py` joins), keeps takes that already have sound, retries
 rate limits and server errors, and records every take's text and request ID in `tts.json`.
