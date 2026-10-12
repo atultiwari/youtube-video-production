@@ -16,8 +16,8 @@ music bed, levelled under the voice.
 | a stamp landing, a card changing | a large change in the note zone | thump / paper swish |
 | a beat changing | a beat boundary in `--beats` (or most of the frame changing) | paper whoosh |
 
-Effects are synthesised from seeded noise and sine partials (ported from the biopsy build's
-`sfx.mjs`): no samples, no licences to record. The music bed is a slow pad with a soft
+Effects are synthesised from seeded noise and sine partials (originally ported from a
+project-local `sfx.mjs`, not shipped): no samples, no licences to record. The music bed is a slow pad with a soft
 arpeggio from the same source.
 
 Levels are set absolutely, not normalised to the mix: the bed sits at -22 LUFS and the effects

@@ -28,8 +28,8 @@ drifts the first time a beat is retimed. On the pilot the detector found 638 tic
 Beat boundaries come from the grid because a dissolve between similar paper tints changes too
 little per frame to detect.
 
-Everything is synthesised from seeded noise and sine partials (ported from the biopsy
-`sfx.mjs`): no samples, so nothing to license. If a licensed library is used instead, record
+Everything is synthesised from seeded noise and sine partials (originally ported from a
+project-local `sfx.mjs`, not shipped with the skill): no samples, so nothing to license. If a licensed library is used instead, record
 every file and its licence in the validation file.
 
 ## Levels
