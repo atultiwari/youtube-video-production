@@ -10,7 +10,9 @@ scripts/sarvam-tts.py docs/A/script.md --takes out/A/takes --voice svc-... --dry
 scripts/sarvam-tts.py docs/A/script.md --takes out/A/takes --voice svc-...
 ```
 
-Run the dry run first: it prints each take and the character count, which is what is billed.
+Run the dry run first: it prints each take and the character count, which is what is billed:
+about **₹2 per 1,000 characters** (₹0.23 for a 114-character test, 2026-10-12), so a Short is
+about ₹2 and a 4-minute script about ₹7. A request took about 3 s.
 The script splits a beat over the 1,000-character cap between sentences (`en-01a.wav`,
 `en-01b.wav`, which `build-audio-grid.py` joins), keeps takes that already have sound, retries
 rate limits and server errors, and records every take's text and request ID in `tts.json`.
@@ -28,12 +30,14 @@ The key is a password to the account's credits: it lives only in the shell envir
 in a file in a project, a script, a chat or a commit.
 
 1. On indus.sarvam.ai, open **API Keys** and create a key. Copy it.
-2. In Terminal, open your shell profile: `open -e ~/.zshrc`.
+2. In Terminal, open your shell's environment file: `open -e ~/.zshenv`. Use `.zshenv`, not
+   `.zshrc`: Claude's commands run in a non-interactive shell, which reads `.zshenv` only. A
+   key in `.zshrc` works in your Terminal and is invisible to the agent (2026-10-12).
 3. Add one line at the end, with the key between the quotes, and save:
    `export SARVAM_API_KEY="paste-the-key-here"`
    Optionally, a second line with the default voice:
    `export SARVAM_VOICE_ID="svc-..."`
-4. Load it: `source ~/.zshrc` (or open a new Terminal window).
+4. Load it: `source ~/.zshenv`, then restart the Claude app so its shell picks it up.
 5. Check it is set without printing it: `test -n "$SARVAM_API_KEY" && echo set`.
 
 If a key is ever pasted somewhere it should not be, delete it on the API Keys page and make a
