@@ -39,6 +39,11 @@ stamp thumps; the mix limiter could not remove the inter-sample overs it made (â
 **Ducking at the obvious settings made the music vanish.** Threshold 0.1, ratio 3 pulled the
 bed 6.8 dB, to 20 dB under speech. *Measure the duck with a speech-like signal; 4 dB was right.*
 
+**"The API serves stock speakers only" stayed true in this file long after it stopped being
+true.** Every take of every video went through the browser studio, pasted and downloaded by
+hand, while Sarvam's API had a cloned-voice endpoint. *Re-check a provider's API before
+automating around it; date the claim when it is written.*
+
 ## Delivery
 
 **"Compute." and "Generalisation." each fused into the next word.** A one- or two-word heading

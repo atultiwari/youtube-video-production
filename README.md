@@ -59,7 +59,7 @@ Self-contained: the scripts read nothing from a project they are not pointed at.
 
 | | |
 |---|---|
-| `scripts/` | status, script and storyboard lints, draft grid, audio grid, mastering, word timing, kit install, sound design, focus check, frame fill, event gaps, contact sheets, YouTube chapters |
+| `scripts/` | status, script and storyboard lints, draft grid, cloned-voice takes through the API, audio grid, mastering, word timing, kit install, sound design, focus check, frame fill, event gaps, contact sheets, YouTube chapters |
 | `assets/kit/` | Remotion components and build/QA tools, copied into a project by `install-kit.mjs` |
 | `styles/` | `paper-notes` (piloted) and `sketchbook` (not yet piloted) |
 | `templates/` | `STATUS.md`, `STORYBOARD.md`, `MUTE-REVIEW.md` |

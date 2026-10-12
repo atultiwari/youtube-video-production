@@ -46,7 +46,7 @@ illustrated. Without modes, a pathology baseline was sent to capture an app it n
  5  ── GATE 1 ──              a human reads the script before a take is spent
  5a Storyboard                illustrated: one picture per beat, events on cue words
  5b Key frames ── GATE 2 ──   the owner approves the look, on stills
- 6  Record the voiceover      browser TTS, one take per beat
+ 6  Record the voiceover      sarvam-tts.py: the cloned voice, one take per beat
  7  Master                    to the delivery target
  8  Measure → grid → words    the takes decide every timing, to the word
  9  Definitive capture        tutorial and hybrid: the exact flows the script calls for
@@ -126,6 +126,7 @@ improvise a drawing component. `install-kit.mjs` enforces it.
 | status | `video-status.py` (which step a video is on, by mode) |
 | 4–5a | `check-script.py` (TTS traps), `check-storyboard.py` (picture per beat, cue words, gaps) |
 | 5b | `draft-takes.py` (a draft grid before the takes exist, for key frames only) |
+| 6 | `sarvam-tts.py` (takes in the cloned voice through the API; key in `SARVAM_API_KEY`) |
 | 7–8 | `master-audio.py`, `build-audio-grid.py`, `word-timestamps.py` (exact word times) |
 | 10 | `install-kit.mjs <project>` (the kit, a style, fonts, tools), `make-paper.py` |
 | 10b | `sound-design.py` |

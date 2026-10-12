@@ -1,10 +1,48 @@
 # 6–8 · Record, master, and build the grid
 
-## Recording a cloned voice in the browser
+## Generating takes through the API (the default)
 
-Voice-cloning studios generally do **not** expose custom voices through their public TTS API —
-the API serves stock speakers only. Assume the browser is the only route until proven otherwise,
-and drive it in a signed-in Chrome.
+Sarvam's API serves **cloned voices** (`POST /voices/clone`, with the voice's `svc-...` ID).
+One command makes every beat's take, straight into the takes folder:
+
+```
+scripts/sarvam-tts.py docs/A/script.md --takes out/A/takes --voice svc-... --dry-run
+scripts/sarvam-tts.py docs/A/script.md --takes out/A/takes --voice svc-...
+```
+
+Run the dry run first: it prints each take and the character count, which is what is billed.
+The script splits a beat over the 1,000-character cap between sentences (`en-01a.wav`,
+`en-01b.wav`, which `build-audio-grid.py` joins), keeps takes that already have sound, retries
+rate limits and server errors, and records every take's text and request ID in `tts.json`.
+Requests are WAV, with Sarvam's quality check (it regenerates audio that does not match the
+text) and text normalisation on. To redo one beat: `--beats 04 --force`.
+
+The other modes on the playground are for live use: **REST Stream** (MP3 as it is generated,
+no quality check) and **WebSocket** (text in, audio out, for voice agents). A video needs
+neither. `sarvam-mcp`, Sarvam's MCP server, speaks with stock voices only, not clones
+(checked in 0.2.12).
+
+### Setting the API key (once)
+
+The key is a password to the account's credits: it lives only in the shell environment, never
+in a file in a project, a script, a chat or a commit.
+
+1. On indus.sarvam.ai, open **API Keys** and create a key. Copy it.
+2. In Terminal, open your shell profile: `open -e ~/.zshrc`.
+3. Add one line at the end, with the key between the quotes, and save:
+   `export SARVAM_API_KEY="paste-the-key-here"`
+   Optionally, a second line with the default voice:
+   `export SARVAM_VOICE_ID="svc-..."`
+4. Load it: `source ~/.zshrc` (or open a new Terminal window).
+5. Check it is set without printing it: `test -n "$SARVAM_API_KEY" && echo set`.
+
+If a key is ever pasted somewhere it should not be, delete it on the API Keys page and make a
+new one.
+
+## Fallback: the browser studio
+
+When the API is down, or for a voice the API does not serve, drive the studio in a signed-in
+Chrome.
 
 ### The order matters
 
