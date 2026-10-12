@@ -37,7 +37,7 @@ every file and its licence in the validation file.
 | Stem | Level | Why |
 |---|---|---|
 | Voice | −14 LUFS, −1 dBTP (master-audio.py) | unchanged from v2 |
-| Music bed | −22 LUFS, ducked about 4 dB under the voice | sits about 12 dB under speech, comes back in the pauses |
+| Music bed | −24 LUFS, ducked about 5.5 dB under the voice | sits about 15–16 dB under speech, comes back in the pauses; 12 dB under was too close for a cloned voice on a phone speaker |
 | Effects | −24 LUFS, ducked harder | less if their peaks would clip |
 | Mix | true peak ≤ −1 dBTP, verified | |
 
@@ -54,7 +54,7 @@ Two failures the script now prevents:
   lesson as `master-audio.py`.
 
 Without a narration (a draft, or the voice not yet recorded) nothing is pushed up to fill the
-silence: the bed stays at −22 LUFS.
+silence: the bed stays at −24 LUFS.
 
 ## Dependencies
 

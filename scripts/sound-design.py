@@ -20,11 +20,12 @@ Effects are synthesised from seeded noise and sine partials (originally ported f
 project-local `sfx.mjs`, not shipped): no samples, no licences to record. The music bed is a slow pad with a soft
 arpeggio from the same source.
 
-Levels are set absolutely, not normalised to the mix: the bed sits at -22 LUFS and the effects
+Levels are set absolutely, not normalised to the mix: the bed sits at -24 LUFS and the effects
 at -24 LUFS (less if their peaks would clip). With a voice (`--narration`, mastered to -14 LUFS),
-the bed is ducked about 4 dB while it speaks, so it sits about 12 dB under speech and comes back
-in the pauses; effects duck harder. Measured with a speech-like test signal: threshold 0.1 /
-ratio 3 ducked the bed 6.8 dB (20 dB under speech, effectively gone); 0.15 / 2.5 ducks 4.0 dB.
+the bed is ducked while it speaks, to about 15-16 dB under speech, and comes back in the pauses;
+effects duck harder. The first real cloned-voice build had the bed only 12 dB under speech
+(-22 LUFS, 0.15 / 2.5), too close for a phone speaker with a voice that carries room colour
+(2026-10-12). Measured with a speech-like test signal: 0.1 / 3 ducks 6.8 dB, 0.15 / 2.5 ducks 4.0.
 The sum is limited to -1 dBTP. Without a voice, nothing is pushed up to fill the silence.
 
 Writes events.json (what was heard where), sfx.wav, music.wav and mix.wav.
@@ -43,7 +44,9 @@ W, H = 480, 270
 PIXEL = 24
 
 # Target loudness of each stem (LUFS), relative to a -14 LUFS voice.
-MUSIC_LUFS, SFX_LUFS = -22.0, -24.0
+MUSIC_LUFS, SFX_LUFS = -24.0, -24.0
+# Bed ducking under the voice (sidechaincompress threshold, ratio): about 5.5 dB.
+DUCK_THRESHOLD, DUCK_RATIO = 0.12, 2.8
 
 
 # ---------------------------------------------------------------- analysis
@@ -269,7 +272,7 @@ def mix(out: Path, narration: Path | None, ceiling_dbtp: float = -1.0) -> Path:
     dest = out / "mix.wav"
     if narration:
         inputs = ["-i", str(narration), "-i", str(out / "music.wav"), "-i", str(out / "sfx.wav")]
-        body = ("[0]asplit=3[vo][k1][k2];[1][k1]sidechaincompress=threshold=0.15:ratio=2.5:attack=40:release=600[mu];"
+        body = (f"[0]asplit=3[vo][k1][k2];[1][k1]sidechaincompress=threshold={DUCK_THRESHOLD}:ratio={DUCK_RATIO}:attack=40:release=600[mu];"
                 "[2][k2]sidechaincompress=threshold=0.05:ratio=4:attack=15:release=350[fx];"
                 "[vo][mu][fx]amix=inputs=3:normalize=0")
     else:

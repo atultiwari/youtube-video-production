@@ -21,6 +21,12 @@ Two mistakes this exists to prevent:
   * A wrapper that does not raise hides that failure -- the loop then re-measures a stale output
     file and reports identical numbers every pass. Five passes of "no change" is the signature.
 
+--voice-eq adds a fixed tonal correction before the gain, for a cloned voice that learned an
+untreated room from its sample: high-pass at 80 Hz, -3 dB at 350 Hz and -2 dB at 750 Hz (the
+boxy band; the first clone measured +12 dB there against 1-2 kHz) and +2.5 dB at 3.5 kHz
+(presence). EQ only. A gate or expander shortened the echo tails from 170 ms to 70 ms but chopped
+word endings audibly (owner, 2026-10-12), so this does not remove echo: a re-recorded sample does.
+
 Each file is measured and corrected on its own. Alternate language tracks are heard one at a
 time; matching them to each other rather than to the target leaves the quieter one wrong.
 """
@@ -46,8 +52,13 @@ def measure(path: Path, i: float, tp: float, lra: float) -> dict:
     return json.loads(blob.group(0))
 
 
-def chain(gain_db: float, ceiling: float) -> str:
-    return (f"volume={gain_db:.2f}dB,"
+VOICE_EQ = ("highpass=f=80,equalizer=f=350:t=q:w=1.2:g=-3,"
+            "equalizer=f=750:t=q:w=1.4:g=-2,equalizer=f=3500:t=q:w=1.4:g=2.5,")
+
+
+def chain(gain_db: float, ceiling: float, voice_eq: bool = False) -> str:
+    return ((VOICE_EQ if voice_eq else "") +
+            f"volume={gain_db:.2f}dB,"
             f"aresample=192000,"
             f"alimiter=limit={ceiling:.4f}:attack=4:release=60:level=disabled,"
             f"aresample=48000")
@@ -63,6 +74,8 @@ def main() -> int:
     parser.add_argument("--lra", type=float, default=11.0)
     parser.add_argument("--tolerance", type=float, default=0.25)
     parser.add_argument("--passes", type=int, default=5)
+    parser.add_argument("--voice-eq", action="store_true",
+                        help="tonal correction for a clone with room colour (EQ only, see above)")
     args = parser.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -72,6 +85,12 @@ def main() -> int:
     failed = False
     for src in args.tracks:
         before = measure(src, args.lufs, args.true_peak, args.lra)
+        if args.voice_eq:  # EQ changes loudness: measure what the gain will act on
+            eqd = args.out / f".eq-{src.name}"
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", VOICE_EQ.rstrip(","),
+                            "-c:a", "pcm_s16le", str(eqd)], check=True)
+            before = measure(eqd, args.lufs, args.true_peak, args.lra)
+            eqd.unlink()
         print(f"\n{src.name}")
         print(f"  measured: {before['input_i']} LUFS, true peak {before['input_tp']} dBTP")
 
@@ -80,7 +99,7 @@ def main() -> int:
         got = before
         for attempt in range(1, args.passes + 1):
             done = subprocess.run(
-                ["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", chain(gain_db, ceiling),
+                ["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", chain(gain_db, ceiling, args.voice_eq),
                  "-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le", str(dest)],
                 capture_output=True, text=True)
             if done.returncode != 0:
