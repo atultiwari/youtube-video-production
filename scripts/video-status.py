@@ -52,6 +52,9 @@ MODES = {
     "tutorial": ("screen tutorial", [VALIDATE, CAPTURE, SCRIPT, *RECORD, SOUND, QA, RENDER]),
     "illustrated": ("illustrated explainer", [VALIDATE, RESEARCH, SCRIPT, STORYBOARD, GATE2, *RECORD, SOUND, QA, RENDER]),
     "hybrid": ("hybrid", [VALIDATE, RESEARCH, CAPTURE, SCRIPT, STORYBOARD, GATE2, *RECORD, SOUND, QA, RENDER]),
+    # Motion-graphics news/incident explainer (remotion-motion-explainer): no drawing, no
+    # storyboard; Gate 2 is the owner approving the silent preview with temporary captions.
+    "motion": ("motion explainer", [VALIDATE, RESEARCH, SCRIPT, GATE2, *RECORD, SOUND, QA, RENDER]),
 }
 OPTIONAL = {"storyboard", "sound"}
 

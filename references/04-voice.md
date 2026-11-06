@@ -195,3 +195,11 @@ moves nothing.
 
 It also reads in both languages at once, which a spoken version cannot — that has to choose which
 language goes first.
+
+## Measured again on a longform (Oct 2026, fridge-hack): see 14-lessons-2026-10.md
+
+- `--pace 1.1` ran at ≈160 wpm over 1,663 words (10:29 of speech). Use it to budget words.
+- **Check every take with Whisper** before mastering: `scripts/check-takes.py --script <script.md> --takes <takes>`.
+  Sarvam's quality check passed a take that dropped "and eighty". After 2 failed takes, re-word the line.
+- Respell hard names for the voice only (a text → spoken map applied when writing the TTS script); captions keep the real spelling.
+- For per-scene builds (`motion` mode), master the joined narration as dual-mono stereo once, then split it back per scene, so every scene shares one gain.

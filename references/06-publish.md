@@ -64,3 +64,13 @@ reported that way rather than as a finding.
 
 Check the live listing rather than the upload confirmation: scheduled date, visibility, and that
 the description survived. The confirmation dialog reports what was submitted, not what stuck.
+
+## Studio through the Chrome extension (Oct 2026): full recipe in `video-promo-kit`
+
+- The extension's `file_upload` only passes files **under 10 MB**. Reveal the MP4 in Finder and have the owner drag it into the upload dialog; the agent fills in everything else.
+- The description again arrived with the channel template ("In this video, [add …]"). Select-all, replace, and read it back through JS (length, `[add`, chapter count, links).
+- A hashtag suggestion popup opens while typing; dismiss it by clicking an inert label, **never Escape**.
+- The schedule date picker shifted under a click and saved **Nov** 14 for Oct 14. Read the date and time fields back before clicking Schedule; pick the time from the list with `find`.
+- Generate chapters from the real take timings, never by hand, and check that the total equals the rendered duration.
+- A cloned-voice narration gets **AI use / altered content: Yes**, and a line in the description notes.
+- After scheduling, verify on `studio.youtube.com/video/<id>/edit`, not on the confirmation dialog.

@@ -193,3 +193,17 @@ before moving on.*
 
 **A reference was chosen because it looked good, not because it worked** — six hours old, 5.7k
 views. *Sort by popular before adapting.*
+
+## From the fridge-hack build (Oct 2026, motion mode)
+
+- **Black frames read as "no background".** Scenes faded in from the composition's black. Keep the ground under the transition layer; fade content only.
+- **Three-line captions covered the picture.** Chunk ≤11 words, split comma-free runs evenly, and keep content above the bottom 210 px.
+- **Overlaps found only in stills.** An alarm label hit the reading, a stamp landed on text, timeline cards hit captions. Render one still per scene + contact sheets before any video render.
+- **The script was 25% over target** (1,809 words for 9–10 min). Budget from the measured ≈160 wpm.
+- **Sarvam QC missed a dropped number** ("100" for "one hundred and eighty"). Whisper-check every take.
+- **The same mis-hearing survived re-takes** ("per store" → "per second tour"). Change the words after 2 tries.
+- **Visuals ran ahead of the narration.** Use word cues on props, not fixed fractions, for anything the narration names.
+- **The thumbnail implied unverified facts** ("From home") and read as a threat ("Hospitals next?"). Every surface obeys the fact sheet; frame it educationally.
+- **The schedule date silently became Nov 14.** Read back every date and time.
+- **A sed edit on reformatted JSON did nothing.** Edit JSON with a JSON tool.
+- **Reference stills lived only in the session scratchpad and were lost.** Keep anything worth reusing in the project or a skill.

@@ -4,14 +4,16 @@ description: >-
   End-to-end runbook for a YouTube video, Short or longform, built in Remotion and narrated by a
   cloned TTS voice, in one of three modes: a screen tutorial with simulated app screens, an
   illustrated explainer with drawn pictures (medical and science teaching, Pathology Notes), or a
-  hybrid. Covers the order of work: mode, claims, reference, script, voiceover, storyboard, build,
-  sound, visual QA, render, publish; all drawing goes through remotion-whiteboard. Use when a
+  hybrid, or a motion-graphics news/incident explainer (built with remotion-motion-explainer).
+  Covers the order of work: mode, claims, reference, script, voiceover, storyboard, build, sound,
+  visual QA, render, publish; all drawing goes through remotion-whiteboard; promotion (thumbnails,
+  carousels, social copy, upload) goes through video-promo-kit. Use when a
   YouTube video or Short starts or resumes ("make a video about X", "new Short", "what's next on
   that video", "build it"). Not for Manim animation or editing filmed footage.
 license: MIT
 metadata:
   author: Dr Atul Tiwari
-  version: "3.0.0"
+  version: "3.1.0"
   measuredOn: "2026-10-10"
 ---
 
@@ -25,12 +27,16 @@ with it rather than obey it. The order is the same for every subject; the **mode
 Decide before anything else, and record it as `mode:` in the video's `STATUS.md`. It changes
 where reference comes from and what the picture is made of.
 
-| | Screen tutorial `tutorial` | Illustrated explainer `illustrated` | Hybrid `hybrid` |
-|---|---|---|---|
-| Teaches | how to use an app or tool | a concept: pathology, physiology, any science | a concept, then the tool that applies it |
-| Step 3 | reconnaissance capture of the app | reference research: atlases, micrographs, real objects | both, per beat |
-| Step 9 | definitive capture | none | for the app beats only |
-| Picture | app shots, built from captured reference | drawn pictures, through `remotion-whiteboard` | each beat in its own kind |
+| | Screen tutorial `tutorial` | Illustrated explainer `illustrated` | Hybrid `hybrid` | Motion explainer `motion` |
+|---|---|---|---|---|
+| Teaches | how to use an app or tool | a concept: pathology, physiology, any science | a concept, then the tool that applies it | a news event, incident or case and its lessons |
+| Step 3 | reconnaissance capture of the app | reference research: atlases, micrographs, real objects | both, per beat | a sourced fact sheet (every on-screen number cited) |
+| Step 9 | definitive capture | none | for the app beats only | none |
+| Picture | app shots, built from captured reference | drawn pictures, through `remotion-whiteboard` | each beat in its own kind | typography, maps, newspaper pages, gauges, through `remotion-motion-explainer` |
+
+`motion` replaces nothing: anything **drawn** (a pen, a hand, stroke-by-stroke pictures) is still
+`illustrated` and still goes through `remotion-whiteboard`. Gate 2 in `motion` is the owner
+approving the silent preview with temporary captions.
 
 **Choose by what the viewer must see, not by habit.** If no beat needs a real interface, it is
 illustrated. Without modes, a pathology baseline was sent to capture an app it never showed.
@@ -95,6 +101,8 @@ key-frame stills before every beat is built: without it, v2 made type on an empt
 | `remotion-whiteboard` | **Required for anything drawn or hand-written**: strokes, written text, the pen. |
 | `motion-design` | easing and choreography for elements that are not drawn |
 | `remotion-best-practices` | Remotion API usage |
+| `remotion-motion-explainer` | `motion` mode: its own template, components, voice/caption/sound scripts and worked example (fridge-hack) |
+| `video-promo-kit` | step 13 for every mode: thumbnail variants (owner picks), 1:1 carousels + LinkedIn PDF, YouTube description/chapters/tags, LinkedIn/Instagram/WhatsApp copy, the YouTube Studio scheduling recipe |
 
 **If `remotion-whiteboard` is not available, stop at the build step and say so**; never
 improvise a drawing component. `install-kit.mjs` enforces it.
@@ -115,7 +123,8 @@ improvise a drawing component. `install-kit.mjs` enforces it.
 | `references/11-visual-qa.md`, `references/rubric.md` | 11 |
 | `references/12-pathology-visuals.md` | 3 and 10, for medical pictures |
 | `references/13-longform.md` | videos over 12 minutes, chapters |
-| `references/06-publish.md` | 12–13 |
+| `references/06-publish.md` | 12–13 (and `video-promo-kit` for the promo material and upload recipe) |
+| `references/14-lessons-2026-10.md` | any mode: measured voice numbers, Whisper take check, word cues, component-fired sound, QA rules from the fridge-hack build |
 | `references/status-and-resuming.md` | resuming a video, or recording a decision |
 | `references/mistakes.md` | when something behaves oddly: read before debugging |
 
@@ -127,7 +136,7 @@ improvise a drawing component. `install-kit.mjs` enforces it.
 | 4–5a | `check-script.py` (TTS traps), `check-storyboard.py` (picture per beat, cue words, gaps) |
 | 5b | `draft-takes.py` (a draft grid before the takes exist, for key frames only) |
 | 6 | `sarvam-tts.py` (takes in the cloned voice through the API; key in `SARVAM_API_KEY`) |
-| 7–8 | `master-audio.py`, `build-audio-grid.py`, `word-timestamps.py` (exact word times) |
+| 7–8 | `check-takes.py` (Whisper every take vs the script), `master-audio.py`, `build-audio-grid.py`, `word-timestamps.py` (exact word times) |
 | 10 | `install-kit.mjs <project>` (the kit, a style, fonts, tools), `make-paper.py` |
 | 10b | `sound-design.py` |
 | 11 | `focus-check.py`, `frame-fill.py`, `event-gaps.py`, `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/build-all.sh` |

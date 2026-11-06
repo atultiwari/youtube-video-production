@@ -2,7 +2,7 @@
 video: L-001
 title: Use ChatGPT Better Than 99% of Doctors
 format: longform            # longform | short
-mode: tutorial              # tutorial | illustrated | hybrid  (SKILL.md, step 0)
+mode: tutorial              # tutorial | illustrated | hybrid | motion  (SKILL.md, step 0)
 languages: [en, hi]         # first is the reference language
 gate2:              # date the owner approved the key frames (illustrated, hybrid)
 paths:
