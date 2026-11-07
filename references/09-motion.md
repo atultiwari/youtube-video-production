@@ -171,3 +171,18 @@ an `id`, an `at` (cue word or line start), and either a `note` (typed on the car
 `sequence()`, `fits()`, `NoteCard`, `Between`, the heading and the Simplified tag. E01's 11 beats
 were written this way; start a new episode from it rather than wiring each beat by hand. List
 steps in time order: a note listed after a later cue waits for it.
+
+## Shorts with the kit (E01 Shorts, Nov 2026: four Shorts, 35–56 s, all 0% static on the first build)
+
+- **Frame 0 shows the hook**: draw the hook object at negative frames (`from={-60}`), not from the
+  step's start. `makeBeat` starts every step after the heading, so a hook drawn "at 0" was still
+  being drawn on frame 0.
+- **No heading after the first beat**: `heading: ""` in `makeBeat` (the note carries the beat).
+- **Labels are 48 px minimum on 9:16** (the QA probe flags 44 px); every label gets an `HL`.
+- **Burned-in captions**: `<Captions grid lines />` (src/kit/Captions.tsx) over the `Film`, one
+  line of ≤ 5 words above the 360 px the platforms cover, current word highlighted.
+- **End frame**: a highlighted "Full episode: <title>" label as the last step, with
+  `build-audio-grid.py --end-hold 1.5`. The channel asks go in the pinned comment, not the narration.
+- **Re-recording**: a possessive of a respelled name ("MYCIN's") came back as "myscience" twice;
+  rewording to "the choices MYCIN made" fixed it on the first try.
+

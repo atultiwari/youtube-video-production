@@ -54,7 +54,7 @@ export interface Item {
 
 export interface BeatSpec {
   readonly chapter: string;
-  /** Pen-written heading at the top of the picture. */
+  /** Pen-written heading at the top of the picture; "" for none (Shorts: first beat at most). */
   readonly heading: string;
   /** The card's question. */
   readonly kicker?: string;
@@ -72,7 +72,7 @@ export const makeBeat = (spec: BeatSpec): React.FC => {
     const items = useMemo(() => spec.items(b, C, picture.w, picture.h), [b, C, picture.w, picture.h]);
     const s = useMemo(() => {
       const steps = [
-        { id: "heading", at: 0, dur: Math.round(spec.heading.length * MOTION.writeFramesPerChar) },
+        ...(spec.heading ? [{ id: "heading", at: 0, dur: Math.round(spec.heading.length * MOTION.writeFramesPerChar) }] : []),
         ...items.map((it) => ({
           id: it.id,
           at: Math.max(0, it.at),
@@ -88,7 +88,7 @@ export const makeBeat = (spec: BeatSpec): React.FC => {
     }));
     return (
       <>
-        <Heading text={spec.heading} at={s.heading.from} color={C.accent} />
+        {spec.heading ? <Heading text={spec.heading} at={s.heading.from} color={C.accent} /> : null}
         {spec.simplified === false ? null : <SimplifiedTag />}
         <Picture>
           {items.filter((it) => it.draw).map((it) => {
