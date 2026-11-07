@@ -25,6 +25,11 @@ HEADING_WORDS = 2
 #: rather than the viewer, and measured retention says that is the line people leave on.
 YOU_WORDS = {"you", "your", "yours", "you're", "you've"}
 
+#: Two capital letters on their own ("PA", "AP"): the cloned voice swallowed them (E01: "PA chest
+#: film" was heard as "PHS film"). Spell the meaning out, or respell in the TTS map. These pairs
+#: were said clearly and are allowed; add more with --allow.
+LETTER_PAIRS_OK = {"AI", "OK", "TV", "UK", "US", "EU"}
+
 
 def fused_headings(text: str) -> list[tuple[int, str]]:
     """Short sentences that another sentence follows, whether or not a line break separates them."""
@@ -53,6 +58,8 @@ def main() -> int:
     parser.add_argument("script", type=Path)
     parser.add_argument("--opening", action="store_true",
                         help="also check that the first line addresses the viewer")
+    parser.add_argument("--allow", default="",
+                        help="comma-separated two-letter abbreviations that are fine, e.g. ML,DL")
     args = parser.parse_args()
 
     text = args.script.read_text()
@@ -69,6 +76,15 @@ def main() -> int:
                 f"line {line_no}: digit in spoken text at column {match.start() + 1}\n"
                 f"    Spell it out; numerals are read unpredictably.")
             break
+        allowed = LETTER_PAIRS_OK | {a.strip().upper() for a in args.allow.split(",") if a.strip()}
+        if not line.lstrip().startswith("#"):
+            for match in re.finditer(r"\b[A-Z]{2}\b", line):
+                if match.group(0) not in allowed:
+                    problems.append(
+                        f"line {line_no}: letter pair {match.group(0)!r}\n"
+                        f"    The cloned voice swallows bare letter pairs. Say what it means, or respell it "
+                        f"(sarvam-tts.py --respell), or --allow it after hearing a take.")
+                    break
         if "—" in line or "–" in line:
             problems.append(
                 f"line {line_no}: em or en dash in spoken text\n"

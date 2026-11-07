@@ -207,3 +207,14 @@ views. *Sort by popular before adapting.*
 - **The schedule date silently became Nov 14.** Read back every date and time.
 - **A sed edit on reformatted JSON did nothing.** Edit JSON with a JSON tool.
 - **Reference stills lived only in the session scratchpad and were lost.** Keep anything worth reusing in the project or a skill.
+
+## From E01, AI in Medicine (Nov 2026, illustrated mode)
+
+- **`pip install --user numpy` did nothing for the tools.** They run as `python3 -I`, which ignores user site-packages. `install-kit.mjs` now makes a venv (~/.local/share/youtube-video-production/venv) and `build-all.sh` uses it.
+- **`install-kit` failed on a blank project** (no Root.tsx), then on a one-line `return <></>`. It now creates the entry point and finds any `<>`.
+- **A zsh command substitution turned a take into an ffmpeg output and zeroed it.** `$(for p in $parts; do echo -i $p; done)` with an unquoted multi-line variable passed the second take as the output file. Join takes in Python (`check-takes.py` and `build-audio-grid.py` do), never with a hand-built ffmpeg argument list.
+- **43% static after a 20-minute render.** Labels were the events and were too small to count. See 09-motion.md, "Labels are not events"; build-all now stops before rendering.
+- **Gap analysis double-counted line starts.** Word times in lines.json are seconds from the beat's start, not the line's.
+- **An insert-before-id edit landed in the wrong beat.** Several beats had a step called `n2`; a script inserting "before the first `n2`" put beat 6's steps in beat 5. Address a beat by its export (`export const B06`) first.
+- **The browser-upload rule was stale.** API uploads from unverified projects are no longer locked private (Google, Nov 2026); see 06-publish.md.
+- **A crude finger.** Approved, but the owner called the drawing out. Draw from `objects.tsx`; see 05-build.md.

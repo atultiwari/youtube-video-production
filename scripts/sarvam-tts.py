@@ -189,6 +189,9 @@ def main() -> int:
     ap.add_argument("--no-normalize", action="store_true", help="do not spell out numbers and dates")
     ap.add_argument("--force", action="store_true", help="regenerate takes that already have sound")
     ap.add_argument("--dry-run", action="store_true", help="print the plan; no key, no request")
+    ap.add_argument("--respell", type=Path,
+                    help='JSON map of written word -> spoken form, applied to the spoken text only '
+                         '(e.g. {"MYCIN": "My-sin", "JAMA": "Jama"}); the script and captions keep the real spelling')
     args = ap.parse_args()
 
     if not args.voice or not args.voice.startswith("svc-"):
@@ -197,13 +200,21 @@ def main() -> int:
         raise SystemExit("--pace must be between 0.5 and 2.0")
     only = {b.strip().zfill(2) for b in args.beats.split(",")} if args.beats else None
     prefix = args.language.split("-")[0]
-    takes = plan(parse(args.script), prefix, only)
+    beats = parse(args.script)
+    if args.respell:
+        sounds = json.loads(args.respell.read_text())
+        for _, lines in beats:
+            for i, line in enumerate(lines):
+                for written, spoken in sounds.items():
+                    line = re.sub(rf"(?<![\w-]){re.escape(written)}(?![\w-])", spoken, line)
+                lines[i] = line
+    takes = plan(beats, prefix, only)
     total = sum(len(t.text) for t in takes)
 
     if args.dry_run:
         for t in takes:
             print(f"{t.name:<12} {len(t.text):5d} chars  {t.text[:60]}{'...' if len(t.text) > 60 else ''}")
-        print(f"\n{len(takes)} takes, {total} characters, voice {args.voice}, {args.language}")
+        print(f"\n{len(takes)} takes, {total} characters, voice {args.voice[:4]}…{args.voice[-4:]}, {args.language}")
         return 0
 
     key = os.environ.get("SARVAM_API_KEY", "").strip()

@@ -14,7 +14,9 @@
  *   5. copies the style's fonts (Fontsource, OFL) to public/fonts, and adds @remotion/fonts at
  *      the project's own Remotion version: no render fetches fonts from the network
  *   6. copies the build and QA tools to tools/
- *   7. makes the paper grain, public/paper/grain.png
+ *   7. makes sure a Python with numpy + Pillow exists for the tools (a shared venv at
+ *      ~/.local/share/youtube-video-production/venv, made once; override with YVP_PYTHON),
+ *      then makes the paper grain, public/paper/grain.png
  *   8. registers `kit-demo` (16:9) and `kit-demo-vertical` (9:16), the kit's still tests
  *
  * Idempotent: re-running updates the kit and tools and changes nothing else.
@@ -64,8 +66,17 @@ if (!fs.existsSync(pkgPath)) fail(`${project} has no package.json. Create the pr
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 const remotionVersion = pkg.dependencies?.remotion ?? pkg.devDependencies?.remotion;
 if (!remotionVersion) fail(`${project} does not depend on remotion.`);
-const src = ["src", "remotion", "app"].map((d) => path.join(project, d)).find((d) => fs.existsSync(path.join(d, "Root.tsx")));
-if (!src) fail(`no Root.tsx under src/, remotion/ or app/ in ${project}.`);
+let src = ["src", "remotion", "app"].map((d) => path.join(project, d)).find((d) => fs.existsSync(path.join(d, "Root.tsx")));
+if (!src) {
+  // A bare project (package.json only): give it the standard entry point and an empty Root.
+  src = path.join(project, "src");
+  fs.mkdirSync(src, { recursive: true });
+  fs.writeFileSync(path.join(src, "Root.tsx"), `import { Composition } from "remotion";\n\nexport const RemotionRoot: React.FC = () => {\n  return (\n    <>\n    </>\n  );\n};\n`);
+  if (!fs.existsSync(path.join(src, "index.ts"))) {
+    fs.writeFileSync(path.join(src, "index.ts"), `import { registerRoot } from "remotion";\nimport { RemotionRoot } from "./Root";\n\nregisterRoot(RemotionRoot);\n`);
+  }
+  say("No Root.tsx found: created src/Root.tsx and src/index.ts");
+}
 const stylePath = path.join(SKILL, "styles", `${styleName}.json`);
 if (!fs.existsSync(stylePath)) fail(`no style "${styleName}" (have: ${fs.readdirSync(path.join(SKILL, "styles")).map((f) => f.replace(".json", "")).join(", ")}).`);
 const style = JSON.parse(fs.readFileSync(stylePath, "utf8"));
@@ -169,24 +180,38 @@ say(`Fonts → public/fonts/ (${faces} faces; licences: ${[...new Set([effective
 const tools = path.join(project, "tools");
 fs.mkdirSync(tools, { recursive: true });
 for (const f of fs.readdirSync(path.join(KIT, "tools"))) fs.copyFileSync(path.join(KIT, "tools", f), path.join(tools, f));
-for (const f of ["frame-fill.py", "event-gaps.py", "sound-design.py", "contact-sheet.py", "draft-takes.py", "make-paper.py", "check-storyboard.py", "focus-check.py"]) {
+for (const f of ["frame-fill.py", "event-gaps.py", "gap-words.py", "sound-design.py", "contact-sheet.py", "draft-takes.py", "make-paper.py", "check-storyboard.py", "focus-check.py"]) {
   const from = path.join(SKILL, "scripts", f);
   if (fs.existsSync(from)) fs.copyFileSync(from, path.join(tools, f));
 }
 for (const f of fs.readdirSync(tools)) if (/\.(sh|py|mjs)$/.test(f)) fs.chmodSync(path.join(tools, f), 0o755);
 say(`Tools → tools/ (${fs.readdirSync(tools).length} files)`);
 
-// 7. Paper ----------------------------------------------------------------------------
+// 7. Python for the tools, then paper ---------------------------------------------------
+// The tools run as `python3 -I`, which ignores user site-packages, so a `pip install --user`
+// numpy is invisible to them (E01, Nov 2026: several failed runs). Use a venv that has them.
+const hasDeps = (py) => { try { execFileSync(py, ["-I", "-c", "import numpy, PIL"], { stdio: "ignore" }); return true; } catch { return false; } };
+const VENV = path.join(os.homedir(), ".local", "share", "youtube-video-production", "venv");
+let py = process.env.YVP_PYTHON || (fs.existsSync(path.join(VENV, "bin", "python3")) ? path.join(VENV, "bin", "python3") : "python3");
+if (!hasDeps(py)) {
+  say(`Python tools need numpy and Pillow: creating ${VENV} (once)`);
+  execFileSync("python3", ["-m", "venv", VENV], { stdio: "inherit" });
+  py = path.join(VENV, "bin", "python3");
+  execFileSync(py, ["-m", "pip", "install", "-q", "numpy", "pillow"], { stdio: "inherit" });
+  if (!hasDeps(py)) fail("numpy/Pillow still not importable; set YVP_PYTHON to a python3 that has them.");
+}
+say(`Python for tools: ${py}  (build-all.sh finds it; elsewhere run tools with this python)`);
 const grain = path.join(project, "public", effective.paper.grain);
 if (!fs.existsSync(grain)) {
-  execFileSync("python3", ["-I", path.join(tools, "make-paper.py"), grain, "--width", "1920", "--height", "1920"], { stdio: "inherit" });
+  execFileSync(py, ["-I", path.join(tools, "make-paper.py"), grain, "--width", "1920", "--height", "1920"], { stdio: "inherit" });
 }
 
 // 8. Demos ----------------------------------------------------------------------------
 const rootPath = path.join(src, "Root.tsx");
 let root = fs.readFileSync(rootPath, "utf8");
 if (!root.includes("kit-demo")) {
-  const opening = root.match(/return\s*\(\s*\n(\s*)<>|=>\s*\(\s*\n(\s*)<>/);
+  // `return (\n  <>`, `=> (\n  <>`, or failing those the first fragment `<>` anywhere.
+  const opening = root.match(/return\s*\(\s*\n(\s*)<>|=>\s*\(\s*\n(\s*)<>/) ?? root.match(/()()<>/);
   if (!opening) {
     say(`Add the demos to ${rootPath} by hand:\n  import { KitDemo, KIT_DEMO_FRAMES } from "./kit/KitDemo";`);
   } else {
@@ -209,6 +234,16 @@ if (!root.includes("kit-demo")) {
   }
 }
 
+// The object library's still test, added to projects installed before it existed too.
+root = fs.readFileSync(rootPath, "utf8");
+if (!root.includes("kit-objects") && root.includes("kit-demo")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-demo" [^\n]*\n)/, `$1$2<Composition id="kit-objects" component={ObjectsDemo} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/(import \{ KIT_DEMO_FRAMES, KitDemo \} from "\.\/kit\/KitDemo";)/, `$1\nimport { ObjectsDemo } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects") && root.includes("ObjectsDemo }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects (the drawing library) in Root.tsx"); }
+  else say(`Register the drawing library by hand: <Composition id="kit-objects" component={ObjectsDemo} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");
+say("  npx remotion still kit-objects out/objects.png --frame=59   # does every object look like the real thing?");

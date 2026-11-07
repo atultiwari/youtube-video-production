@@ -35,7 +35,7 @@ def paper(width: int, height: int, seed: int) -> Image.Image:
         mask = blot > rgba[..., 3]
         rgba[..., 0:3][mask] = (120, 95, 60)
         rgba[..., 3] = np.maximum(rgba[..., 3], blot)
-    return Image.fromarray(rgba, "RGBA")
+    return Image.fromarray(rgba)
 
 
 def main() -> int:

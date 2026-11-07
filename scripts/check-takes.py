@@ -16,6 +16,7 @@ import json
 import re
 import subprocess
 import tempfile
+import wave
 from pathlib import Path
 
 SCRIPT: Path = Path("tts/script.md")
@@ -79,20 +80,46 @@ def script_beats() -> dict[str, str]:
     return {b: " ".join(lines) for b, lines in beats.items()}
 
 
+def take_audio(beat: str, tmp: str) -> Path:
+    """The beat's take: en-NN.wav, or its parts en-NNa.wav, en-NNb.wav… joined in name order
+    (sarvam-tts.py splits beats over 1,000 characters)."""
+    one = TAKES / f"en-{beat}.wav"
+    if one.exists():
+        return one
+    parts = sorted(TAKES.glob(f"en-{beat}[a-z].wav"))
+    if not parts:
+        raise SystemExit(f"no take for beat {beat} in {TAKES} (en-{beat}.wav or en-{beat}a.wav …)")
+    joined = Path(tmp) / f"en-{beat}.wav"
+    with wave.open(str(joined), "wb") as out:
+        for i, p in enumerate(parts):
+            with wave.open(str(p)) as w:
+                if i == 0:
+                    out.setparams(w.getparams())
+                out.writeframes(w.readframes(w.getnframes()))
+    return joined
+
+
 def transcribe(beat: str, force: bool) -> dict:
     out = TAKES.parent / "whisper" / f"en-{beat}.json"
     if out.exists() and not force:
         return json.loads(out.read_text())
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
+        audio = take_audio(beat, tmp)
+        outdir = Path(tmp) / "json"
+        outdir.mkdir()
+        # Without --condition-on-previous-text False, Whisper repeated whole sentences at the end
+        # of long takes (E01: "The Stanford faculty scored…" three times); the take was clean.
         done = subprocess.run(
-            ["mlx_whisper", str(TAKES / f"en-{beat}.wav"), "--model", MODEL, "--language", "en",
-             "--word-timestamps", "True", "--output-format", "json", "--output-dir", tmp],
+            ["mlx_whisper", str(audio), "--model", MODEL, "--language", "en",
+             "--word-timestamps", "True", "--condition-on-previous-text", "False",
+             "--output-format", "json", "--output-dir", str(outdir)],
             capture_output=True, text=True,
         )
-        if done.returncode != 0:
+        found = list(outdir.glob("*.json"))
+        if done.returncode != 0 or not found:
             raise SystemExit(f"mlx_whisper failed on beat {beat}:\n{done.stderr[-600:]}")
-        data = json.loads(next(Path(tmp).glob("*.json")).read_text())
+        data = json.loads(found[0].read_text())
     out.write_text(json.dumps(data))
     return data
 

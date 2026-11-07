@@ -102,7 +102,8 @@ key-frame stills before every beat is built: without it, v2 made type on an empt
 | `motion-design` | easing and choreography for elements that are not drawn |
 | `remotion-best-practices` | Remotion API usage |
 | `remotion-motion-explainer` | `motion` mode: its own template, components, voice/caption/sound scripts and worked example (fridge-hack) |
-| `video-promo-kit` | step 13 for every mode: thumbnail variants (owner picks), 1:1 carousels + LinkedIn PDF, YouTube description/chapters/tags, LinkedIn/Instagram/WhatsApp copy, the YouTube Studio scheduling recipe |
+| `video-promo-kit` | step 13 for every mode: thumbnail variants (owner picks), 1:1 carousels + LinkedIn PDF, YouTube description/chapters/tags, LinkedIn/Instagram/WhatsApp copy |
+| `youtube-uploader` | step 13: the upload itself through the Data API (dry run, then `--confirm` on the owner's yes), thumbnail, captions, playlist, scheduling |
 
 **If `remotion-whiteboard` is not available, stop at the build step and say so**; never
 improvise a drawing component. `install-kit.mjs` enforces it.
@@ -118,13 +119,13 @@ improvise a drawing component. `install-kit.mjs` enforces it.
 | `references/08-storyboard.md` | 5a–5b, Gate 2 |
 | `references/04-voice.md` | 6–8 |
 | `references/09-motion.md` | 8 (word timing) and 10: arrivals, events every 2–4 s |
-| `references/05-build.md` | 10, tutorial shots and the whiteboard hand |
+| `references/05-build.md` | 10, tutorial shots, the whiteboard hand, and the drawing library (`objects.tsx`) |
 | `references/10-sound.md` | 10b |
 | `references/11-visual-qa.md`, `references/rubric.md` | 11 |
 | `references/12-pathology-visuals.md` | 3 and 10, for medical pictures |
 | `references/13-longform.md` | videos over 12 minutes, chapters |
-| `references/06-publish.md` | 12–13 (and `video-promo-kit` for the promo material and upload recipe) |
-| `references/14-lessons-2026-10.md` | any mode: measured voice numbers, Whisper take check, word cues, component-fired sound, QA rules from the fridge-hack build |
+| `references/06-publish.md` | 12–13: render, `ready-to-upload/` → `youtube-uploader` → `_uploaded/` (and `video-promo-kit` for promo material) |
+| `references/14-lessons-2026-10.md` | any mode: measured voice numbers, Whisper take check, word cues, component-fired sound, QA rules from the fridge-hack build (E01's lessons are folded into 04, 05, 06, 09, 11 and mistakes.md) |
 | `references/status-and-resuming.md` | resuming a video, or recording a decision |
 | `references/mistakes.md` | when something behaves oddly: read before debugging |
 
@@ -135,12 +136,12 @@ improvise a drawing component. `install-kit.mjs` enforces it.
 | status | `video-status.py` (which step a video is on, by mode) |
 | 4–5a | `check-script.py` (TTS traps), `check-storyboard.py` (picture per beat, cue words, gaps) |
 | 5b | `draft-takes.py` (a draft grid before the takes exist, for key frames only) |
-| 6 | `sarvam-tts.py` (takes in the cloned voice through the API; key in `SARVAM_API_KEY`) |
+| 6 | `sarvam-tts.py` (takes in the cloned voice through the API; key in `SARVAM_API_KEY`; `--respell` a series map of spoken forms) |
 | 7–8 | `check-takes.py` (Whisper every take vs the script), `master-audio.py`, `build-audio-grid.py`, `word-timestamps.py` (exact word times) |
-| 10 | `install-kit.mjs <project>` (the kit, a style, fonts, tools), `make-paper.py` |
+| 10 | `install-kit.mjs <project>` (the kit, a style, fonts, tools, the Python venv), `make-paper.py`; in the kit, `makeBeat`/`HL` (beatspec.tsx) and the object library (objects.tsx, still test `kit-objects`) |
 | 10b | `sound-design.py` |
-| 11 | `focus-check.py`, `frame-fill.py`, `event-gaps.py`, `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/build-all.sh` |
-| 13 | `chapters.py` (YouTube chapters from the grid) |
+| 11 | `focus-check.py`, `frame-fill.py`, `event-gaps.py`, `gap-words.py` (words spoken in each static gap), `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/stills.mjs` (midpoints, ends, every N s), `tools/build-all.sh` (stops before rendering if too static) |
+| 13 | `chapters.py` (YouTube chapters from the grid), `captions-srt.py` (upload captions from the word timings) |
 
 Templates: `STATUS.md`, `STORYBOARD.md`, `MUTE-REVIEW.md` in `templates/`. Styles: `styles/*.json`.
 

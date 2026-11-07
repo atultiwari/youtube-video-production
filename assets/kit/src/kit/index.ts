@@ -14,3 +14,5 @@ export { QAProbe } from "./QAProbe";
 export { EYE_TRAVEL, fits, FOCUS_GAP, maxLate, noteStep, pointStep, sequence, type Sequence, type Slot, type Step } from "./sequence";
 export { arrow, densify, jitter, P, rng, toPath, type Pt, type Pts } from "./shapes";
 export { CHAPTERS, chapter, FONTS, INK, layoutFor, MOTION, STROKE, STYLE, TISSUE, useLayout, type Chapter, type Layout } from "./style";
+export { HL, makeBeat, type BeatSpec, type Item } from "./beatspec";
+export { box, chestFilm, circle, cubic, doctor, ecgStrip, ecgTrace, finger, heart, oximeter, page, person, stack } from "./objects";

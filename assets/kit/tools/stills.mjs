@@ -2,7 +2,10 @@
 /**
  * Render a list of stills with one bundle (v2 step 11: one frame per beat, before any render).
  *
- *   node tools/stills.mjs <composition> <beats.json> <outDir> midpoints|every:<seconds>
+ *   node tools/stills.mjs <composition> <beats.json> <outDir> midpoints|ends|every:<seconds>
+ *
+ * `ends` is half a second before each beat's cut: the picture fully built, which is what a
+ * layout review needs (midpoints show it half drawn).
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -11,7 +14,7 @@ import { renderStill, selectComposition } from "@remotion/renderer";
 
 const [id, gridPath, outDir, mode] = process.argv.slice(2);
 if (!id || !gridPath || !outDir || !mode) {
-  console.error("usage: node tools/stills.mjs <composition> <beats.json> <outDir> midpoints|every:<seconds>");
+  console.error("usage: node tools/stills.mjs <composition> <beats.json> <outDir> midpoints|ends|every:<seconds>");
   process.exit(1);
 }
 
@@ -22,10 +25,12 @@ const grid = JSON.parse(fs.readFileSync(gridPath, "utf8"));
 const frames =
   mode === "midpoints"
     ? grid.beats.map((b) => ({ name: `beat-${b.beat}`, frame: b.startFrame + Math.floor(b.durationFrames / 2) }))
+    : mode === "ends"
+    ? grid.beats.map((b) => ({ name: `beat-${b.beat}`, frame: b.startFrame + b.durationFrames - Math.round(composition.fps / 2) }))
     : (() => {
         const step = Math.round(Number(mode.split(":")[1]) * composition.fps);
         if (!mode.startsWith("every:") || !Number.isFinite(step) || step <= 0) {
-          console.error(`bad mode "${mode}": use midpoints or every:<seconds>`);
+          console.error(`bad mode "${mode}": use midpoints, ends or every:<seconds>`);
           process.exit(2);
         }
         return Array.from({ length: Math.ceil(composition.durationInFrames / step) }, (_, i) => ({

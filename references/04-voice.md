@@ -203,3 +203,20 @@ language goes first.
   Sarvam's quality check passed a take that dropped "and eighty". After 2 failed takes, re-word the line.
 - Respell hard names for the voice only (a text → spoken map applied when writing the TTS script); captions keep the real spelling.
 - For per-scene builds (`motion` mode), master the joined narration as dual-mono stereo once, then split it back per scene, so every scene shares one gain.
+
+## Measured on E01 (Nov 2026, Sarvam clone, pace 1.1)
+
+- **1,471 words → 8:54** of narration across 11 beats: about 165 wpm. Budget 1,450–1,500 words
+  for a 9-minute longform.
+- **Bare letter pairs are swallowed.** "PA chest film" came back as "PHS film"; spelled out
+  ("taken back to front") it was clean. `check-script.py` flags two-capital pairs (AI and a few
+  others allowed; `--allow` more after hearing a take).
+- **Respell once, per series.** `sarvam-tts.py --respell docs/respell.json` maps written words to
+  spoken forms (`{"MYCIN": "My-sin", "JAMA": "Jama"}`) for the TTS text only; the script,
+  captions and on-screen text keep the real spelling. No second copy of the script to drift.
+- **Whisper invents repeats at the end of long takes** ("The Stanford faculty scored…" three
+  times on a clean take). `check-takes.py` now passes `--condition-on-previous-text False` and
+  joins split takes (`en-04a.wav` + `en-04b.wav`) itself. Before re-recording a flagged take,
+  look at the segment times: a repeat with no audio under it is Whisper, not the voice.
+- **One real drop**: beat 01 lost a whole sentence ("The other one might be."); the Whisper check
+  caught it and one `--force` regeneration fixed it.

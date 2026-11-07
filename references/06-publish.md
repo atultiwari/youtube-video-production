@@ -8,13 +8,28 @@ type-heavy content starves first.
 Verify the delivered file against the loudness target rather than trusting the master: the
 encode is the thing the viewer hears.
 
-## Upload in the browser, not the Data API
+## Upload through the Data API: the `youtube-uploader` skill
 
-For an unaudited API project created after 28 July 2020, every `videos.insert` upload is locked to
-private, and that cannot be changed in the web UI afterwards. The restriction is on the API path
-only — browser uploads are unaffected.
+The old rule here ("unaudited API projects are locked to private, so upload in the browser") is
+**out of date**. Google's videos.insert page, checked 2026-11-07, says videos uploaded from
+unverified API projects are *not* restricted to private, and E01 went up through the API, was
+scheduled, and published normally. Uploads now go through `youtube-uploader`:
 
-So uploads are driven in a signed-in browser.
+1. Finished files go to the project's `ready-to-upload/<project>/` with one name stem:
+   `<code>_<slug>_<16x9|9x16>.mp4`, `.jpg` (thumbnail), `.srt` (`scripts/captions-srt.py`),
+   `_description.txt`, `_youtube.md`, and `_upload.json` (the uploader's manifest, with the
+   channel ID so a sign-in to the wrong channel stops it).
+2. Dry run, show the owner the summary; upload with `--confirm` only after their explicit yes.
+   Private, or scheduled with `publishAt`; `containsSyntheticMedia: true` for the cloned voice.
+3. After a verified upload, move the files to `ready-to-upload/_uploaded/<project>/` with the
+   receipt. Thumbnail swaps and scheduling later: `yt-update.mjs` in that skill.
+4. **Unsaved edits in an open YouTube Studio tab overwrite API changes when the owner clicks
+   Save.** After an API change, ask them to reload the Studio page first.
+5. The API does not echo `containsSyntheticMedia` back; the owner confirms "AI use: Yes" in
+   Studio (Details → AI use).
+
+The browser recipe below (and in video-promo-kit) stays as the fallback when the API is down
+or not set up.
 
 ## Read every field back
 

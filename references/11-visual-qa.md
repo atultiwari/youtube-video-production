@@ -76,3 +76,10 @@ nothing on screen the reviewer could not name.
 
 Score the 2-second sheet against `rubric.md`, with the numbers
 above as evidence, and add any new failure to `mistakes.md`.
+
+## Stills at beat ends (E01)
+
+`node tools/stills.mjs <comp> <beats.json> <out> ends` renders each beat half a second before its
+cut, with the picture fully built: the layout review that matters (midpoints show it half drawn,
+and overlaps between early and late labels only exist at the end). `build-all.sh` makes
+`sheet-ends.png`. On E01 it caught five overlapping label pairs that the midpoints missed.

@@ -143,3 +143,18 @@ start frame, or it arrives before the heading it belongs to.
 
 **A video element past its last frame is not reliably anything.** To hold on the end of a clip,
 switch to a still image of that frame.
+
+## Draw real objects, from the library (E01, Nov 2026)
+
+The owner approved E01 but said the pulse-oximeter finger, a rounded bar, "is not at all looking
+like any finger". A medical audience reads primitive anatomy as careless. So:
+
+- **Recurring objects come from `src/kit/objects.tsx`**: `finger` (side view, nail, cuticle,
+  knuckle creases) with `oximeter`, `ecgStrip`, `chestFilm` (with heart and chest spans for a
+  CTR), `heart` (anatomical, great vessels), `doctor`, `person`, `page`, `stack`. Each returns
+  named parts so a beat draws them one step at a time.
+- **A new object goes into the library first**, built from a reference picture's proportions,
+  and is checked on the `kit-objects` still (`npx remotion still kit-objects out/objects.png
+  --frame=59`) before any beat uses it.
+- **Show the owner the episode's key objects on one still early**, with the storyboard, not
+  first in the finished video.

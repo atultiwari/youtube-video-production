@@ -146,3 +146,28 @@ recording. Treat `lines.json` like `beats.json`: generated, never hand-edited.
 `--props='{"measure":true}'` turns off line boil and push-ins, so a detector sees only real
 events. The kit's `useMeasuring()` and `useBoil()` handle it; any custom decorative motion must
 check it too.
+
+## Labels are not events (E01, Nov 2026)
+
+E01's first full build was **43% static** although every line had a cue-word step: most steps
+were 36–42 px labels, small dots and thin rings. At the measure render's quarter scale a label is
+about 9 px of text, under the detector's 0.25%-of-frame threshold, and a viewer reads it the
+same way: nothing happened. Two rounds of fixes brought it to 2%:
+
+- **Every label arrives with a highlight** (`HL` in `src/kit/beatspec.tsx`, a wash multiplied
+  onto the paper so the text stays legible). A label alone is never a line's event.
+- **Long lines get a second note.** A note retyping is a big event; a 20-second line with one
+  note and three labels goes static.
+- **Find gaps before the full render.** `tools/build-all.sh` now stops when more than
+  `--max-static` (10%) is static and runs `gap-words.py`, which lists the words spoken in each
+  gap, so the fix lands on a cue word. A gap that already contains a cue word means that step's
+  event is too small, not missing.
+
+## Declaring beats (`src/kit/beatspec.tsx`)
+
+`makeBeat({ chapter, heading, kicker, items })` turns a list of steps into a beat: each step has
+an `id`, an `at` (cue word or line start), and either a `note` (typed on the card) or a
+`draw(from)` (in the picture), plus `until` to hide a drawing when a later step starts. It wraps
+`sequence()`, `fits()`, `NoteCard`, `Between`, the heading and the Simplified tag. E01's 11 beats
+were written this way; start a new episode from it rather than wiring each beat by hand. List
+steps in time order: a note listed after a later cue waits for it.
