@@ -8,6 +8,10 @@ import { AbsoluteFill } from "remotion";
 import { Paper } from "./Chrome";
 import { Cell, Rbc } from "./cells";
 import { Dots, Hatch, Ink, Label, Picture, Wash } from "./Picture";
+import React from "react";
+
+import { P } from "./shapes";
+import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
 import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
 import { chapter, CHAPTERS, INK, TISSUE } from "./style";
 
@@ -140,6 +144,54 @@ export const ObjectsDemo3: React.FC = () => {
           <Wash shape={hd.scan} color="#1E2426" at={0} id="hds" alpha={0.95} />
           <Ink strokes={[hd.profile]} from={0} durationInFrames={20} id="hdp" color="#E8E4DA" pen={false} />
           <Ink strokes={[hd.brain, hd.callosum, hd.cerebellum, hd.stem]} from={0} durationInFrames={20} id="hdb" color="#A9A397" pen={false} width={3} />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/** E04 objects (`kit-objects-4`): skin-lesion photos with a ruler and a marker ring, the marker, a question paper, a padlock, a dial. */
+export const ObjectsDemo4: React.FC = () => {
+  const n = lesion(170, 200, 46, "nevus", "a");
+  const m = lesion(520, 200, 60, "melanoma", "b");
+  const rl = ruler(390, 330, 5, 50 / 10 * 2.4);
+  const mk = lesion(170, 560, 40, "nevus", "c");
+  const pen = skinMarker(330, 640, 1);
+  const qp = questionPaper(700, 40, 300, 380, 4);
+  const lk = padlock(760, 520, 1.1);
+  const dl = dial(1020, 640, 70, 0.7);
+  const photo = (x: number, y: number, w: number, h: number, id: string) => <>
+    <Wash shape={P.rect(x, y, w, h, 8)} color={skin} at={0} id={`${id}w`} alpha={0.5} />
+    <Ink strokes={[P.rect(x, y, w, h, 8)]} from={0} durationInFrames={10} id={id} width={3} pen={false} />
+  </>;
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          {photo(40, 80, 260, 250, "p1")}
+          {photo(340, 60, 330, 340, "p2")}
+          {photo(40, 440, 260, 250, "p3")}
+          {[n, m, mk].map((l, i) => <React.Fragment key={i}>
+            <Wash shape={l.body} color="#8A5A3C" at={0} id={`lb${i}`} alpha={0.85} />
+            <Wash shape={l.dark} color="#3B2418" at={0} id={`ld${i}`} alpha={0.8} />
+            <Ink strokes={[l.body]} from={0} durationInFrames={10} id={`li${i}`} width={2} pen={false} color="#4A2E1E" />
+          </React.Fragment>)}
+          <Wash shape={rl.body} color="#F4F1E6" at={0} id="rlw" alpha={0.9} />
+          <Ink strokes={[rl.body, ...rl.ticks]} from={0} durationInFrames={20} id="rl" width={2} pen={false} />
+          {rl.cm.map(([x, y], i) => <Label key={i} text={String(i)} x={x} y={y} at={20} size={18} italic={false} />)}
+          <Ink strokes={[mk.ring]} from={0} durationInFrames={10} id="mkr" color="#6A3FA0" width={6} pen={false} />
+          <Wash shape={pen.barrel} color="#E8E4DA" at={0} id="pnb" alpha={0.9} />
+          <Wash shape={pen.cap} color={pen.violet} at={0} id="pnc" alpha={0.85} />
+          <Ink strokes={[pen.barrel, pen.cap, pen.clip, pen.taper]} from={0} durationInFrames={20} id="pn" />
+          <Ink strokes={[pen.nib]} from={0} durationInFrames={10} id="pnn" color={pen.violet} width={6} pen={false} />
+          <Wash shape={qp.sheet} color="#FFFDF6" at={0} id="qpw" alpha={0.9} />
+          <Ink strokes={[qp.sheet, qp.ear, qp.header, ...qp.lines]} from={0} durationInFrames={20} id="qp" />
+          <Label text="MBBS Final · 2016" x={qp.title[0]} y={qp.title[1]} at={20} size={24} italic={false} weight={700} />
+          {[0, 1, 2, 3].map((i) => <Label key={i} text={`Q${i + 1}.`} x={qp.q(i)[0]} y={qp.q(i)[1]} at={20} size={24} italic={false} weight={700} />)}
+          <Wash shape={lk.body} color="#C9A24A" at={0} id="lkw" alpha={0.7} />
+          <Ink strokes={[lk.shackle, lk.body, ...lk.keyhole]} from={0} durationInFrames={20} id="lk" />
+          <Wash shape={dl.face} color="#DCE6EE" at={0} id="dlw" alpha={0.7} />
+          <Ink strokes={[dl.face, dl.grip, ...dl.ticks, dl.pointer]} from={0} durationInFrames={20} id="dl" />
         </Picture>
       </Paper>
     </AbsoluteFill>

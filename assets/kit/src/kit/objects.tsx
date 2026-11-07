@@ -524,3 +524,94 @@ export const headScan = (x: number, y: number, s = 1) => ({
   stem: path(x, y, s, [140, 196], [[[134, 240], [130, 280], [126, 330]]]),
   face: [x + 284 * s, y + 200 * s] as Pt,
 });
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E04 (Nov 2026): a pigmented skin lesion, a clinic ruler, a gentian-violet skin
+ * marker, a question paper, a padlock and a settings dial. Checked on the `kit-objects-4` still.
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * A pigmented skin lesion seen from above. `kind: "nevus"` is small, round and even (benign);
+ * `"melanoma"` is larger with an irregular, notched border and a darker off-centre area (the ABCD
+ * signs). Wash `body` mid-brown and `dark` near-black brown; ink `body`. `ring` is the circle a
+ * surgeon draws round it with a skin marker.
+ */
+export const lesion = (cx: number, cy: number, r: number, kind: "nevus" | "melanoma" = "nevus", key = "") => {
+  const mel = kind === "melanoma";
+  return {
+    body: P.blob(cx, cy, r * (mel ? 1.15 : 1), r * (mel ? 0.92 : 0.95), `les${key}${kind}`, mel ? 0.2 : 0.04, 64),
+    dark: P.blob(cx + (mel ? r * 0.25 : 0), cy - (mel ? r * 0.15 : 0), r * (mel ? 0.5 : 0.45), r * (mel ? 0.42 : 0.42), `lesd${key}`, mel ? 0.25 : 0.05),
+    ring: P.blob(cx, cy, r * 1.9, r * 1.75, `lesr${key}`, 0.05, 56),
+    at: [cx, cy] as Pt,
+  };
+};
+
+/**
+ * A clear plastic clinic ruler, horizontal: the body, millimetre ticks (every 5th longer, every
+ * 10th longest) and `cm`, the positions for the centimetre numbers (typeset Labels). `mm` px.
+ */
+export const ruler = (x: number, y: number, cm = 5, mm = 10, h = 52) => ({
+  body: P.rect(x, y, cm * 10 * mm + 2 * mm, h, 6),
+  ticks: Array.from({ length: cm * 10 + 1 }, (_, i) => {
+    const len = i % 10 === 0 ? h * 0.5 : i % 5 === 0 ? h * 0.36 : h * 0.22;
+    return P.line(x + mm + i * mm, y, x + mm + i * mm, y + len, 1);
+  }),
+  cm: Array.from({ length: cm + 1 }, (_, i) => [x + mm + i * 10 * mm, y + h * 0.88] as Pt),
+});
+
+/**
+ * A surgical skin marker (gentian violet), lying diagonally, tip at lower left: the barrel, the
+ * clip of the cap at the back, the tapered tip and the violet nib. Local 300 × 60, scale s.
+ */
+export const skinMarker = (x: number, y: number, s = 1) => ({
+  barrel: rectL(x, y, s, 60, 0, 260, 44, 14),
+  cap: rectL(x, y, s, 200, -4, 300, 48, 16),
+  clip: rectL(x, y, s, 216, -14, 290, -4, 3),
+  taper: path(x, y, s, [60, 4], [[[40, 10], [24, 16], [14, 20]], [[12, 22], [12, 24], [14, 26]], [[24, 30], [40, 36], [60, 42]]]),
+  nib: path(x, y, s, [14, 18], [[[6, 20], [2, 22], [0, 22]], [[2, 22], [6, 24], [14, 28]]]),
+  violet: "#6A3FA0",
+});
+
+/**
+ * A printed question paper: the sheet, a header box for the exam name, numbered questions
+ * (`q(i)` is where "Q1." sits, followed by two text lines each) and a dog-ear corner.
+ */
+export const questionPaper = (x: number, y: number, w: number, h: number, n = 4) => {
+  const top = y + 90, gap = (h - 120) / n;
+  return {
+    sheet: path(0, 0, 1, [x, y], [[[x + w * 0.4, y], [x + w * 0.7, y], [x + w - 34, y]], [[x + w - 20, y + 10], [x + w - 10, y + 22], [x + w, y + 34]], [[x + w, y + h * 0.4], [x + w, y + h * 0.7], [x + w, y + h]], [[x + w * 0.7, y + h], [x + w * 0.3, y + h], [x, y + h]], [[x, y + h * 0.7], [x, y + h * 0.3], [x, y]]]),
+    ear: P.polyline([[x + w - 34, y], [x + w - 34, y + 34], [x + w, y + 34]], 8),
+    header: P.rect(x + 24, y + 20, w - 90, 50, 4),
+    title: [x + 24 + (w - 90) / 2, y + 55] as Pt,
+    lines: Array.from({ length: n }, (_, i) => [
+      P.line(x + 80, top + i * gap + 14, x + w - 30, top + i * gap + 14, 10),
+      P.line(x + 80, top + i * gap + 40, x + w - 30 - (i % 2 ? 60 : 110), top + i * gap + 40, 10),
+    ]).flat(),
+    q: (i: number): Pt => [x + 44, top + i * gap + 24],
+  };
+};
+
+/** A padlock, closed: the shackle (an inverted U), the body and the keyhole. Local 120 × 150. */
+export const padlock = (x: number, y: number, s = 1) => ({
+  shackle: path(x, y, s, [26, 66], [[[26, 30], [26, 4], [60, 4]], [[94, 4], [94, 30], [94, 66]]]),
+  body: rectL(x, y, s, 6, 62, 114, 150, 12),
+  keyhole: [P.ellipse(x + 60 * s, y + 96 * s, 10 * s, 10 * s), P.line(x + 60 * s, y + 104 * s, x + 60 * s, y + 126 * s, 4)],
+});
+
+/**
+ * A settings knob on a panel: the face, a scale of ticks on the upper 270°, and a pointer at
+ * `turn` (0 = fully left, 1 = fully right). For hyperparameters.
+ */
+export const dial = (cx: number, cy: number, r: number, turn = 0.5) => {
+  const ang = (u: number) => (-135 + 270 * u) * (Math.PI / 180);
+  const a = ang(turn);
+  return {
+    face: P.ellipse(cx, cy, r, r),
+    grip: P.ellipse(cx, cy, r * 0.78, r * 0.78),
+    ticks: Array.from({ length: 11 }, (_, i) => {
+      const t = ang(i / 10);
+      return P.line(cx + Math.sin(t) * r * 1.12, cy - Math.cos(t) * r * 1.12, cx + Math.sin(t) * r * (i % 5 ? 1.24 : 1.32), cy - Math.cos(t) * r * (i % 5 ? 1.24 : 1.32), 3);
+    }),
+    pointer: P.line(cx + Math.sin(a) * r * 0.2, cy - Math.cos(a) * r * 0.2, cx + Math.sin(a) * r * 0.7, cy - Math.cos(a) * r * 0.7, 6),
+  };
+};

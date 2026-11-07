@@ -157,8 +157,14 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   `arterialTrace`, `syringe`, `goBoard`, `blackboard`, `hospital` (page 2: `kit-objects-2`); and since
   E03 `sheet` (spreadsheet with cell, column and row rectangles), `database`, `foot` (plantar view,
   neuropathic ulcer, monofilament sites), `monofilament`, `phone`, `clock`, `testTube`, `headScan`
-  (sagittal MRI with the face profile) (page 3: `kit-objects-3`). Each
+  (sagittal MRI with the face profile) (page 3: `kit-objects-3`); and since E04 `lesion` (nevus or
+  melanoma, with a marker `ring`), `ruler` (cm/mm ticks, `cm` label points), `skinMarker`,
+  `questionPaper` (`q(i)` and `title` label points), `padlock`, `dial` (page 4: `kit-objects-4`). Each
   returns named parts so a beat draws them one step at a time.
+- **No typeset text inside an object.** Objects return label *points* (ruler `cm`, paper `q(i)`);
+  the beat writes the text there with `Label`/HL at a size that passes QA (36 px at 16:9, 48 px in
+  Shorts). An episode component that adds its own text (E04's X-ray letter tag) takes a size prop
+  so a Short can raise it: E04S2 failed QA at the 40 px default and passed at 56–64 px.
 - **A new object goes into the library first**, built from a reference picture's proportions,
   and is checked on the `kit-objects` still (`npx remotion still kit-objects out/objects.png
   --frame=59`) before any beat uses it.
