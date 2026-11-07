@@ -58,12 +58,30 @@ def say_number(token: str) -> str:
     return words + (" percent" if pct else "")
 
 
+def say_digits(tok: str) -> list[str]:
+    """A Whisper token with digits, as spoken words. Besides plain numbers, accepts the forms
+    Whisper writes for spelled-out script words (E07, Nov 2026, correct takes that failed 95%):
+    "2x2" / "2×2" → "two by two", and letter-digit mixes "f1" → "f one", "covid19" → "covid nineteen"."""
+    m = re.fullmatch(r"(\d+)[x×](\d+)", tok)
+    if m:
+        return [*say_int(int(m.group(1))).split(), "by", *say_int(int(m.group(2))).split()]
+    words = say_number(tok)
+    if words == tok and re.search(r"[a-z]", tok):
+        out: list[str] = []
+        for run in re.findall(r"[a-z]+|\d+", tok):
+            out.extend([run] if run.isalpha() else say_int(int(run)).split())
+        return out
+    return words.split()
+
+
 def norm_words(text: str) -> list[str]:
     out: list[str] = []
     for raw in text.replace("-", " ").split():
         tok = raw.strip(".,!?;:\"'“”‘’()").lower()
         if any(c.isdigit() for c in tok):
-            out.extend(say_number(tok).split())
+            out.extend(say_digits(tok))
+        elif tok in ("x", "×") and out and out[-1] in ONES + TENS:
+            out.append("by")  # "2 × 2" written with spaces (E07)
         elif tok:
             out.append(re.sub(r"[^a-z0-9éè]", "", tok.replace("é", "e").replace("è", "e")))
     return [w for w in out if w]

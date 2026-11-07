@@ -22,6 +22,8 @@ export {
   dial, lesion, padlock, questionPaper, ruler, skinMarker,
   blister, hospitalBed, tree,
   apple, car, colonTile, dog, errorLandscape, HE, kidney, network, neuron, type Crypt,
+  bell, coin, twoByTwo, vial,
 } from "./objects";
 export { Cell, CELL_FRAMES, Rbc } from "./cells";
+export { CELL, counts, curve, dashed, Glow, GREEN, npv, Plot, ppv, PPVBar, prevAt, Slider, Squares, Table, tableGeom, Under, type TableProps } from "./metrics";
 export { Captions } from "./Captions";

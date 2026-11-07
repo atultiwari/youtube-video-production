@@ -180,6 +180,11 @@ were written this way; start a new episode from it rather than wiring each beat 
 steps in time order: a note listed after a later cue waits for it. Step ids must be unique
 within a beat: makeBeat throws naming the beat and id, and `tools/lint-beats.mjs` (run first by
 `build-all.sh`) catches literal duplicates before the QA pass (E06 lost a 10-minute QA run to one).
+`b.word(cue, i)` takes the first exact match in line `i` (else the first prefix match); with
+`--lines` (build-all passes it) lint-beats also reports every cue word that occurs more than once
+in its line and which occurrence is picked (E07: "recall" landed on "precision recall curve", and
+"Raise" on "raise more false alarms" before "Raise it"). Warnings only: cue a word unique to the
+part of the line you mean.
 
 ## Shorts with the kit (E01 Shorts, Nov 2026: four Shorts, 35–56 s, all 0% static on the first build)
 

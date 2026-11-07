@@ -44,8 +44,9 @@ echo "== lint"
 # Duplicate step ids, before the long QA pass (E06). Checks the composition's own source files.
 compfile=$(grep -lE "export const $comp(:| =)" -r src --include='*.tsx' 2>/dev/null | head -1)
 if [[ -n $compfile ]]; then
-  # A Short is one file; an episode is its folder.
-  if [[ $(dirname "$compfile") == src/shorts ]]; then node tools/lint-beats.mjs "$compfile"; else node tools/lint-beats.mjs "$(dirname "$compfile")"/*.tsx; fi
+  # A Short is one file; an episode is its folder. --lines also reports cue words that occur more
+  # than once in their line, with the occurrence b.word picks (E07; warns only).
+  if [[ $(dirname "$compfile") == src/shorts ]]; then node tools/lint-beats.mjs "$compfile" --lines "$lines"; else node tools/lint-beats.mjs "$(dirname "$compfile")"/*.tsx --lines "$lines"; fi
 fi
 echo "== QA"
 # Every issue is printed; the run stops here if there are any.

@@ -60,6 +60,13 @@ At the quarter-scale measure render, a highlight smaller than about 120 × 56 px
 h < 28) under a 36 px label does not register. E03's table cells were 23% static until their
 highlights were enlarged to that size (beatspec.tsx says so too).
 
+Size is not enough: the change must also clear the 24-level threshold. A faint highlight wash
+(a multiplied `Wash`/`Glow` at alpha ≤ 0.3, or a pale colour on paper) over a large area changes
+each pixel too little and does not count, nor do rings, ticks, thin arrows or small stick figures
+(E06, E07). E07 measured 21% static on its first pass with a highlight wash on most cues; adding
+an `HL` label (or raising the wash to alpha ≥ 0.45 in a strong colour) on a word in each gap
+brought it to 5%.
+
 ## Mute review: does it explain itself?
 
 The last check before a render is a person, or an agent, watching **with the sound off**. Copy

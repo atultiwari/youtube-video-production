@@ -33,6 +33,10 @@
  * - Highlights that make a small arrival an event need area: under about 120 × 56 px (HL w ≥ 60,
  *   h ≥ 28) a table-cell highlight does not register in the quarter-scale measure render (E03:
  *   23% static until the cell highlights were enlarged).
+ * - Faint highlight washes do not count either: a multiplied `Wash` (or E07's `Glow`) at alpha ≤ 0.3,
+ *   or a pale colour on paper, changes each pixel by less than the detector's 24 levels, however
+ *   large. E07 was 21% static on first measure with washes on most cues; an `HL` label on a gap
+ *   word (or alpha ≥ 0.45 in a strong colour) took it to 5%.
  * - Labels alone are too small to count as events (36 px at a quarter-scale measure is under the
  *   detector's 0.25%-of-frame threshold): give a label step an `HL` highlight, or it leaves a
  *   static gap (E01's first build was 43% static for exactly this reason).

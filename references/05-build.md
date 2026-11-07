@@ -169,7 +169,14 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   for frame-driven gradient descent), `kidney` (coronal section), `dog`, `car`, `apple` (everyday
   photo subjects), drawn in reading order by `src/kit/art.tsx` (`ColonTileArt`, `NeuronArt`,
   `NetworkArt`, `KidneyArt`, `DogArt`, `CarArt`, `AppleArt`); `Fills` (Picture.tsx) fills a few
-  hundred small shapes in one layer (page 6: `kit-objects-6`). Each
+  hundred small shapes in one layer (page 6: `kit-objects-6`); since E07 `twoByTwo` (the diagnostic
+  2×2 table's geometry: frame, dividers, header strips, `cells`, `centre`, `colHead`/`rowHead`),
+  `vial` (antibiotic vial: crimp, flip-off cap, label, powder), `coin` (one rupee, ₹), `bell` (alarm
+  bell, `arcs` for ringing), and `src/kit/metrics.tsx`: a frame-driven 2×2 `Table` whose counts
+  follow a prevalence function of the frame (`prevAt` steps whole percents, so 1,000 patients at
+  90%/90% always show integer cells), `Slider` (prevalence), `PPVBar` (the alert row as true vs
+  false alarms), `Squares` ("7 of 10" grids), `Plot`/`curve`/`dashed`/`Under` for ROC, PR and
+  calibration curves (page 7: `kit-objects-7`). Each
   returns named parts so a beat draws them one step at a time.
 - **No typeset text inside an object.** Objects return label *points* (ruler `cm`, paper `q(i)`);
   the beat writes the text there with `Label`/HL at a size that passes QA (36 px at 16:9, 48 px in

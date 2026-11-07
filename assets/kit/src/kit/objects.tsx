@@ -1006,3 +1006,83 @@ export const apple = (x: number, y: number, s = 1) => ({
   leaf: smoothClosed(x, y, s, [[106, 20], [128, 4], [156, 6], [140, 22]], 6),
   shine: smoothOpen(x, y, s, [[44, 70], [36, 96], [40, 120]], 6),
 });
+
+/**
+ * The diagnostic 2×2 table (E07): disease across the top (present | absent), test down the side
+ * (positive | negative). (x, y) is the top-left of the whole table including the header strips;
+ * `hw` is the row-header strip's width, `hh` the column-header strip's height.
+ * Cells in reading order: tp (top-left), fp (top-right), fn (bottom-left), tn (bottom-right).
+ * Parts: frame (closed, cells only), dividers (the cross), headerLines (the strips' inner edges),
+ * cells (closed rects for washes, inset 6 px), centre of each cell, colHead/rowHead centres.
+ */
+export const twoByTwo = (x: number, y: number, w: number, h: number, hw = 170, hh = 70) => {
+  const cx0 = x + hw, cy0 = y + hh, cw = (w - hw) / 2, ch = (h - hh) / 2;
+  const cell = (i: number, j: number) => P.rect(cx0 + i * cw + 6, cy0 + j * ch + 6, cw - 12, ch - 12, 8);
+  const centre = (i: number, j: number): Pt => [cx0 + (i + 0.5) * cw, cy0 + (j + 0.5) * ch];
+  return {
+    frame: P.rect(cx0, cy0, w - hw, h - hh, 10),
+    dividers: [P.line(cx0 + cw, cy0 - hh * 0.9, cx0 + cw, y + h, 16), P.line(cx0 - hw * 0.9, cy0 + ch, x + w, cy0 + ch, 16)],
+    headerLines: [P.line(cx0, cy0 - hh * 0.9, cx0, cy0, 4), P.line(cx0 - hw * 0.9, cy0, cx0, cy0, 4)],
+    cells: { tp: cell(0, 0), fp: cell(1, 0), fn: cell(0, 1), tn: cell(1, 1) },
+    centre: { tp: centre(0, 0), fp: centre(1, 0), fn: centre(0, 1), tn: centre(1, 1) },
+    colHead: [[cx0 + cw / 2, y + hh / 2], [cx0 + cw * 1.5, y + hh / 2]] as Pt[],
+    rowHead: [[x + hw / 2, cy0 + ch / 2], [x + hw / 2, cy0 + ch * 1.5]] as Pt[],
+    cellW: cw, cellH: ch,
+  };
+};
+
+/**
+ * An injection vial (antibiotic powder), front view: glass body with shoulders and a neck, the
+ * aluminium crimp ring, the plastic flip-off cap, a paper label with two print lines, and the
+ * powder level. Local box 120 × 230, top-left (x, y), scale s. Wash `glass` pale, `cap` coloured,
+ * `powder` white, `label` cream, then ink everything.
+ */
+export const vial = (x: number, y: number, s = 1) => ({
+  glass: smoothClosed(x, y, s, [[34, 66], [34, 74], [14, 92], [8, 112], [8, 214], [16, 226], [104, 226], [112, 214], [112, 112], [106, 92], [86, 74], [86, 66]], 6),
+  crimp: rectL(x, y, s, 26, 36, 94, 68, 6),
+  cap: rectL(x, y, s, 22, 8, 98, 38, 10),
+  capRidge: P.line(x + 30 * s, y + 24 * s, x + 90 * s, y + 24 * s, 6),
+  label: rectL(x, y, s, 14, 124, 106, 196, 4),
+  print: [P.line(x + 28 * s, y + 148 * s, x + 92 * s, y + 148 * s, 8), P.line(x + 28 * s, y + 172 * s, x + 76 * s, y + 172 * s, 8)],
+  powder: smoothClosed(x, y, s, [[12, 200], [60, 194], [108, 200], [108, 214], [100, 222], [20, 222], [12, 214]], 4),
+  shine: P.line(x + 20 * s, y + 104 * s, x + 20 * s, y + 118 * s, 3),
+});
+
+/**
+ * A one-rupee coin, face on: rim, raised inner ring, the ₹ sign (two top bars, the bowl, the
+ * diagonal leg) and a numeral "1" stroke. Centre (cx, cy), radius r. Wash `face` in a steel grey.
+ */
+export const coin = (cx: number, cy: number, r: number) => {
+  const k = r / 100;
+  const L = (x1: number, y1: number, x2: number, y2: number) => P.line(cx + x1 * k, cy + y1 * k, cx + x2 * k, cy + y2 * k, 10);
+  return {
+    face: P.ellipse(cx, cy, r, r),
+    ring: P.ellipse(cx, cy, r * 0.86, r * 0.86),
+    rupee: [
+      L(-34, -48, 30, -48), L(-34, -26, 30, -26),
+      smoothOpen(cx, cy, k, [[-34, -48], [2, -48], [16, -36], [14, -20], [0, -8], [-34, -6]], 8),
+      L(-34, -6, 22, 44),
+    ],
+    reeds: Array.from({ length: 36 }, (_, i) => {
+      const a = (i / 36) * Math.PI * 2;
+      return P.line(cx + Math.cos(a) * r * 0.9, cy + Math.sin(a) * r * 0.9, cx + Math.cos(a) * r * 0.97, cy + Math.sin(a) * r * 0.97, 2);
+    }),
+  };
+};
+
+/**
+ * An alarm bell: a flared bell body, the lip, a top knob, the clapper below the lip, and three
+ * sound arcs on each side (draw the arcs last, when it rings). Centre of the body (cx, cy), scale s;
+ * the bell is about 200 × 220 × s.
+ */
+export const bell = (cx: number, cy: number, s = 1) => ({
+  body: smoothClosed(cx, cy, s, [[0, -96], [34, -86], [54, -50], [60, 0], [70, 40], [96, 66], [96, 76], [-96, 76], [-96, 66], [-70, 40], [-60, 0], [-54, -50], [-34, -86]], 8),
+  lip: P.line(cx - 96 * s, cy + 66 * s, cx + 96 * s, cy + 66 * s, 10),
+  knob: P.ellipse(cx, cy - 106 * s, 12 * s, 12 * s),
+  clapper: P.ellipse(cx, cy + 94 * s, 18 * s, 14 * s),
+  shine: smoothOpen(cx, cy, s, [[-30, -60], [-40, -20], [-42, 20]], 6),
+  arcs: [1, 2, 3].flatMap((i) => [
+    P.ellipse(cx, cy - 10 * s, (100 + i * 26) * s, (100 + i * 26) * s, -Math.PI * 0.18, Math.PI * 0.12, 10),
+    P.ellipse(cx, cy - 10 * s, (100 + i * 26) * s, (100 + i * 26) * s, Math.PI * 0.88, Math.PI * 1.18, 10),
+  ]),
+});

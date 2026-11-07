@@ -11,7 +11,8 @@ import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
 import React from "react";
 
 import { P } from "./shapes";
-import { blister, errorLandscape, hospitalBed, tree } from "./objects";
+import { bell, blister, coin, errorLandscape, hospitalBed, tree, vial } from "./objects";
+import { PPVBar, Slider, Table } from "./metrics";
 import { AppleArt, CarArt, ColonTileArt, DogArt, KidneyArt, NetworkArt, NeuronArt } from "./art";
 import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
 import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
@@ -249,6 +250,50 @@ export const ObjectsDemo6: React.FC = () => {
           <Wash shape={land.body} color="#CDE3C4" at={0} id="lw" alpha={0.8} />
           <Ink strokes={[land.ground]} from={0} durationInFrames={20} id="lg" width={5} />
           <Fills shapes={[P.ellipse(ball[0], ball[1] - 22, 22, 22)]} color="#C8423B" at={0} />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * Page 7 of the library (`kit-objects-7`): the E07 additions (2×2 table geometry, vial, rupee coin,
+ * alarm bell) and metrics.tsx (frame-driven 2×2 table at 2% prevalence, PPV bar, prevalence
+ * slider), with the phone and bed they appear beside. Check after editing:
+ *   npx remotion still kit-objects-7 out/objects-7.png --frame=59
+ */
+export const ObjectsDemo7: React.FC = () => {
+  const v = vial(640, 60, 1.2);
+  const c = coin(940, 170, 110);
+  const b = bell(180, 640, 0.9);
+  const ph = phone(420, 470, 150, 280);
+  const bd = hospitalBed(640, 560, 0.9);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Table x={20} y={20} w={560} h={380} at={0} id="mt" wash={{ tp: 0, fp: 0, fn: 0, tn: 0 }} count={{ p: () => 2, at: { tp: 0, fp: 0, fn: 0, tn: 0 } }} size={56} headSize={32} />
+          <PPVBar x={700} y={380} w={340} h={40} at={0} id="mpb" p={() => 2} label={false} />
+          <Slider x={700} y={510} w={360} at={0} id="msl" p={() => 2} color="#F6D8A8" size={34} />
+          <Wash shape={v.glass} color="#E4F0F4" at={0} id="vg" alpha={0.9} />
+          <Wash shape={v.powder} color="#FFFFFF" at={0} id="vp" alpha={1} />
+          <Wash shape={v.label} color="#FFF4D6" at={0} id="vl" alpha={1} />
+          <Wash shape={v.crimp} color="#C9CDD2" at={0} id="vc" alpha={1} />
+          <Wash shape={v.cap} color="#3E7CC0" at={0} id="vk" alpha={1} />
+          <Ink strokes={[v.glass, v.crimp, v.cap, v.capRidge, v.label, ...v.print, v.powder, v.shine]} from={0} durationInFrames={20} id="vi" width={3} />
+          <Wash shape={c.face} color="#C9CCD1" at={0} id="cf" alpha={0.95} />
+          <Ink strokes={[c.face, c.ring, ...c.reeds]} from={0} durationInFrames={20} id="ci" width={3} double={false} />
+          <Ink strokes={c.rupee} from={0} durationInFrames={20} id="cr" width={6} />
+          <Wash shape={b.body} color="#E9C46A" at={0} id="bw" alpha={0.95} />
+          <Wash shape={b.clapper} color="#9C7A2A" at={0} id="bc" alpha={1} />
+          <Ink strokes={[b.body, b.lip, b.knob, b.clapper, b.shine]} from={0} durationInFrames={20} id="bi" />
+          <Ink strokes={b.arcs} from={0} durationInFrames={20} id="ba" color="#C8423B" width={4} double={false} />
+          <Wash shape={ph.screen} color="#FDE2DE" at={0} id="ps" alpha={0.95} />
+          <Ink strokes={[ph.body, ph.screen, ph.camera, ph.bar]} from={0} durationInFrames={20} id="pi" />
+          <Label text="SEPSIS ALERT" x={495} y={600} at={0} size={22} italic={false} weight={700} color="#C8423B" />
+          <Label text="Bed 12" x={495} y={640} at={0} size={26} italic={false} weight={700} />
+          <Wash shape={bd.mattress} color="#DDE8F2" at={0} id="bm" alpha={0.9} />
+          <Ink strokes={[bd.headboard, bd.footboard, bd.mattress, bd.pillow, ...bd.frame, ...bd.rail, ...bd.legs, ...bd.castors]} from={0} durationInFrames={20} id="bdi" />
         </Picture>
       </Paper>
     </AbsoluteFill>
