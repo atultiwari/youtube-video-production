@@ -166,7 +166,12 @@ def take_audio(beat: str, tmp: str) -> Path:
 
 def transcribe(beat: str, force: bool) -> dict:
     out = TAKES.parent / "whisper" / f"en-{beat}.json"
-    if out.exists() and not force:
+    # A cached transcript is reused only while it is newer than every file of the take: after a
+    # retake (sarvam-tts.py --force) the old JSON would score the new take against the old audio
+    # (E03, Nov 2026: a good retake was counted as a second failure).
+    wavs = [TAKES / f"en-{beat}.wav"] + sorted(TAKES.glob(f"en-{beat}[a-z].wav"))
+    newest = max((w.stat().st_mtime for w in wavs if w.exists()), default=0)
+    if out.exists() and not force and out.stat().st_mtime >= newest:
         return json.loads(out.read_text())
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:

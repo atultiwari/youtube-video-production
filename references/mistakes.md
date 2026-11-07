@@ -218,3 +218,10 @@ views. *Sort by popular before adapting.*
 - **An insert-before-id edit landed in the wrong beat.** Several beats had a step called `n2`; a script inserting "before the first `n2`" put beat 6's steps in beat 5. Address a beat by its export (`export const B06`) first.
 - **The browser-upload rule was stale.** API uploads from unverified projects are no longer locked private (Google, Nov 2026); see 06-publish.md.
 - **A crude finger.** Approved, but the owner called the drawing out. Draw from `objects.tsx`; see 05-build.md.
+
+## From E03, AI in Medicine (Nov 2026, illustrated mode)
+
+- **A good retake was scored as a second failure.** `check-takes.py` reused the Whisper transcript cached from the first take. It now re-transcribes any beat whose take is newer than its cached JSON.
+- **A Short's hook was missing at frame 0.** An item with `until` is wrapped in `Between`, which starts at the step's sequenced frame (after the pen-written heading) and fades in. `makeBeat` now throws on an `until` item that starts at frame ≤ 0.
+- **23% static from table cells.** Small cell highlights did not register as events; see 11-visual-qa.md.
+- **Hiding a group on the same frame a new label appears in its place** left one QA overlap frame. Hide on the line's note step instead.

@@ -19,6 +19,13 @@
  * - `note` steps type on the card; every other step draws in the picture at its start frame.
  * - `until: "<id>"` hides a drawing when that step starts (a new picture in the same beat).
  * - The beat throws if its last step would end after the cut (fits()).
+ * - A hook (a Short's frame-0 picture, drawn at negative frames) must not have `until`: an `until`
+ *   item is wrapped in Between, which starts at the step's *sequenced* frame (after the pen-written
+ *   heading, ~3.5 frames a character) and fades in, so the hook is missing at frame 0. makeBeat
+ *   throws on it (E03S3, Nov 2026). Put the hook in its own item with no `until`.
+ * - Highlights that make a small arrival an event need area: under about 120 × 56 px (HL w ≥ 60,
+ *   h ≥ 28) a table-cell highlight does not register in the quarter-scale measure render (E03:
+ *   23% static until the cell highlights were enlarged).
  * - Labels alone are too small to count as events (36 px at a quarter-scale measure is under the
  *   detector's 0.25%-of-frame threshold): give a label step an `HL` highlight, or it leaves a
  *   static gap (E01's first build was 43% static for exactly this reason).
@@ -69,7 +76,17 @@ export const makeBeat = (spec: BeatSpec): React.FC => {
     const { fps } = useVideoConfig();
     const { picture } = useLayout();
     const C = chapter(spec.chapter);
-    const items = useMemo(() => spec.items(b, C, picture.w, picture.h), [b, C, picture.w, picture.h]);
+    const items = useMemo(() => {
+      const list = spec.items(b, C, picture.w, picture.h);
+      for (const it of list) {
+        if (it.until && it.at <= 0 && it.draw) {
+          throw new Error(`beat ${b.id}: item "${it.id}" starts at frame ${it.at} and has until: "${it.until}". `
+            + "Between would hide it until its sequenced start and fade it in, so a frame-0 hook disappears. "
+            + "Draw the hook in an item without `until`.");
+        }
+      }
+      return list;
+    }, [b, C, picture.w, picture.h]);
     const s = useMemo(() => {
       const steps = [
         ...(spec.heading ? [{ id: "heading", at: 0, dur: Math.round(spec.heading.length * MOTION.writeFramesPerChar) }] : []),

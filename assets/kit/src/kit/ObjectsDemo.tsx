@@ -8,7 +8,7 @@ import { AbsoluteFill } from "remotion";
 import { Paper } from "./Chrome";
 import { Cell, Rbc } from "./cells";
 import { Dots, Hatch, Ink, Label, Picture, Wash } from "./Picture";
-import { blackboard, chestFilm, doctor, ecgStrip, finger, fundus, glassSlide, goBoard, heart, hospital, ivBag, monitor, oximeter, STAIN, syringe } from "./objects";
+import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
 import { chapter, CHAPTERS, INK, TISSUE } from "./style";
 
 const C = chapter(Object.keys(CHAPTERS)[0]);
@@ -93,6 +93,53 @@ export const ObjectsDemo2: React.FC = () => {
           <Wash shape={bb.board} color="#2F4A3A" at={0} id="bbw" alpha={0.95} />
           <Ink strokes={[bb.frame, bb.board, bb.ledge, bb.chalk]} from={0} durationInFrames={20} id="bb" color="#7A5230" />
           <Label text="Classroom 1" x={bb.centre[0]} y={bb.centre[1]} at={30} size={40} italic={false} color="#F4F1EA" />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * Page 3 of the library (`kit-objects-3`): the E03 additions. Check after editing:
+ *   npx remotion still kit-objects-3 out/objects-3.png --frame=59
+ */
+export const ObjectsDemo3: React.FC = () => {
+  const sh = sheet(20, 40, [170, 120, 120], 5, 52);
+  const db = database(20, 340, 160, 200);
+  const ft = foot(260, 300, 0.85);
+  const mf = monofilament(470, 330, 1);
+  const ph = phone(640, 330, 150, 290);
+  const ck = clock(940, 140, 100, 3, 0);
+  const tt = testTube(1120, 50, 0.9);
+  const hd = headScan(840, 420, 0.95);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Ink strokes={[sh.frame, ...sh.rules, ...sh.cols]} from={0} durationInFrames={20} id="sh" width={2} pen={false} />
+          <Ink strokes={[sh.header]} from={0} durationInFrames={10} id="shh" />
+          {["Name", "HbA1c", "Foot"].map((t, c) => <Label key={t} text={t} x={sh.cell(c, 0)[0]} y={sh.cell(c, 0)[1] + 10} at={30} size={26} italic={false} weight={700} />)}
+          {[["Ramesh K", "7.8", "normal"], ["R Kumar", "7,8", ""], ["S Devi", "high", "not done"]].map((row, r) => row.map((t, c) => <Label key={`${r}${c}`} text={t} x={sh.cell(c, r + 1)[0]} y={sh.cell(c, r + 1)[1] + 9} at={30} size={24} />))}
+          <Wash shape={db.body} color="#CFE3F0" at={0} id="dbw" alpha={0.6} />
+          <Ink strokes={[db.top, ...db.sides, ...db.bands]} from={0} durationInFrames={20} id="db" />
+          <Wash shape={ft.sole} color={skin} at={0} id="ftw" alpha={0.55} />
+          {ft.toes.map((t, i) => <Wash key={i} shape={t} color={skin} at={0} id={`ftt${i}`} alpha={0.55} />)}
+          <Ink strokes={[ft.sole, ...ft.toes, ...ft.creases]} from={0} durationInFrames={20} id="ft" />
+          <Wash shape={ft.ulcer} color="#C4574A" at={0} id="ftu" alpha={0.8} />
+          <Wash shape={ft.ulcerBed} color="#E9A49A" at={0} id="ftub" alpha={0.9} />
+          <Ink strokes={[ft.ulcer]} from={0} durationInFrames={10} id="ftuo" color={TISSUE.blood} width={3} pen={false} />
+          <Wash shape={mf.holder} color="#4A6FB5" at={0} id="mfw" alpha={0.5} />
+          <Ink strokes={[mf.holder, ...mf.grip, mf.collar]} from={0} durationInFrames={20} id="mf" />
+          <Ink strokes={[mf.filament]} from={0} durationInFrames={10} id="mff" width={4} pen={false} />
+          <Wash shape={ph.screen} color="#DCE6EE" at={0} id="phw" alpha={0.8} />
+          <Ink strokes={[ph.body, ph.screen, ph.camera, ph.bar]} from={0} durationInFrames={20} id="ph" />
+          <Ink strokes={[ck.face, ...ck.ticks, ck.hour, ck.minute, ck.centre]} from={0} durationInFrames={20} id="ck" />
+          <Wash shape={tt.cap} color="#9A8AC4" at={0} id="ttc" alpha={0.9} />
+          <Wash shape={tt.blood} color={TISSUE.blood} at={0} id="ttb" alpha={0.75} />
+          <Ink strokes={[tt.cap, tt.tube, tt.label, ...tt.labelLines]} from={0} durationInFrames={20} id="tt" />
+          <Wash shape={hd.scan} color="#1E2426" at={0} id="hds" alpha={0.95} />
+          <Ink strokes={[hd.profile]} from={0} durationInFrames={20} id="hdp" color="#E8E4DA" pen={false} />
+          <Ink strokes={[hd.brain, hd.callosum, hd.cerebellum, hd.stem]} from={0} durationInFrames={20} id="hdb" color="#A9A397" pen={false} width={3} />
         </Picture>
       </Paper>
     </AbsoluteFill>

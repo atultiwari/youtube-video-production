@@ -56,6 +56,10 @@ levels) over at least 0.25% of the frame, about a 70 × 70 px patch at 1080p. ff
 between consecutive frames, so it reported "static" while a still showed three neutrophils
 drifting to the wall. Baselines and pilot were re-measured with the same detector.
 
+At the quarter-scale measure render, a highlight smaller than about 120 × 56 px (`HL` w < 60 or
+h < 28) under a 36 px label does not register. E03's table cells were 23% static until their
+highlights were enlarged to that size (beatspec.tsx says so too).
+
 ## Mute review: does it explain itself?
 
 The last check before a render is a person, or an agent, watching **with the sound off**. Copy

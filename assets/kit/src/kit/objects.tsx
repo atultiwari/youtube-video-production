@@ -394,3 +394,133 @@ export const syringe = (x: number, y: number, s = 1) => ({
   hub: rectL(x, y, s, 240, 24, 262, 46, 3),
   needle: P.line(x + 262 * s, y + 35 * s, x + 320 * s, y + 35 * s, 6),
 });
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E03 (Nov 2026): a spreadsheet, a database cylinder, a foot (plantar view) with an
+ * ulcer, a 10-g monofilament, a phone, a clock, a blood-collection tube and a sagittal head scan.
+ * Checked on the `kit-objects-3` still (ObjectsDemo3).
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * A spreadsheet: outer frame, a header row (drawn heavier by the caller), row and column rules.
+ * `widths` are column widths; `cell(c, r)` is a cell centre (row 0 is the header); `colRect(c)`
+ * and `rowRect(r)` are closed rectangles for a highlight wash on one column or one row.
+ */
+export const sheet = (x: number, y: number, widths: number[], rows: number, rh: number) => {
+  const W = widths.reduce((a, b) => a + b, 0), H = rows * rh;
+  const xs = widths.reduce<number[]>((acc, w) => [...acc, acc[acc.length - 1] + w], [x]);
+  return {
+    frame: P.rect(x, y, W, H, 6),
+    header: P.line(x, y + rh, x + W, y + rh, 10),
+    rules: Array.from({ length: rows - 2 }, (_, i) => P.line(x, y + rh * (i + 2), x + W, y + rh * (i + 2), 10)),
+    cols: xs.slice(1, -1).map((cx) => P.line(cx, y, cx, y + H, 8)),
+    cell: (c: number, r: number): Pt => [xs[c] + widths[c] / 2, y + r * rh + rh / 2],
+    colRect: (c: number): Pts => P.rect(xs[c] + 3, y + 3, widths[c] - 6, H - 6, 4),
+    rowRect: (r: number): Pts => P.rect(x + 3, y + r * rh + 3, W - 6, rh - 6, 4),
+    w: W, h: H,
+  };
+};
+
+/** A database drawn the usual way, as a cylinder of stacked discs. */
+export const database = (x: number, y: number, w: number, h: number) => {
+  const ry = w * 0.16;
+  return {
+    top: P.ellipse(x + w / 2, y + ry, w / 2, ry),
+    sides: [P.line(x, y + ry, x, y + h - ry, 8), P.line(x + w, y + ry, x + w, y + h - ry, 8)],
+    bands: [1 / 3, 2 / 3, 1].map((t) => P.ellipse(x + w / 2, y + ry + (h - 2 * ry) * t, w / 2, ry, 0, Math.PI, 24)),
+    body: P.rect(x, y + ry, w, h - 2 * ry, 2),
+  };
+};
+
+/**
+ * A left foot seen from the sole (plantar view), toes up, big toe on the viewer's left: the sole
+ * with the ball, the medial arch and the heel; five toes; an ulcer under the first metatarsal head
+ * (the classic neuropathic site). Local box 230 × 540, top-left (x, y), scale s.
+ * `sites` are the usual monofilament test points (great toe, 1st, 3rd and 5th metatarsal heads).
+ */
+export const foot = (x: number, y: number, s = 1) => ({
+  sole: path(x, y, s, [22, 150], [
+    [[60, 128], [150, 128], [208, 160]], [[214, 220], [206, 300], [196, 360]], [[190, 420], [196, 480], [170, 515]],
+    [[140, 545], [80, 545], [56, 515]], [[38, 470], [52, 420], [72, 372]], [[88, 330], [72, 282], [44, 248]],
+    [[22, 215], [16, 180], [22, 150]],
+  ]),
+  toes: [
+    P.blob(x + 48 * s, y + 92 * s, 33 * s, 46 * s, "toe1", 0.03),
+    P.blob(x + 104 * s, y + 80 * s, 19 * s, 28 * s, "toe2", 0.03),
+    P.blob(x + 144 * s, y + 90 * s, 17 * s, 25 * s, "toe3", 0.03),
+    P.blob(x + 178 * s, y + 106 * s, 15 * s, 22 * s, "toe4", 0.03),
+    P.blob(x + 204 * s, y + 130 * s, 12 * s, 18 * s, "toe5", 0.03),
+  ],
+  creases: [path(x, y, s, [96, 214], [[[130, 204], [168, 210], [198, 226]]])],
+  ulcer: P.blob(x + 62 * s, y + 178 * s, 24 * s, 18 * s, "ulcer", 0.08),
+  ulcerBed: P.blob(x + 62 * s, y + 178 * s, 12 * s, 9 * s, "ulcerbed", 0.1),
+  sites: [[48, 88], [62, 178], [140, 168], [196, 196]].map(([u, v]) => [x + u * s, y + v * s] as Pt),
+  ulcerAt: [x + 62 * s, y + 178 * s] as Pt,
+});
+
+/**
+ * A 10-g Semmes–Weinstein monofilament: the plastic holder and the nylon filament, buckled into
+ * a C as it is pressed on the skin. Local box 120 × 300, holder on top, tip at the bottom.
+ */
+export const monofilament = (x: number, y: number, s = 1) => ({
+  holder: rectL(x, y, s, 30, 0, 66, 190, 12),
+  grip: [0, 1, 2, 3].map((i) => P.line(x + 34 * s, y + (40 + i * 16) * s, x + 62 * s, y + (40 + i * 16) * s, 4)),
+  collar: rectL(x, y, s, 38, 190, 58, 206, 3),
+  filament: path(x, y, s, [48, 206], [[[110, 226], [112, 290], [48, 304]]]),
+  tip: [x + 48 * s, y + 300 * s] as Pt,
+});
+
+/** A smartphone, portrait: body, screen, camera, home bar. `screen` is closed for a photo wash. */
+export const phone = (x: number, y: number, w: number, h: number) => ({
+  body: P.rect(x, y, w, h, w * 0.14),
+  screen: P.rect(x + w * 0.07, y + h * 0.07, w * 0.86, h * 0.84, w * 0.05),
+  camera: P.ellipse(x + w / 2, y + h * 0.035, w * 0.025, w * 0.025),
+  bar: P.line(x + w * 0.35, y + h * 0.955, x + w * 0.65, y + h * 0.955, 6),
+});
+
+/** A wall clock reading `hour`:`minute`: face, twelve ticks, two hands, the centre. */
+export const clock = (cx: number, cy: number, r: number, hour = 3, minute = 0) => {
+  const hand = (turns: number, len: number) => P.line(cx, cy, cx + Math.sin(turns * 2 * Math.PI) * len, cy - Math.cos(turns * 2 * Math.PI) * len, 6);
+  return {
+    face: P.ellipse(cx, cy, r, r),
+    ticks: Array.from({ length: 12 }, (_, i) => {
+      const a = (i / 12) * 2 * Math.PI, r0 = i % 3 ? r * 0.86 : r * 0.78;
+      return P.line(cx + Math.sin(a) * r0, cy - Math.cos(a) * r0, cx + Math.sin(a) * r * 0.94, cy - Math.cos(a) * r * 0.94, 4);
+    }),
+    hour: hand((hour % 12 + minute / 60) / 12, r * 0.5),
+    minute: hand(minute / 60, r * 0.75),
+    centre: P.ellipse(cx, cy, r * 0.05, r * 0.05),
+  };
+};
+
+/**
+ * A blood-collection tube, upright: coloured stopper (wash it: grey for glucose, lavender for
+ * HbA1c/CBC), the tube with a round bottom, the blood level and a paper label. Local 70 × 260.
+ */
+export const testTube = (x: number, y: number, s = 1) => ({
+  cap: rectL(x, y, s, 2, 0, 68, 46, 8),
+  tube: path(x, y, s, [8, 46], [[[8, 120], [8, 180], [8, 225]], [[8, 262], [62, 262], [62, 225]], [[62, 180], [62, 120], [62, 46]]]),
+  blood: path(x, y, s, [12, 140], [[[30, 136], [44, 144], [58, 140]], [[58, 180], [58, 210], [58, 225]], [[58, 254], [12, 254], [12, 225]], [[12, 200], [12, 170], [12, 140]]]),
+  label: rectL(x, y, s, 12, 66, 58, 128, 3),
+  labelLines: [80, 96, 112].map((v) => P.line(x + 18 * s, y + v * s, x + 52 * s, y + v * s, 4)),
+});
+
+/**
+ * A head in a sagittal MRI slice, facing right: the skin profile (forehead, nose, lips, chin and
+ * neck: the part face-recognition rebuilds), the brain with its corpus callosum, the cerebellum
+ * and brainstem. Local box 310 × 370, top-left (x, y), scale s. `scan` is the dark film behind it.
+ */
+export const headScan = (x: number, y: number, s = 1) => ({
+  scan: rectL(x, y, s, -30, -20, 330, 390, 10),
+  profile: path(x, y, s, [70, 370], [
+    [[60, 320], [30, 290], [24, 220]], [[18, 130], [60, 30], [160, 18]], [[230, 12], [268, 60], [270, 120]],
+    [[272, 140], [266, 150], [270, 160]], [[286, 180], [300, 196], [298, 206]], [[290, 214], [278, 214], [274, 220]],
+    [[284, 228], [282, 236], [272, 240]], [[282, 248], [282, 258], [272, 264]], [[276, 284], [270, 300], [250, 306]],
+    [[230, 310], [222, 320], [222, 370]],
+  ]),
+  brain: path(x, y, s, [60, 190], [[[44, 120], [80, 50], [160, 44]], [[222, 40], [252, 90], [248, 140]], [[246, 176], [220, 196], [180, 196]], [[140, 200], [100, 206], [60, 190]]]),
+  callosum: path(x, y, s, [100, 140], [[[120, 110], [180, 104], [210, 136]]]),
+  cerebellum: P.blob(x + 92 * s, y + 222 * s, 40 * s, 26 * s, "cbl", 0.05),
+  stem: path(x, y, s, [140, 196], [[[134, 240], [130, 280], [126, 330]]]),
+  face: [x + 284 * s, y + 200 * s] as Pt,
+});

@@ -18,6 +18,7 @@ export { HL, makeBeat, type BeatSpec, type Item } from "./beatspec";
 export {
   arterialTrace, blackboard, box, chestFilm, circle, cubic, doctor, ecgStrip, ecgTrace, finger, fundus, glassSlide, goBoard,
   granules, heart, hospital, ivBag, monitor, oximeter, page, person, rbc, stack, STAIN, syringe, wbc, type CellKind,
+  clock, database, foot, headScan, monofilament, phone, sheet, testTube,
 } from "./objects";
 export { Cell, CELL_FRAMES, Rbc } from "./cells";
 export { Captions } from "./Captions";

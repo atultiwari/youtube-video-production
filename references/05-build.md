@@ -154,7 +154,10 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   CTR), `heart` (anatomical, great vessels), `doctor`, `person`, `page`, `stack`; and since E02
   `wbc` (neutrophil, band, lymphocyte, monocyte, eosinophil, basophil on a Romanowsky film, drawn
   with `Cell`/`Rbc` from `cells.tsx`), `rbc`, `glassSlide`, `fundus`, `ivBag`, `monitor` with
-  `arterialTrace`, `syringe`, `goBoard`, `blackboard`, `hospital` (page 2: `kit-objects-2`). Each
+  `arterialTrace`, `syringe`, `goBoard`, `blackboard`, `hospital` (page 2: `kit-objects-2`); and since
+  E03 `sheet` (spreadsheet with cell, column and row rectangles), `database`, `foot` (plantar view,
+  neuropathic ulcer, monofilament sites), `monofilament`, `phone`, `clock`, `testTube`, `headScan`
+  (sagittal MRI with the face profile) (page 3: `kit-objects-3`). Each
   returns named parts so a beat draws them one step at a time.
 - **A new object goes into the library first**, built from a reference picture's proportions,
   and is checked on the `kit-objects` still (`npx remotion still kit-objects out/objects.png
