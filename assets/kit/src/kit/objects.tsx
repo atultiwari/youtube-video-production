@@ -155,3 +155,242 @@ export const stack = (x: number, y: number, w: number, h: number, n = 3, dx = 22
 export const circle = (cx: number, cy: number, r: number): Pts => P.ellipse(cx, cy, r, r * 0.9, -Math.PI / 2, Math.PI * 1.5, 72);
 
 export const box = (x: number, y: number, w: number, h: number): Pts => P.rect(x, y, w, h, 14);
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E02 (Nov 2026): blood-film cells, a glass slide, a fundus photograph, an IV bag, a
+ * bedside monitor, a Go board and a classroom blackboard. Checked on the `kit-objects-2` still.
+ * ------------------------------------------------------------------------------------------- */
+
+/** Granule positions scattered inside a circle of radius r (deterministic per key). */
+export const granules = (cx: number, cy: number, r: number, n: number, key: string, avoid?: (x: number, y: number) => boolean): Pt[] => {
+  const out: Pt[] = [];
+  let seed = 0;
+  for (const ch of key) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  let guard = 0;
+  while (out.length < n && guard++ < n * 40) {
+    const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * r;
+    const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d;
+    if (!avoid || !avoid(x, y)) out.push([x, y]);
+  }
+  return out;
+};
+
+export type CellKind = "neutrophil" | "band" | "lymphocyte" | "monocyte" | "eosinophil" | "basophil";
+
+/** Colours for a Romanowsky-stained film (Leishman / May-Grünwald-Giemsa). */
+export const STAIN = {
+  nucleus: "#4B2F7F",
+  nucleusWash: "#7A5AAE",
+  neutroCyto: "#F1D9DF",
+  lymphoCyto: "#A9C8EA",
+  monoCyto: "#BCC3D6",
+  eosGranule: "#D9622B",
+  basoGranule: "#2E1F55",
+  neutroGranule: "#B88AB8",
+  rbc: "#E7A39A",
+  rbcPale: "#F6D6CF",
+} as const;
+
+/**
+ * A white blood cell as on a stained film, centred at (cx, cy), radius r (a neutrophil is about
+ * twice an RBC's width: r ≈ 1.15 × the RBC radius; lymphocytes smaller, monocytes larger).
+ * Parts: membrane (closed), nucleus (closed outlines, one per lobe), bridges (chromatin strands
+ * between lobes), granules (dot centres), granuleR, cyto and granule colours.
+ * - neutrophil: 3 dense lobes joined by thin strands, fine lilac granules, pale pink cytoplasm
+ * - band: the same cell with an unsegmented horseshoe nucleus of even width
+ * - eosinophil: 2 lobes ("spectacles"), packed coarse orange granules
+ * - basophil: lobed nucleus mostly hidden under coarse dark-purple granules
+ * - lymphocyte: small; round dense nucleus filling most of the cell, thin sky-blue rim
+ * - monocyte: large; folded kidney-shaped nucleus, grey-blue cytoplasm, a few vacuoles
+ */
+export const wbc = (kind: CellKind, cx: number, cy: number, r: number) => {
+  const k = `${kind}${Math.round(cx)}${Math.round(cy)}`;
+  if (kind === "lymphocyte") {
+    const R = r * 0.78;
+    return {
+      membrane: P.blob(cx, cy, R, R * 0.96, `${k}m`, 0.04),
+      nucleus: [P.blob(cx - R * 0.06, cy + R * 0.02, R * 0.8, R * 0.76, `${k}n`, 0.05)] as Pts[],
+      bridges: [] as Pts[], granules: [] as Pt[], granuleR: 0, cyto: STAIN.lymphoCyto, granule: STAIN.nucleus, vacuoles: [] as Pts[],
+    };
+  }
+  if (kind === "monocyte") {
+    const R = r * 1.25;
+    const bean = path(cx - R, cy - R, R / 100, [40, 70], [
+      [[40, 38], [80, 28], [112, 36]], [[150, 44], [170, 74], [160, 104]], [[152, 128], [128, 140], [112, 128]],
+      [[100, 116], [88, 112], [74, 122]], [[56, 136], [36, 116], [36, 94]], [[36, 84], [38, 76], [40, 70]],
+    ]);
+    return {
+      membrane: P.blob(cx, cy, R, R * 0.92, `${k}m`, 0.07),
+      nucleus: [bean] as Pts[],
+      bridges: [] as Pts[], granules: granules(cx, cy, R * 0.85, 14, `${k}g`), granuleR: r * 0.022, cyto: STAIN.monoCyto, granule: STAIN.neutroGranule,
+      vacuoles: [P.ellipse(cx - R * 0.45, cy + R * 0.55, R * 0.08, R * 0.08), P.ellipse(cx + R * 0.55, cy + R * 0.5, R * 0.06, R * 0.06)] as Pts[],
+    };
+  }
+  const membrane = P.blob(cx, cy, r, r * 0.97, `${k}m`, 0.04);
+  if (kind === "eosinophil") {
+    const L = P.blob(cx - r * 0.36, cy + r * 0.02, r * 0.3, r * 0.36, `${k}a`, 0.08);
+    const Rr = P.blob(cx + r * 0.36, cy - r * 0.02, r * 0.3, r * 0.36, `${k}b`, 0.08);
+    const inNuc = (x: number, y: number) => Math.hypot(x - (cx - r * 0.36), y - cy) < r * 0.34 || Math.hypot(x - (cx + r * 0.36), y - cy) < r * 0.34;
+    return {
+      membrane, nucleus: [L, Rr] as Pts[], bridges: [P.quad(cx - r * 0.08, cy - r * 0.02, cx, cy + r * 0.06, cx + r * 0.08, cy - r * 0.02, 8)],
+      granules: granules(cx, cy, r * 0.8, 70, `${k}g`, inNuc), granuleR: r * 0.065, cyto: STAIN.neutroCyto, granule: STAIN.eosGranule, vacuoles: [] as Pts[],
+    };
+  }
+  if (kind === "basophil") {
+    return {
+      membrane, nucleus: [P.blob(cx - r * 0.1, cy, r * 0.5, r * 0.42, `${k}n`, 0.18)] as Pts[], bridges: [] as Pts[],
+      granules: granules(cx, cy, r * 0.85, 60, `${k}g`), granuleR: r * 0.075, cyto: STAIN.neutroCyto, granule: STAIN.basoGranule, vacuoles: [] as Pts[],
+    };
+  }
+  if (kind === "band") {
+    const outer = P.ellipse(cx, cy + r * 0.16, r * 0.62, r * 0.56, Math.PI * 0.85, Math.PI * 2.15, 40);
+    const inner = P.ellipse(cx, cy + r * 0.16, r * 0.3, r * 0.25, Math.PI * 2.15, Math.PI * 0.85, 30);
+    const shoe = [...outer, ...inner, outer[0]] as Pts;
+    const inNuc = (x: number, y: number) => { const d = Math.hypot((x - cx) / 0.56, (y - cy - r * 0.12) / 0.5) / r; return d < 1.05 && d > 0.5 && y < cy + r * 0.3; };
+    return { membrane, nucleus: [shoe] as Pts[], bridges: [] as Pts[], granules: granules(cx, cy, r * 0.85, 40, `${k}g`, inNuc), granuleR: r * 0.03, cyto: STAIN.neutroCyto, granule: STAIN.neutroGranule, vacuoles: [] as Pts[] };
+  }
+  // neutrophil
+  const lobes: [number, number][] = [[-0.38, 0.12], [0.0, -0.26], [0.38, 0.14]];
+  const nucleus = lobes.map(([dx, dy], i) => P.blob(cx + dx * r, cy + dy * r, r * 0.27, r * 0.23, `${k}l${i}`, 0.12));
+  const bridges = [P.quad(cx - r * 0.22, cy + r * 0.0, cx - r * 0.16, cy - r * 0.16, cx - r * 0.12, cy - r * 0.26, 8),
+    P.quad(cx + r * 0.14, cy - r * 0.24, cx + r * 0.24, cy - r * 0.08, cx + r * 0.24, cy + r * 0.08, 8)];
+  const inNuc = (x: number, y: number) => lobes.some(([dx, dy]) => Math.hypot(x - (cx + dx * r), y - (cy + dy * r)) < r * 0.3);
+  return { membrane, nucleus, bridges, granules: granules(cx, cy, r * 0.85, 40, `${k}g`, inNuc), granuleR: r * 0.03, cyto: STAIN.neutroCyto, granule: STAIN.neutroGranule, vacuoles: [] as Pts[] };
+};
+
+/** A red cell, face on: rim and the central pallor (about a third of the diameter). */
+export const rbc = (cx: number, cy: number, r: number, key = "") => ({
+  rim: P.blob(cx, cy, r, r * 0.95, `rbc${key}${Math.round(cx)}${Math.round(cy)}`, 0.03),
+  pallor: P.ellipse(cx, cy, r * 0.38, r * 0.36),
+});
+
+/**
+ * A glass microscope slide, label end on the left: glass, frosted label patch, and a blood film
+ * with its thick start and its feathered tail (where the differential is counted).
+ */
+export const glassSlide = (x: number, y: number, w: number, h: number) => {
+  const fx = x + w * 0.24;
+  const smear = path(0, 0, 1, [fx + w * 0.04, y + h * 0.2], [
+    [[fx + w * 0.3, y + h * 0.16], [x + w * 0.78, y + h * 0.18], [x + w * 0.86, y + h * 0.3]],
+    [[x + w * 0.9, y + h * 0.4], [x + w * 0.88, y + h * 0.55], [x + w * 0.9, y + h * 0.66]],
+    [[x + w * 0.86, y + h * 0.8], [x + w * 0.78, y + h * 0.82], [fx + w * 0.3, y + h * 0.84]],
+    [[fx + w * 0.06, y + h * 0.84], [fx + w * 0.04, y + h * 0.5], [fx + w * 0.04, y + h * 0.2]],
+  ]);
+  return {
+    glass: P.rect(x, y, w, h, 4),
+    frost: P.rect(x + w * 0.02, y + h * 0.08, w * 0.2, h * 0.84, 3),
+    smear,
+    /** The feathered tail, where a differential is read. */
+    tail: [x + w * 0.84, y + h * 0.5] as Pt,
+    label: [x + w * 0.12, y + h * 0.56] as Pt,
+  };
+};
+
+/**
+ * A colour fundus photograph of a left eye: the circular field, the optic disc on the viewer's
+ * left with its cup, the superior and inferior arcades curving round the macula, the fovea.
+ */
+export const fundus = (cx: number, cy: number, r: number) => {
+  const dx = cx - r * 0.42, dy = cy;
+  const arc = (sy: number, tx: number, ty: number) => path(0, 0, 1, [dx, dy + sy * r * 0.08], [[[dx + r * 0.1, dy + sy * r * 0.5], [cx + r * 0.3, cy + sy * r * 0.62], [tx, ty]]]);
+  const vessels: Pts[] = [
+    arc(-1, cx + r * 0.82, cy - r * 0.28), arc(1, cx + r * 0.82, cy + r * 0.3),
+    arc(-1, cx + r * 0.6, cy - r * 0.72), arc(1, cx + r * 0.62, cy + r * 0.72),
+    path(0, 0, 1, [dx, dy - r * 0.1], [[[dx - r * 0.08, dy - r * 0.36], [dx - r * 0.14, dy - r * 0.54], [dx - r * 0.2, cy - r * 0.66]]]),
+    path(0, 0, 1, [dx, dy + r * 0.1], [[[dx - r * 0.08, dy + r * 0.36], [dx - r * 0.14, dy + r * 0.54], [dx - r * 0.2, cy + r * 0.66]]]),
+    path(0, 0, 1, [dx - r * 0.08, dy], [[[dx - r * 0.3, dy - r * 0.04], [dx - r * 0.42, dy + r * 0.02], [dx - r * 0.52, dy - r * 0.04]]]),
+  ];
+  return {
+    field: P.ellipse(cx, cy, r, r),
+    disc: P.ellipse(dx, dy, r * 0.13, r * 0.15),
+    cup: P.ellipse(dx + r * 0.02, dy, r * 0.05, r * 0.06),
+    macula: P.ellipse(cx + r * 0.26, cy + r * 0.02, r * 0.14, r * 0.13),
+    fovea: [cx + r * 0.26, cy + r * 0.02] as Pt,
+    vessels,
+  };
+};
+
+/**
+ * An IV infusion bag on a hook: bag (closed), hanger hole, fluid level, printed label box,
+ * port, drip chamber, tubing with a roller clamp. Local box 200 × 520, top-left (x, y), scale s.
+ */
+export const ivBag = (x: number, y: number, s = 1) => ({
+  bag: path(x, y, s, [40, 40], [[[90, 30], [110, 30], [160, 40]], [[176, 44], [180, 60], [180, 80]], [[182, 160], [176, 230], [150, 270]],
+    [[130, 290], [70, 290], [50, 270]], [[24, 230], [18, 160], [20, 80]], [[20, 60], [24, 44], [40, 40]]]),
+  hole: P.ellipse(x + 100 * s, y + 52 * s, 14 * s, 8 * s),
+  level: P.line(x + 26 * s, y + 110 * s, x + 174 * s, y + 110 * s, 8),
+  labelBox: P.rect(x + 50 * s, y + 140 * s, 100 * s, 80 * s, 6 * s),
+  port: P.rect(x + 88 * s, y + 288 * s, 24 * s, 30 * s, 4 * s),
+  chamber: P.rect(x + 82 * s, y + 318 * s, 36 * s, 70 * s, 10 * s),
+  drop: P.ellipse(x + 100 * s, y + 340 * s, 5 * s, 7 * s),
+  tube: path(x, y, s, [100, 388], [[[100, 440], [130, 470], [120, 520]]]),
+  clamp: P.rect(x + 104 * s, y + 448 * s, 34 * s, 22 * s, 4 * s),
+  labelAt: [x + 100 * s, y + 188 * s] as Pt,
+});
+
+/** One arterial pressure pulse: steep upstroke, peak, dicrotic notch, run-off. */
+export const arterialTrace = (x1: number, x2: number, y: number, amp: number, beats: number): Pts => {
+  const pts: Pt[] = [];
+  const span = (x2 - x1) / beats;
+  const shape: [number, number][] = [[0, 0], [0.08, -0.9], [0.14, -1], [0.24, -0.72], [0.32, -0.5], [0.36, -0.58], [0.44, -0.42], [0.7, -0.14], [1, 0]];
+  for (let b = 0; b < beats; b++) for (const [u, v] of shape) pts.push([x1 + (b + u) * span, y + v * amp]);
+  return pts;
+};
+
+/** A bedside monitor: case, screen, stand, an arterial trace, and where the number goes. */
+export const monitor = (x: number, y: number, w: number, h: number) => ({
+  case: P.rect(x, y, w, h, 18),
+  screen: P.rect(x + w * 0.06, y + h * 0.09, w * 0.88, h * 0.72, 8),
+  stand: [P.line(x + w / 2, y + h, x + w / 2, y + h * 1.18, 6), P.line(x + w * 0.3, y + h * 1.18, x + w * 0.7, y + h * 1.18, 8)],
+  buttons: [0, 1, 2].map((i) => P.ellipse(x + w * (0.72 + i * 0.08), y + h * 0.9, w * 0.022, w * 0.022)),
+  trace: arterialTrace(x + w * 0.1, x + w * 0.62, y + h * 0.62, h * 0.32, 3),
+  readout: [x + w * 0.78, y + h * 0.52] as Pt,
+});
+
+/**
+ * A Go board, n × n lines (19 on a full board; 9 reads better small), with star points.
+ * `at(i, j)` gives an intersection for placing stones (draw stones as filled dots, r ≈ 0.45 cell).
+ */
+export const goBoard = (x: number, y: number, size: number, n = 9) => {
+  const m = size * 0.07, cell = (size - 2 * m) / (n - 1);
+  const at = (i: number, j: number): Pt => [x + m + i * cell, y + m + j * cell];
+  const lines: Pts[] = [];
+  for (let i = 0; i < n; i++) {
+    lines.push(P.line(x + m, y + m + i * cell, x + size - m, y + m + i * cell, 8));
+    lines.push(P.line(x + m + i * cell, y + m, x + m + i * cell, y + size - m, 8));
+  }
+  const stars = n === 9 ? [[2, 2], [6, 2], [4, 4], [2, 6], [6, 6]] : [[3, 3], [9, 3], [15, 3], [3, 9], [9, 9], [15, 9], [3, 15], [9, 15], [15, 15]];
+  return { board: P.rect(x, y, size, size, 6), lines, stars: stars.map(([i, j]) => at(i, j)), at, cell };
+};
+
+/** A classroom blackboard: wooden frame, the board, the chalk ledge with a stick of chalk. */
+export const blackboard = (x: number, y: number, w: number, h: number) => ({
+  frame: P.rect(x, y, w, h, 8),
+  board: P.rect(x + 14, y + 14, w - 28, h - 28, 4),
+  ledge: P.rect(x - 10, y + h, w + 20, 16, 4),
+  chalk: P.rect(x + w * 0.7, y + h - 6, 46, 10, 4),
+  centre: [x + w / 2, y + h / 2] as Pt,
+});
+
+/** A hospital building: block, door, red-cross sign, a row of windows. */
+export const hospital = (x: number, y: number, w: number, h: number) => ({
+  block: P.rect(x, y, w, h, 6),
+  door: P.rect(x + w * 0.4, y + h * 0.66, w * 0.2, h * 0.34, 4),
+  cross: [P.line(x + w / 2, y + h * 0.1, x + w / 2, y + h * 0.4, 6), P.line(x + w * 0.38, y + h * 0.25, x + w * 0.62, y + h * 0.25, 6)],
+  windows: [0.12, 0.7].flatMap((fx) => [0.12, 0.42].map((fy) => P.rect(x + w * fx, y + h * (fy + 0.06), w * 0.18, h * 0.16, 3))),
+});
+
+/**
+ * A syringe lying horizontally, needle to the right: barrel, graduations, plunger rod and thumb
+ * rest, hub and needle. Local box 320 × 70, top-left (x, y), scale s. `fluid` is the barrel's
+ * inner rectangle, for a coloured wash (a vasopressor infusion, a drug dose).
+ */
+export const syringe = (x: number, y: number, s = 1) => ({
+  barrel: rectL(x, y, s, 60, 10, 240, 60, 6),
+  fluid: rectL(x, y, s, 120, 16, 236, 54, 4),
+  marks: [0, 1, 2, 3, 4, 5].map((i) => P.line(x + (130 + i * 20) * s, y + 10 * s, x + (130 + i * 20) * s, y + (i % 2 ? 24 : 30) * s, 4)),
+  plunger: [P.line(x + 10 * s, y + 35 * s, x + 120 * s, y + 35 * s, 8), rectL(x, y, s, 0, 8, 12, 62, 3), rectL(x, y, s, 112, 14, 122, 56, 2)],
+  hub: rectL(x, y, s, 240, 24, 262, 46, 3),
+  needle: P.line(x + 262 * s, y + 35 * s, x + 320 * s, y + 35 * s, 6),
+});

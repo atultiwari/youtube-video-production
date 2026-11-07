@@ -15,5 +15,9 @@ export { EYE_TRAVEL, fits, FOCUS_GAP, maxLate, noteStep, pointStep, sequence, ty
 export { arrow, densify, jitter, P, rng, toPath, type Pt, type Pts } from "./shapes";
 export { CHAPTERS, chapter, FONTS, INK, layoutFor, MOTION, STROKE, STYLE, TISSUE, useLayout, type Chapter, type Layout } from "./style";
 export { HL, makeBeat, type BeatSpec, type Item } from "./beatspec";
-export { box, chestFilm, circle, cubic, doctor, ecgStrip, ecgTrace, finger, heart, oximeter, page, person, stack } from "./objects";
+export {
+  arterialTrace, blackboard, box, chestFilm, circle, cubic, doctor, ecgStrip, ecgTrace, finger, fundus, glassSlide, goBoard,
+  granules, heart, hospital, ivBag, monitor, oximeter, page, person, rbc, stack, STAIN, syringe, wbc, type CellKind,
+} from "./objects";
+export { Cell, CELL_FRAMES, Rbc } from "./cells";
 export { Captions } from "./Captions";

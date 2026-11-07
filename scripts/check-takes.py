@@ -47,6 +47,8 @@ def say_number(token: str) -> str:
     if re.fullmatch(r"\d+\.\d+", core):
         whole, frac = core.split(".")
         words = say_int(int(whole)) + " point " + " ".join(ONES[int(d)] for d in frac)
+    elif re.fullmatch(r"200\d", core):
+        words = "two thousand" + ("" if core == "2000" else " " + ONES[int(core[3])])
     elif re.fullmatch(r"(19|20)\d\d", core):
         words = say_int(int(core[:2])) + " " + say_int(int(core[2:]))
     elif re.fullmatch(r"\d+", core):
@@ -65,6 +67,69 @@ def norm_words(text: str) -> list[str]:
         elif tok:
             out.append(re.sub(r"[^a-z0-9éè]", "", tok.replace("é", "e").replace("è", "e")))
     return [w for w in out if w]
+
+
+#: British → American spellings Whisper writes (it hears Indian/British English but spells US).
+#: Applied to both the script and the transcript, so either spelling matches (E02, Nov 2026:
+#: "labelling", "haematologist", "unlabelled" alone pushed a clean take under 95%).
+UK_WORDS = {"centre": "center", "centres": "centers", "metre": "meter", "litre": "liter", "fibre": "fiber",
+            "theatre": "theater", "programme": "program", "programmes": "programs", "grey": "gray",
+            "practise": "practice", "licence": "license", "defence": "defense", "analyse": "analyze",
+            "analysed": "analyzed", "analysing": "analyzing", "catalogue": "catalog", "dialogue": "dialog"}
+UK_RULES = [
+    (re.compile(r"^(un)?(label|model|travel|cancel|signal|level|channel|fuel|total|counsel)l(ed|ing|er|ers)$"), r"\1\2\3"),
+    (re.compile(r"^(an)?haem"), r"\1hem"),
+    (re.compile(r"^(an)?aem"), r"\1em"),
+    (re.compile(r"^paed"), "ped"),
+    (re.compile(r"^oe(dema|soph|strog)"), r"e\1"),
+    (re.compile(r"^([a-z]{2,})our(s|ed|ing|al)?$"), r"\1or\2"),
+    (re.compile(r"^([a-z]{3,})is(e|ed|es|ing|ation|ations)$"), r"\1iz\2"),
+]
+
+
+def us_spelling(word: str) -> str:
+    word = UK_WORDS.get(word, word)
+    for pattern, repl in UK_RULES:
+        word = pattern.sub(repl, word)
+    return word
+
+
+def load_respell(path: Path | None) -> list[tuple[str, list[str]]]:
+    """(written word, spoken words) pairs from a --respell map, e.g. CheXpert → chest expert."""
+    if not path or not path.exists():
+        return []
+    pairs = json.loads(path.read_text())
+    return [(norm_words(k)[0], norm_words(v)) for k, v in pairs.items() if norm_words(k) and norm_words(v)]
+
+
+def canon(words: list[str], respell: list[tuple[str, list[str]]], heard: bool) -> list[str]:
+    """Words compared on meaning, not spelling: US spelling, "data set" as one word, and on the
+    transcript side a respelled name heard as its spoken form ("chest expert", "chestexpert",
+    "ben jee oh") put back as the script's written word ("chexpert", "bengio")."""
+    out: list[str] = []
+    i = 0
+    while i < len(words):
+        if heard:
+            hit = None
+            for key, spoken in respell:
+                n = len(spoken)
+                if words[i:i + n] == spoken:
+                    hit = (key, n)
+                elif words[i] == "".join(spoken):
+                    hit = (key, 1)
+                if hit:
+                    break
+            if hit:
+                out.append(hit[0])
+                i += hit[1]
+                continue
+        if words[i] == "data" and i + 1 < len(words) and words[i + 1] in ("set", "sets"):
+            out.append("data" + words[i + 1])
+            i += 2
+            continue
+        out.append(us_spelling(words[i]))
+        i += 1
+    return out
 
 
 def script_beats() -> dict[str, str]:
@@ -131,17 +196,20 @@ def main() -> int:
     ap.add_argument("--takes", type=Path, default=TAKES, help="folder with en-NN.wav takes")
     ap.add_argument("--beats", help="comma-separated beat numbers")
     ap.add_argument("--retranscribe", action="store_true")
+    ap.add_argument("--respell", type=Path, default=Path("docs/respell.json"),
+                    help="the sarvam-tts.py --respell map; respelled names count as matches")
     args = ap.parse_args()
     SCRIPT, TAKES = args.script, args.takes
     beats = script_beats()
     only = set(args.beats.split(",")) if args.beats else None
+    respell = load_respell(args.respell)
     flagged = 0
     for beat, text in beats.items():
         if only and beat not in only:
             continue
         data = transcribe(beat, args.retranscribe)
-        heard = norm_words(data.get("text", ""))
-        want = norm_words(text)
+        heard = canon(norm_words(data.get("text", "")), respell, heard=True)
+        want = canon(norm_words(text), respell, heard=False)
         sm = difflib.SequenceMatcher(a=want, b=heard, autojunk=False)
         ratio = sum(b.size for b in sm.get_matching_blocks()) / max(1, len(want))
         diffs = [(" ".join(want[i1:i2]), " ".join(heard[j1:j2])) for op, i1, i2, j1, j2 in sm.get_opcodes() if op != "equal"]

@@ -25,6 +25,13 @@ const phrases = (grid: Grid, lines: Lines): { toks: Tok[]; start: number; end: n
       });
       let cur: Tok[] = [];
       toks.forEach((tok, i) => {
+        // Break *before* a word that would make the phrase too wide for 1080 px at 54 px bold:
+        // checking the length only after adding let a long last word run off the frame
+        // (E02S2: "and twenty thousand chest radiographs,").
+        if (cur.length && [...cur, tok].map((c) => c.text).join(" ").length > 28) {
+          out.push({ toks: cur, start: cur[0].t, end: 0 });
+          cur = [];
+        }
         cur.push(tok);
         const len = cur.map((c) => c.text).join(" ").length;
         if (i === toks.length - 1 || /[.?!,;:]$/.test(tok.text) || cur.length >= 5 || len >= 26) {
