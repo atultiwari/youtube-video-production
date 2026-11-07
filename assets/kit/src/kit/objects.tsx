@@ -615,3 +615,63 @@ export const dial = (cx: number, cy: number, r: number, turn = 0.5) => {
     pointer: P.line(cx + Math.sin(a) * r * 0.2, cy - Math.cos(a) * r * 0.2, cx + Math.sin(a) * r * 0.7, cy - Math.cos(a) * r * 0.7, 6),
   };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E05 (Nov 2026): a hospital bed, a broad-leaved tree (for the forest), a blister strip
+ * of tablets. Checked on the `kit-objects-5` still.
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * A ward bed in side view, head to the left: headboard, footboard, mattress, pillow, the frame,
+ * two legs on castors and a folded-down side rail. Local box 420 × 240, top-left (x, y), scale s.
+ * Wash `mattress` pale blue and `pillow` white. `top` is where a lying patient's head would rest.
+ */
+export const hospitalBed = (x: number, y: number, s = 1) => ({
+  headboard: rectL(x, y, s, 0, 20, 34, 190, 10),
+  footboard: rectL(x, y, s, 386, 70, 416, 190, 10),
+  mattress: rectL(x, y, s, 34, 96, 386, 140, 14),
+  pillow: path(x, y, s, [44, 96], [[[44, 70], [70, 62], [100, 64]], [[124, 66], [134, 80], [132, 96]]]),
+  frame: [P.line(x + 34 * s, y + 156 * s, x + 386 * s, y + 156 * s, 12), P.line(x + 34 * s, y + 140 * s, x + 34 * s, y + 156 * s, 2)],
+  rail: [P.line(x + 150 * s, y + 112 * s, x + 320 * s, y + 112 * s, 8), ...[170, 235, 300].map((rx) => P.line(x + rx * s, y + 112 * s, x + rx * s, y + 140 * s, 3))],
+  legs: [P.line(x + 70 * s, y + 156 * s, x + 70 * s, y + 210 * s, 4), P.line(x + 350 * s, y + 156 * s, x + 350 * s, y + 210 * s, 4)],
+  castors: [70, 350].map((cx) => P.ellipse(x + cx * s, y + 222 * s, 13 * s, 13 * s)),
+  top: [x + 90 * s, y + 70 * s] as Pt,
+});
+
+/**
+ * A broad-leaved tree: a trunk that flares at the root, two branches into the crown, and a
+ * scalloped crown outline. (x, y) is the foot of the trunk; the tree is about 220 × 300 × s.
+ * Draw in this order so the trunk's top hides in the leaves: trunk wash + ink, then the crown
+ * wash (alpha ≈ 0.85) over it, then the crown and branch ink. `key` varies the crown so a forest of
+ * trees is not identical.
+ */
+export const tree = (x: number, y: number, s = 1, key = "") => {
+  const cx = x, cy = y - 200 * s, rx = 105 * s, ry = 95 * s;
+  const k = key.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const lobes = 9 + (k % 3), phase = (k % 7) * 0.4;
+  const crown: Pt[] = Array.from({ length: 145 }, (_, i) => {
+    const t = (i / 144) * Math.PI * 2;
+    const bump = 1 + 0.09 * Math.abs(Math.sin((t * lobes) / 2 + phase));
+    return [cx + Math.cos(t) * rx * bump, cy + Math.sin(t) * ry * bump] as const;
+  });
+  return {
+    crown: crown as Pts,
+    trunk: path(x, y, s, [-26, 0], [[[-14, -10], [-12, -40], [-14, -160]], [[-6, -162], [6, -162], [14, -160]], [[12, -40], [14, -10], [26, 0]]]),
+    branches: [path(x, y, s, [-6, -110], [[[-20, -140], [-40, -160], [-56, -176]]]), path(x, y, s, [6, -112], [[[18, -150], [34, -170], [48, -190]]])],
+    centre: [cx, cy] as Pt,
+  };
+};
+
+/**
+ * A blister strip of tablets seen from the front: the foil card, 2 × n domed pockets with a
+ * tablet in each, and the perforation down the middle. Local (x, y) top-left, w × h.
+ */
+export const blister = (x: number, y: number, w: number, h: number, n = 5) => {
+  const pw = w / n, ph = h / 2;
+  return {
+    card: P.rect(x, y, w, h, 8),
+    pockets: Array.from({ length: n * 2 }, (_, i) => P.ellipse(x + pw * ((i % n) + 0.5), y + ph * (Math.floor(i / n) + 0.5), pw * 0.34, ph * 0.3)),
+    tablets: Array.from({ length: n * 2 }, (_, i) => P.ellipse(x + pw * ((i % n) + 0.5), y + ph * (Math.floor(i / n) + 0.5), pw * 0.22, ph * 0.18)),
+    perforation: Array.from({ length: n * 2 }, (_, i) => P.line(x + (i + 0.2) * (w / (n * 2)), y + ph, x + (i + 0.7) * (w / (n * 2)), y + ph, 2)),
+  };
+};

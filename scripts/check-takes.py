@@ -132,6 +132,36 @@ def canon(words: list[str], respell: list[tuple[str, list[str]]], heard: bool) -
     return out
 
 
+#: Words Whisper reliably writes as a homophone of a correct take: script word → what it hears.
+#: Accepted only when the script has the word and not the homophone itself (E05: "Bayes" was heard
+#: as "base" in every take). Extend per project with --heard-as (a JSON map of the same shape).
+HEARD_AS = {"bayes": ["base", "bays", "baze"]}
+
+
+def accept_heard_as(want: list[str], heard: list[str], extra: dict[str, list[str]]) -> list[str]:
+    """Put a known homophone in the transcript back as the script's word."""
+    table = {**HEARD_AS, **{k.lower(): [v.lower() for v in vs] for k, vs in extra.items()}}
+    script = set(want)
+    swap = {v: k for k, vs in table.items() if k in script for v in vs if v not in script}
+    return [swap.get(w, w) for w in heard]
+
+
+def merge_compounds(words: list[str], other: list[str]) -> list[str]:
+    """Join a split pair ("cut", "off") when the other side has it as one word ("cutoff"), so
+    hyphenated, spaced and closed forms of a compound all match (E05: "cut-off" vs "cutoff")."""
+    single = set(other)
+    out: list[str] = []
+    i = 0
+    while i < len(words):
+        if i + 1 < len(words) and words[i] + words[i + 1] in single:
+            out.append(words[i] + words[i + 1])
+            i += 2
+            continue
+        out.append(words[i])
+        i += 1
+    return out
+
+
 def script_beats() -> dict[str, str]:
     beats: dict[str, list[str]] = {}
     current = None
@@ -203,11 +233,14 @@ def main() -> int:
     ap.add_argument("--retranscribe", action="store_true")
     ap.add_argument("--respell", type=Path, default=Path("docs/respell.json"),
                     help="the sarvam-tts.py --respell map; respelled names count as matches")
+    ap.add_argument("--heard-as", type=Path, default=None,
+                    help="JSON map of script word -> homophones Whisper writes for it (added to HEARD_AS)")
     args = ap.parse_args()
     SCRIPT, TAKES = args.script, args.takes
     beats = script_beats()
     only = set(args.beats.split(",")) if args.beats else None
     respell = load_respell(args.respell)
+    heard_as = json.loads(args.heard_as.read_text()) if args.heard_as and args.heard_as.exists() else {}
     flagged = 0
     for beat, text in beats.items():
         if only and beat not in only:
@@ -215,6 +248,8 @@ def main() -> int:
         data = transcribe(beat, args.retranscribe)
         heard = canon(norm_words(data.get("text", "")), respell, heard=True)
         want = canon(norm_words(text), respell, heard=False)
+        heard = accept_heard_as(want, heard, heard_as)
+        want, heard = merge_compounds(want, heard), merge_compounds(heard, want)
         sm = difflib.SequenceMatcher(a=want, b=heard, autojunk=False)
         ratio = sum(b.size for b in sm.get_matching_blocks()) / max(1, len(want))
         diffs = [(" ".join(want[i1:i2]), " ".join(heard[j1:j2])) for op, i1, i2, j1, j2 in sm.get_opcodes() if op != "equal"]

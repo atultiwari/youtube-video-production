@@ -20,6 +20,7 @@ export {
   granules, heart, hospital, ivBag, monitor, oximeter, page, person, rbc, stack, STAIN, syringe, wbc, type CellKind,
   clock, database, foot, headScan, monofilament, phone, sheet, testTube,
   dial, lesion, padlock, questionPaper, ruler, skinMarker,
+  blister, hospitalBed, tree,
 } from "./objects";
 export { Cell, CELL_FRAMES, Rbc } from "./cells";
 export { Captions } from "./Captions";

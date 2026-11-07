@@ -21,8 +21,9 @@
  * - The beat throws if its last step would end after the cut (fits()).
  * - A hook (a Short's frame-0 picture, drawn at negative frames) must not have `until`: an `until`
  *   item is wrapped in Between, which starts at the step's *sequenced* frame (after the pen-written
- *   heading, ~3.5 frames a character) and fades in, so the hook is missing at frame 0. makeBeat
- *   throws on it (E03S3, Nov 2026). Put the hook in its own item with no `until`.
+ *   heading, ~3.5 frames a character) and fades in, so the hook is missing at frame 0 (E03S3,
+ *   Nov 2026). Put the hook in its own item with no `until`. An `until` item at frame ≤ 0 (usually a
+ *   cue on the beat's first spoken word) is moved to frame 1 with a console warning (E05).
  * - Highlights that make a small arrival an event need area: under about 120 × 56 px (HL w ≥ 60,
  *   h ≥ 28) a table-cell highlight does not register in the quarter-scale measure render (E03:
  *   23% static until the cell highlights were enlarged).
@@ -77,15 +78,15 @@ export const makeBeat = (spec: BeatSpec): React.FC => {
     const { picture } = useLayout();
     const C = chapter(spec.chapter);
     const items = useMemo(() => {
-      const list = spec.items(b, C, picture.w, picture.h);
-      for (const it of list) {
-        if (it.until && it.at <= 0 && it.draw) {
-          throw new Error(`beat ${b.id}: item "${it.id}" starts at frame ${it.at} and has until: "${it.until}". `
-            + "Between would hide it until its sequenced start and fade it in, so a frame-0 hook disappears. "
-            + "Draw the hook in an item without `until`.");
-        }
-      }
-      return list;
+      return spec.items(b, C, picture.w, picture.h).map((it) => {
+        if (!(it.until && it.at <= 0 && it.draw)) return it;
+        // A cue on the beat's first spoken word lands on frame 0 (E05: "Boosting", "Naive"). Start
+        // it on frame 1 instead of failing the build. A frame-0 hook with `until` would also land
+        // here and be hidden at frame 0, so the warning says so; Shorts QA checks frame 0.
+        console.warn(`beat ${b.id}: item "${it.id}" has until: "${it.until}" and starts at frame ${it.at}; moved to frame 1. `
+          + "If it is a frame-0 hook, draw it in an item without `until`, or Between hides it at frame 0.");
+        return { ...it, at: 1 };
+      });
     }, [b, C, picture.w, picture.h]);
     const s = useMemo(() => {
       const steps = [

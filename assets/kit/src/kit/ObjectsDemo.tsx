@@ -11,6 +11,7 @@ import { Dots, Hatch, Ink, Label, Picture, Wash } from "./Picture";
 import React from "react";
 
 import { P } from "./shapes";
+import { blister, hospitalBed, tree } from "./objects";
 import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
 import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
 import { chapter, CHAPTERS, INK, TISSUE } from "./style";
@@ -192,6 +193,33 @@ export const ObjectsDemo4: React.FC = () => {
           <Ink strokes={[lk.shackle, lk.body, ...lk.keyhole]} from={0} durationInFrames={20} id="lk" />
           <Wash shape={dl.face} color="#DCE6EE" at={0} id="dlw" alpha={0.7} />
           <Ink strokes={[dl.face, dl.grip, ...dl.ticks, dl.pointer]} from={0} durationInFrames={20} id="dl" />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/** E05 objects (`kit-objects-5`): a ward bed, a forest of broad-leaved trees, a blister strip. */
+export const ObjectsDemo5: React.FC = () => {
+  const bd = hospitalBed(60, 120, 1.4);
+  const trees = [0, 1, 2].map((i) => tree(760 + i * 170, 520 - (i % 2) * 30, 0.9 + (i % 2) * 0.15, `t${i}`));
+  const bl = blister(120, 560, 420, 170, 5);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Wash shape={bd.mattress} color="#CFE3F0" at={0} id="bdm" alpha={0.9} />
+          <Wash shape={bd.pillow} color="#FFFFFF" at={0} id="bdp" alpha={0.9} />
+          <Ink strokes={[bd.headboard, bd.footboard, bd.mattress, bd.pillow, ...bd.frame, ...bd.rail, ...bd.legs, ...bd.castors]} from={0} durationInFrames={20} id="bd" />
+          {trees.map((t, i) => <React.Fragment key={i}>
+            <Wash shape={t.trunk} color="#8A5A3C" at={0} id={`tt${i}`} alpha={0.8} />
+            <Ink strokes={[t.trunk]} from={0} durationInFrames={20} id={`tk${i}`} />
+            <Wash shape={t.crown} color="#9CC59A" at={0} id={`tc${i}`} alpha={0.88} />
+            <Ink strokes={[...t.branches, t.crown]} from={0} durationInFrames={20} id={`ti${i}`} />
+          </React.Fragment>)}
+          <Wash shape={bl.card} color="#D9DDE2" at={0} id="blw" alpha={0.9} />
+          {bl.tablets.map((t, i) => <Wash key={i} shape={t} color="#F2EEE4" at={0} id={`blt${i}`} alpha={0.95} />)}
+          <Ink strokes={[bl.card, ...bl.pockets, ...bl.tablets, ...bl.perforation]} from={0} durationInFrames={20} id="bl" />
         </Picture>
       </Paper>
     </AbsoluteFill>

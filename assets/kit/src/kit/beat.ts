@@ -37,7 +37,11 @@ export interface BeatTiming {
   readonly lines: readonly LineTiming[];
   /** Local frame on which line `i` starts. */
   readonly line: (i: number) => number;
-  /** Local frame on which `word` (first match, by prefix) is spoken in line `i`. */
+  /**
+   * Local frame on which `word` is spoken in line `i`: the first exact match, else the first word
+   * that starts with it ("nine" no longer lands on "nineteen", E05; "classroom" still finds
+   * "classrooms" when the singular is not spoken).
+   */
   readonly word: (word: string, i: number) => number;
 }
 
@@ -58,7 +62,9 @@ export const beatTiming = (grid: Grid, lines: Lines, id: string): BeatTiming => 
     if (!l) throw new Error(`beat ${id} has no line ${i}`);
     const words = wordsOf(l.text);
     const cue = w.replace(/[\u2018\u2019]/g, "'").toLowerCase();
-    const index = words.findIndex((x) => x.toLowerCase().startsWith(cue));
+    const lower = words.map((x) => x.toLowerCase());
+    const exactIndex = lower.indexOf(cue);
+    const index = exactIndex >= 0 ? exactIndex : lower.findIndex((x) => x.startsWith(cue));
     if (index < 0) throw new Error(`beat ${id} line ${i}: "${w}" is not spoken in "${l.text}"`);
     // Exact when the takes have been transcribed; a word-share estimate in a draft grid
     // (off by a median 1.3 s per word on a real take).
