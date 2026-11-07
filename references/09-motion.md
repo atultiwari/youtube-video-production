@@ -162,6 +162,13 @@ same way: nothing happened. Two rounds of fixes brought it to 2%:
   `--max-static` (10%) is static and runs `gap-words.py`, which lists the words spoken in each
   gap, so the fix lands on a cue word. A gap that already contains a cue word means that step's
   event is too small, not missing.
+- **Rings, ticks, crosses and small moving objects are not events either** (E06, Nov 2026: 26%
+  static on the first measure with a cue word in almost every gap). A `Ring` round a nucleus, a
+  `Tick`, a 22 px ball rolling down a landscape: each is too small at quarter scale. Give the step
+  an `HL` label or a highlight `Wash` with area (a multiplied wash over the region the ring points
+  at). 30 such additions took E06 to 4%.
+- **A white `HL` is invisible on a washed shape** (a label inside a filled node): highlight in the
+  chapter accent and ink the text white.
 
 ## Declaring beats (`src/kit/beatspec.tsx`)
 
@@ -170,7 +177,9 @@ an `id`, an `at` (cue word or line start), and either a `note` (typed on the car
 `draw(from)` (in the picture), plus `until` to hide a drawing when a later step starts. It wraps
 `sequence()`, `fits()`, `NoteCard`, `Between`, the heading and the Simplified tag. E01's 11 beats
 were written this way; start a new episode from it rather than wiring each beat by hand. List
-steps in time order: a note listed after a later cue waits for it.
+steps in time order: a note listed after a later cue waits for it. Step ids must be unique
+within a beat: makeBeat throws naming the beat and id, and `tools/lint-beats.mjs` (run first by
+`build-all.sh`) catches literal duplicates before the QA pass (E06 lost a 10-minute QA run to one).
 
 ## Shorts with the kit (E01 Shorts, Nov 2026: four Shorts, 35–56 s, all 0% static on the first build)
 

@@ -140,7 +140,7 @@ improvise a drawing component. `install-kit.mjs` enforces it.
 | 7–8 | `check-takes.py` (Whisper every take vs the script), `master-audio.py`, `build-audio-grid.py`, `word-timestamps.py` (exact word times) |
 | 10 | `install-kit.mjs <project>` (the kit, a style, fonts, tools, the Python venv), `make-paper.py`; in the kit, `makeBeat`/`HL` (beatspec.tsx) and the object library (objects.tsx, still test `kit-objects`) |
 | 10b | `sound-design.py` |
-| 11 | `focus-check.py`, `frame-fill.py`, `event-gaps.py`, `gap-words.py` (words spoken in each static gap), `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/stills.mjs` (midpoints, ends, every N s), `tools/build-all.sh` (stops before rendering if too static) |
+| 11 | `focus-check.py`, `frame-fill.py`, `event-gaps.py`, `gap-words.py` (words spoken in each static gap), `contact-sheet.py`; the kit's `tools/qa.mjs`, `tools/stills.mjs` (midpoints, ends, every N s), `tools/build-all.sh` (lints duplicate step ids with `tools/lint-beats.mjs`, then stops before rendering if too static) |
 | 13 | `chapters.py` (YouTube chapters from the grid), `captions-srt.py` (upload captions from the word timings) |
 
 Templates: `STATUS.md`, `STORYBOARD.md`, `MUTE-REVIEW.md` in `templates/`. Styles: `styles/*.json`.

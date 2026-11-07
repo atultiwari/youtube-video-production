@@ -31,6 +31,13 @@ done
 grid=public/$key/grid/beats.json; lines=public/$key/lines.json; out=out/$key
 mkdir -p "$out"
 
+echo "== lint"
+# Duplicate step ids, before the long QA pass (E06). Checks the composition's own source files.
+compfile=$(grep -lE "export const $comp(:| =)" -r src --include='*.tsx' 2>/dev/null | head -1)
+if [[ -n $compfile ]]; then
+  # A Short is one file; an episode is its folder.
+  if [[ $(dirname "$compfile") == src/shorts ]]; then node tools/lint-beats.mjs "$compfile"; else node tools/lint-beats.mjs "$(dirname "$compfile")"/*.tsx; fi
+fi
 echo "== QA"
 # Every issue is printed; the run stops here if there are any.
 node tools/qa.mjs "$comp" --every 1 --json "$out/qa.json" | grep -v '^\[Tab' 

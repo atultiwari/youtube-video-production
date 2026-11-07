@@ -221,3 +221,23 @@ export const Ring: React.FC<{ cx: number; cy: number; rx: number; ry: number; at
   <Ink strokes={[P.ellipse(cx, cy, rx, ry, -Math.PI * 0.6, Math.PI * 1.55, 72)]} from={at} durationInFrames={MOTION.ringFrames}
     id={id} color={color} width={width} double={false} />
 );
+
+/**
+ * Many small filled shapes (nuclei, granules, stones) in one layer, each fading in after the
+ * one before (`every` frames apart; 0 = all at once). Cheaper than one Wash per shape when a
+ * tissue tile holds a few hundred nuclei (E06). No jitter: small fills do not boil.
+ */
+export const Fills: React.FC<{ shapes: readonly Pts[]; color: string; at: number; every?: number; alpha?: number; stroke?: string }> = ({
+  shapes, color, at, every = 0, alpha = 0.92, stroke,
+}) => {
+  const frame = useCurrentFrame();
+  return (
+    <Layer>
+      {shapes.map((s, i) => {
+        const a = interpolate(frame - at - i * every, [0, 5], [0, alpha], clamp01);
+        if (a <= 0) return null;
+        return <path key={i} d={toPath(s, true)} fill={color} opacity={a} stroke={stroke} strokeWidth={stroke ? 1.2 : 0} />;
+      })}
+    </Layer>
+  );
+};

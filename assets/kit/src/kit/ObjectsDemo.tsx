@@ -7,11 +7,12 @@ import { AbsoluteFill } from "remotion";
 
 import { Paper } from "./Chrome";
 import { Cell, Rbc } from "./cells";
-import { Dots, Hatch, Ink, Label, Picture, Wash } from "./Picture";
+import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
 import React from "react";
 
 import { P } from "./shapes";
-import { blister, hospitalBed, tree } from "./objects";
+import { blister, errorLandscape, hospitalBed, tree } from "./objects";
+import { AppleArt, CarArt, ColonTileArt, DogArt, KidneyArt, NetworkArt, NeuronArt } from "./art";
 import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
 import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
 import { chapter, CHAPTERS, INK, TISSUE } from "./style";
@@ -220,6 +221,34 @@ export const ObjectsDemo5: React.FC = () => {
           <Wash shape={bl.card} color="#D9DDE2" at={0} id="blw" alpha={0.9} />
           {bl.tablets.map((t, i) => <Wash key={i} shape={t} color="#F2EEE4" at={0} id={`blt${i}`} alpha={0.95} />)}
           <Ink strokes={[bl.card, ...bl.pockets, ...bl.tablets, ...bl.perforation]} from={0} durationInFrames={20} id="bl" />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * Page 6 of the library (`kit-objects-6`): the E06 additions. Check after editing:
+ *   npx remotion still kit-objects-6 out/objects-6.png --frame=59
+ */
+export const ObjectsDemo6: React.FC = () => {
+  const land = errorLandscape(560, 560, 500, 220);
+  const ball = land.at(0.86);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <ColonTileArt x={10} y={10} w={340} h={300} at={0} id="ctn" dur={24} />
+          <ColonTileArt x={370} y={10} w={340} h={300} kind="tumour" at={0} id="ctt" dur={24} />
+          <NeuronArt x={10} y={330} s={0.6} at={0} id="nr" dur={24} />
+          <NetworkArt x={740} y={40} w={320} h={240} at={0} id="nw" dur={24} />
+          <KidneyArt x={20} y={520} s={0.9} at={0} id="kd" />
+          <DogArt x={230} y={560} s={0.9} at={0} id="dg" />
+          <CarArt x={240} y={780} s={0.7} at={0} id="cr" />
+          <AppleArt x={560} y={330} s={0.8} at={0} id="ap" />
+          <Wash shape={land.body} color="#CDE3C4" at={0} id="lw" alpha={0.8} />
+          <Ink strokes={[land.ground]} from={0} durationInFrames={20} id="lg" width={5} />
+          <Fills shapes={[P.ellipse(ball[0], ball[1] - 22, 22, 22)]} color="#C8423B" at={0} />
         </Picture>
       </Paper>
     </AbsoluteFill>

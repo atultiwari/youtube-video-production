@@ -24,6 +24,12 @@
  *   heading, ~3.5 frames a character) and fades in, so the hook is missing at frame 0 (E03S3,
  *   Nov 2026). Put the hook in its own item with no `until`. An `until` item at frame ≤ 0 (usually a
  *   cue on the beat's first spoken word) is moved to frame 1 with a console warning (E05).
+ * - Step ids must be unique within a beat (makeBeat throws; tools/lint-beats.mjs, run first by
+ *   build-all.sh, catches literal duplicates before QA).
+ * - Rings, ticks, crosses and small moving objects (a 22 px ball rolling) do not count as events in
+ *   the quarter-scale measure render: give each such step an `HL` or a highlight `Wash` with area
+ *   (E06: 26% static on first measure for exactly this). A white `HL` over a washed shape is
+ *   invisible too: highlight in the accent and ink the text white.
  * - Highlights that make a small arrival an event need area: under about 120 × 56 px (HL w ≥ 60,
  *   h ≥ 28) a table-cell highlight does not register in the quarter-scale measure render (E03:
  *   23% static until the cell highlights were enlarged).
@@ -78,7 +84,16 @@ export const makeBeat = (spec: BeatSpec): React.FC => {
     const { picture } = useLayout();
     const C = chapter(spec.chapter);
     const items = useMemo(() => {
-      return spec.items(b, C, picture.w, picture.h).map((it) => {
+      const raw = spec.items(b, C, picture.w, picture.h);
+      // Duplicate step ids used to surface only as sequence()'s "listed twice", deep in a render
+      // after the 10-minute QA pass (E06). Name the beat and the id here; tools/lint-beats.mjs
+      // catches literal duplicates before QA starts.
+      const seen = new Set<string>();
+      for (const it of raw) {
+        if (seen.has(it.id)) throw new Error(`beat ${b.id}: step id "${it.id}" is used twice; give each step its own id`);
+        seen.add(it.id);
+      }
+      return raw.map((it) => {
         if (!(it.until && it.at <= 0 && it.draw)) return it;
         // A cue on the beat's first spoken word lands on frame 0 (E05: "Boosting", "Naive"). Start
         // it on frame 1 instead of failing the build. A frame-0 hook with `until` would also land

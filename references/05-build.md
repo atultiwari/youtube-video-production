@@ -161,7 +161,15 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   melanoma, with a marker `ring`), `ruler` (cm/mm ticks, `cm` label points), `skinMarker`,
   `questionPaper` (`q(i)` and `title` label points), `padlock`, `dial` (page 4: `kit-objects-4`); and
   since E05 `hospitalBed` (ward bed, side view), `tree` (broad-leaved, `key` varies the crown; draw
-  the trunk, then the crown wash over it), `blister` (strip of tablets) (page 5: `kit-objects-5`). Each
+  the trunk, then the crown wash over it), `blister` (strip of tablets) (page 5: `kit-objects-5`); since E06 `neuron` (multipolar, myelinated
+  axon), `colonTile` (H&E colon mucosa, crypts cut across; `"normal"`: round evenly spaced crypts,
+  basal nuclei, goblet cells; `"tumour"`: crowded irregular glands, stratified pencil nuclei,
+  cribriform lumens, dirty necrosis; colours in `HE`), `network` (feed-forward diagram),
+  `errorLandscape` (side-on loss curve with `height`/`slope`/`at`, a local and a global minimum,
+  for frame-driven gradient descent), `kidney` (coronal section), `dog`, `car`, `apple` (everyday
+  photo subjects), drawn in reading order by `src/kit/art.tsx` (`ColonTileArt`, `NeuronArt`,
+  `NetworkArt`, `KidneyArt`, `DogArt`, `CarArt`, `AppleArt`); `Fills` (Picture.tsx) fills a few
+  hundred small shapes in one layer (page 6: `kit-objects-6`). Each
   returns named parts so a beat draws them one step at a time.
 - **No typeset text inside an object.** Objects return label *points* (ruler `cm`, paper `q(i)`);
   the beat writes the text there with `Label`/HL at a size that passes QA (36 px at 16:9, 48 px in

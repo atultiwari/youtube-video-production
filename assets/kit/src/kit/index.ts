@@ -9,7 +9,7 @@ export { Kicker, Paper, SeriesTag, SimplifiedTag, Stamp } from "./Chrome";
 export { Film, type BeatEntry } from "./Film";
 export { Heading } from "./Heading";
 export { NoteCard, typeFrames, type Note } from "./NoteCard";
-export { Between, Dots, dotsFrames, Drift, Hatch, Ink, Label, Picture, Ring, Wash, type InkProps } from "./Picture";
+export { Between, Dots, dotsFrames, Drift, Fills, Hatch, Ink, Label, Picture, Ring, Wash, type InkProps } from "./Picture";
 export { QAProbe } from "./QAProbe";
 export { EYE_TRAVEL, fits, FOCUS_GAP, maxLate, noteStep, pointStep, sequence, type Sequence, type Slot, type Step } from "./sequence";
 export { arrow, densify, jitter, P, rng, toPath, type Pt, type Pts } from "./shapes";
@@ -21,6 +21,7 @@ export {
   clock, database, foot, headScan, monofilament, phone, sheet, testTube,
   dial, lesion, padlock, questionPaper, ruler, skinMarker,
   blister, hospitalBed, tree,
+  apple, car, colonTile, dog, errorLandscape, HE, kidney, network, neuron, type Crypt,
 } from "./objects";
 export { Cell, CELL_FRAMES, Rbc } from "./cells";
 export { Captions } from "./Captions";

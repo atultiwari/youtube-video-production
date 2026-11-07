@@ -675,3 +675,334 @@ export const blister = (x: number, y: number, w: number, h: number, n = 5) => {
     perforation: Array.from({ length: n * 2 }, (_, i) => P.line(x + (i + 0.2) * (w / (n * 2)), y + ph, x + (i + 0.7) * (w / (n * 2)), y + ph, 2)),
   };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E06 (Nov 2026): a neuron, an H&E colon mucosa tile (normal and adenocarcinoma), a
+ * neural-network diagram, an error landscape for gradient descent, a kidney, and three
+ * everyday photo subjects (a dog, a car, an apple). Checked on the `kit-objects-6` still.
+ * ------------------------------------------------------------------------------------------- */
+
+/** A closed Catmull-Rom curve through `pts` (local box, placed at (x, y) × s). */
+const smoothClosed = (x: number, y: number, s: number, pts: [number, number][], n = 10): Pts => {
+  const out: Pt[] = [];
+  const m = pts.length;
+  for (let i = 0; i < m; i++) {
+    const p0 = pts[(i - 1 + m) % m], p1 = pts[i], p2 = pts[(i + 1) % m], p3 = pts[(i + 2) % m];
+    for (let k = 0; k < n; k++) {
+      const t = k / n, t2 = t * t, t3 = t2 * t;
+      const f = (a: number, b: number, c: number, d: number) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+      out.push([x + f(p0[0], p1[0], p2[0], p3[0]) * s, y + f(p0[1], p1[1], p2[1], p3[1]) * s]);
+    }
+  }
+  out.push(out[0]);
+  return out;
+};
+/** An open Catmull-Rom curve through `pts` (ends clamped). */
+const smoothOpen = (x: number, y: number, s: number, pts: [number, number][], n = 10): Pts => {
+  const out: Pt[] = [];
+  const m = pts.length;
+  for (let i = 0; i < m - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(m - 1, i + 2)];
+    for (let k = 0; k < n; k++) {
+      const t = k / n, t2 = t * t, t3 = t2 * t;
+      const f = (a: number, b: number, c: number, d: number) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+      out.push([x + f(p0[0], p1[0], p2[0], p3[0]) * s, y + f(p0[1], p1[1], p2[1], p3[1]) * s]);
+    }
+  }
+  out.push([x + pts[m - 1][0] * s, y + pts[m - 1][1] * s]);
+  return out;
+};
+
+/** A deterministic 0..1 stream per key. */
+const stream = (key: string) => {
+  let seed = 7;
+  for (const ch of key) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  return () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+};
+
+/**
+ * A multipolar neuron, as in a histology or physiology textbook: an angular cell body with a
+ * round nucleus and a nucleolus, branching dendrites on the left, the axon hillock, a myelinated
+ * axon (sheath segments with nodes of Ranvier between them) running right, and terminal branches
+ * ending in synaptic boutons. Local box 900 × 300, top-left (x, y), scale s.
+ * Parts: soma (closed), nucleus, nucleolus, dendrites (open strokes, trunk first), axon,
+ * myelin (closed segments), terminals (open), boutons (closed); dendriteTip / somaAt / axonEnd
+ * for labels.
+ */
+export const neuron = (x: number, y: number, s = 1) => {
+  const T = (px: number, py: number): Pt => [x + px * s, y + py * s];
+  const dendrites: Pts[] = [];
+  const branch = (sx: number, sy: number, ang: number, len: number, depth: number, key: string) => {
+    const r = stream(key);
+    const ex = sx + Math.cos(ang) * len, ey = sy + Math.sin(ang) * len;
+    const bend = (r() - 0.5) * len * 0.35;
+    const mx = (sx + ex) / 2 - Math.sin(ang) * bend, my = (sy + ey) / 2 + Math.cos(ang) * bend;
+    dendrites.push(P.quad(...T(sx, sy), ...T(mx, my), ...T(ex, ey), 14));
+    if (depth > 0) {
+      branch(ex, ey, ang - 0.42 - r() * 0.2, len * 0.62, depth - 1, `${key}a`);
+      branch(ex, ey, ang + 0.38 + r() * 0.2, len * 0.58, depth - 1, `${key}b`);
+    }
+  };
+  const somaPts: [number, number][] = [[255, 150], [232, 112], [196, 98], [168, 104], [150, 128], [146, 158], [158, 190], [190, 204], [228, 190]];
+  const roots: [number, number, number][] = [[196, 100, -1.75], [160, 112, -2.45], [146, 150, Math.PI], [156, 186, 2.5], [196, 202, 1.85]];
+  roots.forEach(([sx, sy, a], i) => branch(sx, sy, a, i === 2 ? 70 : 62, 2, `nd${i}`));
+  const seg = (x0: number, x1: number) => P.rect(x + x0 * s, y + 138 * s, (x1 - x0) * s, 24 * s, 12 * s);
+  const myelin = [310, 400, 490, 580, 670].map((x0) => seg(x0, x0 + 76));
+  const ends: [number, number][] = [[880, 96], [892, 136], [890, 172], [872, 210]];
+  return {
+    soma: smoothClosed(x, y, s, somaPts, 8),
+    nucleus: P.ellipse(...T(198, 152), 24 * s, 22 * s),
+    nucleolus: P.ellipse(...T(204, 148), 6 * s, 6 * s),
+    dendrites,
+    axon: P.line(...T(255, 150), ...T(800, 150), 40),
+    hillock: smoothOpen(x, y, s, [[246, 132], [262, 144], [280, 148]], 6),
+    myelin,
+    terminals: ends.map(([ex, ey]) => smoothOpen(x, y, s, [[800, 150], [835, 150 + (ey - 150) * 0.4], [ex - 10, ey]], 8)),
+    boutons: ends.map(([ex, ey]) => P.ellipse(...T(ex, ey), 9 * s, 9 * s)),
+    somaAt: T(200, 150), dendriteTip: T(60, 70), axonEnd: T(880, 150),
+  };
+};
+
+/** H&E colours as on a well-stained colon section (haematoxylin purple-blue, eosin pink, mucin pale). */
+export const HE = {
+  stroma: "#E7A3C2",
+  stromaPale: "#F0C3D6",
+  cyto: "#E9A6CB",
+  nucleus: "#4A3A8C",
+  nucleusLight: "#6C5AAE",
+  mucin: "#E4E6F2",
+  lumen: "#FFFFFF",
+  necrosis: "#D98AAE",
+  lymph: "#3B2E78",
+} as const;
+
+export interface Crypt {
+  /** Basement membrane (closed). */
+  readonly outline: Pts;
+  /** Lumen (closed); tumour glands may have several (cribriform). */
+  readonly lumens: Pts[];
+  /** Epithelial nuclei (closed, small ellipses), basal in normal crypts, stratified in tumour. */
+  readonly nuclei: Pts[];
+  /** Goblet-cell mucin vacuoles (closed); none in tumour glands. */
+  readonly goblets: Pts[];
+  /** Cell borders (short radial strokes). */
+  readonly walls: Pts[];
+  /** Luminal debris in tumour glands ("dirty necrosis": pink with nuclear dust). */
+  readonly debris: Pt[];
+  readonly centre: Pt;
+}
+
+/**
+ * A square H&E tile of colonic mucosa with the crypts cut across (the "test-tube rack" seen end
+ * on), the way a pathologist sees a well-oriented transverse section at medium power.
+ * - `normal`: round, evenly spaced crypts of equal size in pink lamina propria; each crypt is a
+ *   single layer of tall cells round a small central lumen, small dark nuclei sitting basally at
+ *   the basement membrane, many goblet cells (pale mucin vacuoles) between them; the lamina
+ *   propria holds scattered small round lymphocyte and plasma-cell nuclei.
+ * - `tumour` (adenocarcinoma): crowded, back-to-back glands of unequal size and angular shape,
+ *   some with two or three lumens (cribriform); enlarged, elongated, pencil-like nuclei stacked
+ *   in two or three rows up to the lumen; no goblet cells; pink debris with nuclear dust in the
+ *   lumens; little stroma between glands.
+ * Wash `field` HE.stroma, each crypt outline HE.cyto, goblets HE.mucin, lumens HE.lumen, then
+ * fill the nuclei HE.nucleus (see e06 `Fills`) and ink the outlines. (x, y) top-left, size w × h.
+ */
+export const colonTile = (x: number, y: number, w: number, h: number, kind: "normal" | "tumour" = "normal", key = "ct") => {
+  const r = stream(`${key}${kind}`);
+  const crypts: Crypt[] = [];
+  const tumour = kind === "tumour";
+  const R = Math.min(w, h) * (tumour ? 0.12 : 0.12);
+  const gap = R * (tumour ? 2.15 : 2.55);
+  const m = R * (tumour ? 1.3 : 1.1);
+  const cols = Math.max(2, Math.floor((w - 2 * m) / gap + 0.5) + 1);
+  const rows = Math.max(2, Math.floor((h - 2 * m) / (gap * 0.87) + 0.5) + 1);
+  const sx = (w - 2 * m) / (cols - 0.5), sy = (h - 2 * m) / (rows - 1);
+  const centres: Pt[] = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cx = x + m + col * sx + (row % 2 ? sx / 2 : 0);
+      const cy = y + m + row * sy;
+      const j = tumour ? 0.35 : 0.1;
+      centres.push([cx + (r() - 0.5) * R * j, cy + (r() - 0.5) * R * j]);
+    }
+  }
+  centres.forEach(([cx, cy], gi) => {
+    const k = `${key}${kind}${gi}`;
+    const sz = tumour ? 0.8 + r() * 0.35 : 0.96 + r() * 0.08;
+    const rx = R * sz * (tumour ? 0.9 + r() * 0.3 : 1), ry = R * sz * (tumour ? 0.8 + r() * 0.3 : 0.96);
+    const outline = P.blob(cx, cy, rx, ry, `${k}o`, tumour ? 0.16 : 0.035, 64);
+    const radiusAt = (a: number) => {
+      let best = 0, bd = 1e9;
+      for (const [px, py] of outline) {
+        const d = Math.abs(Math.atan2(py - cy, px - cx) - a);
+        const dd = Math.min(d, Math.PI * 2 - d);
+        if (dd < bd) { bd = dd; best = Math.hypot(px - cx, py - cy); }
+      }
+      return best;
+    };
+    /** A small ellipse at radius fraction f along angle a, long axis `along` (radial) × `across`. */
+    const nuc = (a: number, f: number, along: number, across: number): Pts => {
+      const ro = radiusAt(a), ca = Math.cos(a), sa = Math.sin(a);
+      const ncx = cx + ca * ro * f, ncy = cy + sa * ro * f;
+      return P.ellipse(0, 0, along * ro, across * ro, 0, Math.PI * 2, 14).map(([px, py]) => [ncx + px * ca - py * sa, ncy + px * sa + py * ca] as const);
+    };
+    const lumens: Pts[] = [];
+    const nuclei: Pts[] = [];
+    const goblets: Pts[] = [];
+    const walls: Pts[] = [];
+    const debris: Pt[] = [];
+    if (!tumour) {
+      const lr = R * 0.16;
+      lumens.push(P.blob(cx, cy, lr, lr * 0.85, `${k}l`, 0.15, 24));
+      const n = 30;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + (r() - 0.5) * 0.08;
+        nuclei.push(nuc(a, 0.87 + (r() - 0.5) * 0.04, 0.075, 0.045));
+      }
+      const g = 13;
+      for (let i = 0; i < g; i++) {
+        const a = (i / g) * Math.PI * 2 + 0.2 + (r() - 0.5) * 0.1;
+        const ro = radiusAt(a), gr = ro * (0.55 + (r() - 0.5) * 0.06);
+        goblets.push(P.blob(cx + Math.cos(a) * gr, cy + Math.sin(a) * gr, ro * 0.165, ro * 0.14, `${k}g${i}`, 0.12, 18));
+      }
+    } else {
+      const nl = gi % 4 === 1 ? 3 : gi % 4 === 3 ? 2 : 1;
+      const lc: Pt[] = nl === 1 ? [[cx + (r() - 0.5) * rx * 0.2, cy]] : Array.from({ length: nl }, (_, j) => [cx + Math.cos((j / nl) * Math.PI * 2 + 0.5) * rx * 0.36, cy + Math.sin((j / nl) * Math.PI * 2 + 0.5) * ry * 0.36] as Pt);
+      lc.forEach(([lx, ly], j) => {
+        const lr = (nl === 1 ? 0.36 : 0.18) * Math.min(rx, ry);
+        lumens.push(P.blob(lx, ly, lr * (0.9 + r() * 0.4), lr * (0.6 + r() * 0.3), `${k}l${j}`, 0.3, 24));
+        if (gi % 2 === 0) for (let d = 0; d < 6; d++) {
+          const a = r() * Math.PI * 2, dd = r() * lr * 0.5;
+          debris.push([lx + Math.cos(a) * dd, ly + Math.sin(a) * dd]);
+        }
+      });
+      const n = 26;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + (r() - 0.5) * 0.15;
+        const layers = 2 + (r() < 0.5 ? 1 : 0);
+        for (let layer = 0; layer < layers; layer++) {
+          nuclei.push(nuc(a + (r() - 0.5) * 0.1, 0.85 - layer * 0.14 + (r() - 0.5) * 0.05, 0.07 + r() * 0.02, 0.04 + r() * 0.012));
+        }
+      }
+    }
+    crypts.push({ outline, lumens, nuclei, goblets, walls, debris, centre: [cx, cy] });
+  });
+  const inCrypt = (px: number, py: number) => crypts.some((c) => Math.hypot(px - c.centre[0], py - c.centre[1]) < R * (tumour ? 1.25 : 1.08));
+  const stromaNuclei = granules(x + w / 2, y + h / 2, Math.hypot(w, h) / 2, tumour ? 45 : 170, `${key}${kind}s`, (px, py) => px < x + 5 || px > x + w - 5 || py < y + 5 || py > y + h - 5 || inCrypt(px, py))
+    .map(([px, py], i) => tumour && i % 2 === 0
+      ? P.ellipse(px, py, R * 0.1, R * 0.025, 0, Math.PI * 2, 12).map(([qx, qy]) => [px + (qx - px) * 0.8 - (qy - py) * 0.6, py + (qx - px) * 0.6 + (qy - py) * 0.8] as const)
+      : P.ellipse(px, py, R * 0.045, R * 0.042, 0, Math.PI * 2, 12));
+  return { field: P.rect(x, y, w, h, 4), crypts, stromaNuclei, R };
+};
+
+/**
+ * A feed-forward neural network diagram: `layers` gives the node count per layer, left to right.
+ * Parts: nodes (per layer, closed circles), centres (per layer), edges (per gap between layers,
+ * one stroke per connection), r.
+ */
+export const network = (x: number, y: number, w: number, h: number, layers: number[] = [3, 4, 4, 2], r = 26) => {
+  const centres: Pt[][] = layers.map((n, li) => {
+    const lx = x + (layers.length === 1 ? w / 2 : (li / (layers.length - 1)) * w);
+    const step = n > 1 ? Math.min(h / (n - 1), r * 4.2) : 0;
+    const top = y + h / 2 - (step * (n - 1)) / 2;
+    return Array.from({ length: n }, (_, i) => [lx, top + i * step] as Pt);
+  });
+  const nodes = centres.map((col) => col.map(([cx, cy]) => P.ellipse(cx, cy, r, r, -Math.PI / 2, Math.PI * 1.5, 36)));
+  const edges = centres.slice(0, -1).map((col, li) => col.flatMap(([ax, ay]) => centres[li + 1].map(([bx, by]) => {
+    const d = Math.hypot(bx - ax, by - ay);
+    return P.line(ax + ((bx - ax) / d) * r, ay + ((by - ay) / d) * r, bx - ((bx - ax) / d) * r, by - ((by - ay) / d) * r, 6);
+  })));
+  return { nodes, centres, edges, r };
+};
+
+/**
+ * An error landscape seen side-on, for gradient descent: high ground on the left, a shallow dip
+ * (local minimum), a ridge, the deep valley (global minimum), rising again on the right.
+ * `height(u)` is 0 (lowest) .. 1 (highest) for u in 0..1; `at(u)` the ground point; `slope(u)`
+ * the gradient; `ground` the stroke; `body` the closed shape under it for a wash; `local` and
+ * `global` the u of the two minima.
+ */
+export const errorLandscape = (x: number, y: number, w: number, h: number) => {
+  const height = (u: number) =>
+    0.55 + 0.42 * Math.cos(u * Math.PI * 1.15) * (1 - u * 0.2)
+    - 0.34 * Math.exp(-((u - 0.7) ** 2) / 0.012)
+    - 0.2 * Math.exp(-((u - 0.27) ** 2) / 0.004)
+    + 0.35 * u ** 6;
+  const us = Array.from({ length: 241 }, (_, i) => i / 240);
+  const hs = us.map(height);
+  const lo = Math.min(...hs), hi = Math.max(...hs);
+  const H = (u: number) => (height(u) - lo) / (hi - lo);
+  const at = (u: number): Pt => [x + u * w, y + (1 - H(u)) * h];
+  const slope = (u: number) => (H(u + 1e-4) - H(u - 1e-4)) / 2e-4;
+  const ground = us.map(at);
+  const argmin = (a: number, b: number) => us.filter((u) => u >= a && u <= b).reduce((m, u) => (H(u) < H(m) ? u : m), a);
+  return {
+    ground, at, slope, height: H,
+    body: [...ground, [x + w, y + h + 40], [x, y + h + 40], ground[0]] as Pts,
+    local: argmin(0.15, 0.4), global: argmin(0.5, 0.9),
+  };
+};
+
+/**
+ * A kidney in coronal section, hilum facing right: the capsule, the cortex/medulla border,
+ * five medullary pyramids pointing to the hilum, the renal pelvis and the ureter leaving
+ * downward. Local box 220 × 300 (ureter to 380), top-left (x, y), scale s.
+ */
+export const kidney = (x: number, y: number, s = 1) => {
+  const outer: [number, number][] = [[150, 92], [160, 40], [118, 6], [70, 10], [22, 26], [4, 90], [6, 150], [10, 210], [36, 268], [88, 278], [140, 272], [166, 220], [156, 176], [134, 160], [128, 134], [136, 110]];
+  const inner: [number, number][] = [[136, 92], [132, 50], [104, 30], [70, 34], [40, 46], [28, 96], [30, 150], [34, 206], [54, 248], [92, 254], [128, 246], [144, 212], [140, 182]];
+  const pyr = (tx: number, ty: number, bx1: number, by1: number, bx2: number, by2: number) => smoothClosed(x, y, s, [[bx1, by1], [(bx1 + bx2) / 2 - (tx > 100 ? 0 : 6), (by1 + by2) / 2], [bx2, by2], [tx, ty]], 6);
+  return {
+    capsule: smoothClosed(x, y, s, outer, 8),
+    cortex: smoothOpen(x, y, s, inner, 8),
+    pyramids: [pyr(118, 96, 62, 50, 92, 40), pyr(112, 124, 40, 92, 46, 128), pyr(112, 152, 38, 156, 44, 192), pyr(116, 180, 52, 222, 80, 238), pyr(124, 112, 96, 52, 76, 60)],
+    pelvis: smoothClosed(x, y, s, [[118, 100], [140, 118], [150, 150], [138, 176], [118, 186], [128, 150]], 8),
+    ureter: smoothOpen(x, y, s, [[140, 176], [158, 210], [170, 270], [176, 330], [184, 380]], 8),
+    centre: [x + 90 * s, y + 140 * s] as Pt,
+  };
+};
+
+/**
+ * A dog standing, side view facing left (a Labrador-like build): one closed silhouette with
+ * the near legs, the far legs as separate strokes, a floppy ear, eye, nose, collar and tail.
+ * Local box 320 × 220, top-left (x, y), scale s.
+ */
+export const dog = (x: number, y: number, s = 1) => ({
+  body: smoothClosed(x, y, s, [
+    [10, 66], [16, 56], [40, 50], [60, 40], [74, 24], [96, 16], [116, 24], [128, 44], [134, 62], [160, 72], [210, 72], [262, 74], [284, 82],
+    [292, 104], [294, 130], [286, 160], [292, 192], [298, 208], [276, 210], [270, 186], [262, 150], [240, 134], [180, 132], [146, 132],
+    [140, 168], [140, 208], [116, 210], [114, 172], [108, 128], [98, 104], [84, 86], [56, 80], [26, 78],
+  ], 8),
+  farLegs: [smoothOpen(x, y, s, [[160, 132], [164, 172], [168, 206], [150, 208]], 8), smoothOpen(x, y, s, [[250, 140], [246, 176], [252, 206], [234, 208]], 8)],
+  ear: smoothOpen(x, y, s, [[98, 22], [110, 34], [116, 58], [108, 72], [100, 60], [100, 40]], 8),
+  eye: P.ellipse(x + 70 * s, y + 38 * s, 4 * s, 4 * s),
+  nose: P.blob(x + 14 * s, y + 60 * s, 7 * s, 6 * s, "dognose", 0.05, 16),
+  mouth: smoothOpen(x, y, s, [[18, 72], [36, 74], [54, 70]], 6),
+  collar: smoothOpen(x, y, s, [[126, 50], [128, 74], [118, 96]], 6),
+  tail: smoothOpen(x, y, s, [[284, 84], [300, 66], [312, 44], [318, 30]], 8),
+});
+
+/**
+ * A family hatchback, side view facing left: body with bonnet, windscreen, roof, rear window and
+ * boot, two windows with the B-pillar, door line, handle, headlamp, and two wheels with hubs.
+ * Local box 380 × 170, top-left (x, y), scale s.
+ */
+export const car = (x: number, y: number, s = 1) => ({
+  body: smoothClosed(x, y, s, [
+    [12, 112], [16, 92], [40, 84], [110, 76], [150, 40], [180, 30], [270, 30], [304, 46], [338, 80], [362, 90], [368, 116], [356, 128],
+    [326, 128], [318, 108], [296, 98], [272, 108], [264, 128], [124, 128], [116, 108], [94, 98], [72, 108], [64, 128], [20, 128],
+  ], 6),
+  windows: [smoothClosed(x, y, s, [[158, 76], [184, 44], [222, 42], [222, 76]], 4), smoothClosed(x, y, s, [[234, 76], [234, 42], [270, 42], [298, 54], [318, 76]], 4)],
+  door: P.line(x + 228 * s, y + 80 * s, x + 228 * s, y + 124 * s, 6),
+  handle: P.line(x + 196 * s, y + 90 * s, x + 214 * s, y + 90 * s, 3),
+  lamp: P.ellipse(x + 30 * s, y + 96 * s, 10 * s, 6 * s),
+  wheels: [P.ellipse(x + 94 * s, y + 128 * s, 28 * s, 28 * s), P.ellipse(x + 296 * s, y + 128 * s, 28 * s, 28 * s)],
+  hubs: [P.ellipse(x + 94 * s, y + 128 * s, 11 * s, 11 * s), P.ellipse(x + 296 * s, y + 128 * s, 11 * s, 11 * s)],
+});
+
+/** An apple: two-lobed body with the top dimple, stem and one leaf. Local box 200 × 200. */
+export const apple = (x: number, y: number, s = 1) => ({
+  body: smoothClosed(x, y, s, [[100, 44], [130, 26], [172, 34], [194, 76], [190, 130], [166, 176], [130, 192], [100, 182], [70, 192], [34, 176], [10, 130], [6, 76], [28, 34], [70, 26]], 8),
+  stem: smoothOpen(x, y, s, [[100, 46], [102, 26], [108, 8]], 6),
+  leaf: smoothClosed(x, y, s, [[106, 20], [128, 4], [156, 6], [140, 22]], 6),
+  shine: smoothOpen(x, y, s, [[44, 70], [36, 96], [40, 120]], 6),
+});
