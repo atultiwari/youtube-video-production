@@ -13,6 +13,15 @@
 #   4. full render, muxed with the mix; with --deliver-4k (Shorts) also the 2160x3840 upload
 #   5. stills: beat midpoints, beat ends (fully built) and every 2 s, contact sheets, phone sheet, frame fill
 set -euo pipefail
+# Housekeeping: every Remotion render leaves a ~1 GB webpack bundle in the macOS temp folder and
+# nothing deletes it (E07: 268 bundles filled the disk). Remove bundles and Chrome profiles older
+# than 2 hours (never a running build's), and orphaned headless Chromes (parent launchd) over 2 h.
+TMPD=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null || echo "${TMPDIR:-/tmp}")
+find "$TMPD" -maxdepth 1 \( -name 'remotion-webpack-bundle-*' -o -name 'puppeteer_dev_chrome_profile-*' \) -mmin +120 -exec rm -rf {} + 2>/dev/null || true
+for pid in $(pgrep -f chrome-headless-shell 2>/dev/null || true); do
+  [[ $(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ') == 1 ]] || continue
+  et=$(ps -o etime= -p "$pid" | tr -d ' '); [[ $et == *-* || $et =~ ^[0-9]+:[0-9]+:[0-9]+$ && ${et%%:*} -ge 2 ]] && kill "$pid" 2>/dev/null || true
+done
 comp=$1; key=$2; shift 2
 narration=(); deliver4k=0; maxstatic=10; force=0
 PY=${YVP_PYTHON:-$HOME/.local/share/youtube-video-production/venv/bin/python3}
