@@ -1629,3 +1629,177 @@ export const mcqSheet = (x: number, y: number, w: number, h: number, stem = 3, m
     opt,
   };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Page 13 (E13, Nov 2026): an OPD consultation desk with a phone recording on a stand, a seated
+ * patient, an EHR clinic note (an AI draft with Sign and Edit buttons), a tumour-board meeting
+ * room, and a USB-C plug. Checked on the `kit-objects-13` still (ObjectsDemo13).
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * An outpatient (OPD) consultation desk, front view from slightly above, as an Indian OPD looks:
+ * the desk top drawn in perspective (narrower at the back), its front edge, a modesty panel, a
+ * drawer pedestal on the left (three drawers with handles) and a leg on the right. On the desk: a
+ * smartphone standing in a small stand, recording (a red dot, a waveform of bars, a mic glyph at
+ * the bottom of the screen), a prescription pad with ruled lines and a pen lying beside it. Box
+ * w × h (desk top front edge at 0.46 h). Wash `top` wood, `panel`/`pedestal` a darker wood, `screen`
+ * near-black, `rec` red, `pad` white. `phoneBox` is [x, y, w, h] of the phone; `deskTopY` the front
+ * edge; `seat` is where a patient's stool goes (right of the desk, at floor level).
+ */
+export const opdDesk = (x: number, y: number, w: number, h: number) => {
+  const ty = y + h * 0.46, th = h * 0.05, back = y + h * 0.36, inset = w * 0.05;
+  const px = x + w * 0.6, pw = w * 0.1, ph = h * 0.28, py = back + h * 0.02 - ph;
+  const sx = px + pw * 0.08, sy = py + ph * 0.06, sw = pw * 0.84, sh = ph * 0.86;
+  const wy = sy + sh * 0.5, bars = 9;
+  const mx = sx + sw / 2, my = sy + sh * 0.8;
+  const padQ: Pts = [[x + w * 0.2, back + h * 0.02], [x + w * 0.42, back + h * 0.02], [x + w * 0.44, ty - h * 0.015], [x + w * 0.18, ty - h * 0.015], [x + w * 0.2, back + h * 0.02]];
+  const pedX = x + w * 0.04, pedW = w * 0.3, pedTop = ty + th, pedH = y + h - pedTop;
+  return {
+    top: [[x + inset, back], [x + w - inset, back], [x + w, ty], [x, ty], [x + inset, back]] as Pts,
+    edge: P.rect(x, ty, w, th, 3),
+    panel: P.rect(x + w * 0.34, ty + th, w * 0.56, h * 0.3, 2),
+    pedestal: P.rect(pedX, pedTop, pedW, pedH, 3),
+    drawers: [0, 1, 2].map((i) => P.rect(pedX + pedW * 0.06, pedTop + pedH * (0.05 + i * 0.31), pedW * 0.88, pedH * 0.27, 3)),
+    handles: [0, 1, 2].map((i) => P.line(pedX + pedW * 0.38, pedTop + pedH * (0.18 + i * 0.31), pedX + pedW * 0.62, pedTop + pedH * (0.18 + i * 0.31), 4)),
+    leg: P.rect(x + w * 0.9, ty + th, w * 0.05, y + h - ty - th, 2),
+    stand: P.polyline([[px - pw * 0.15, back + h * 0.03], [px + pw * 0.5, back - h * 0.03], [px + pw * 1.15, back + h * 0.03], [px - pw * 0.15, back + h * 0.03]], 4),
+    phone: P.rect(px, py, pw, ph, pw * 0.14),
+    screen: P.rect(sx, sy, sw, sh, pw * 0.05),
+    rec: P.ellipse(sx + sw * 0.5, sy + sh * 0.16, sw * 0.12, sw * 0.12),
+    wave: Array.from({ length: bars }, (_, i) => {
+      const bx = sx + sw * (0.12 + (0.76 * i) / (bars - 1)), a = sh * [0.04, 0.1, 0.16, 0.08, 0.2, 0.12, 0.17, 0.07, 0.04][i];
+      return P.line(bx, wy - a, bx, wy + a, 3);
+    }),
+    mic: [P.rect(mx - sw * 0.1, my - sh * 0.12, sw * 0.2, sh * 0.13, sw * 0.1), P.ellipse(mx, my - sh * 0.04, sw * 0.18, sh * 0.06, 0, Math.PI, 12), P.line(mx, my + sh * 0.02, mx, my + sh * 0.07, 2), P.line(mx - sw * 0.1, my + sh * 0.07, mx + sw * 0.1, my + sh * 0.07, 2)],
+    pad: padQ,
+    padLines: [0, 1, 2, 3].map((i) => {
+      const v = 0.25 + i * 0.18, yy = back + h * 0.02 + (ty - h * 0.015 - back - h * 0.02) * v;
+      return P.line(x + w * (0.215 - v * 0.02), yy, x + w * (0.4 + v * 0.02), yy, 4);
+    }),
+    pen: P.line(x + w * 0.46, ty - h * 0.02, x + w * 0.53, back + h * 0.03, 4),
+    phoneBox: [px, py, pw, ph] as [number, number, number, number],
+    recAt: [sx + sw * 0.5, sy + sh * 0.16] as Pt,
+    deskTopY: ty,
+    seat: [x + w * 1.12, y + h] as Pt,
+  };
+};
+
+/**
+ * A person seated on a round OPD stool, side view, facing left (dir = 1) or right (dir = -1):
+ * head, torso, upper arm and forearm resting on the thigh, thigh, shin, foot, and the stool (seat
+ * disc and three legs). (x, y) is the floor point under the stool's centre; s scales (s = 1 is
+ * about 300 tall). Closed `head`, `seat` for washes.
+ */
+export const seatedPerson = (x: number, y: number, s = 1, dir = 1) => {
+  const X = (u: number) => x - dir * u * s, Y = (v: number) => y - v * s;
+  return {
+    head: P.ellipse(X(-6), Y(262), 24 * s, 27 * s),
+    body: [P.line(X(0), Y(232), X(6), Y(124), 8)],
+    arm: [P.line(X(2), Y(212), X(26), Y(160), 6), P.line(X(26), Y(160), X(66), Y(132), 6)],
+    leg: [P.line(X(6), Y(124), X(76), Y(122), 8), P.line(X(76), Y(122), X(82), Y(14), 8), P.line(X(82), Y(14), X(106), Y(10), 6)],
+    seat: P.ellipse(X(6), Y(112), 42 * s, 9 * s),
+    stoolLegs: [P.line(X(-24), Y(106), X(-36), Y(0), 6), P.line(X(36), Y(106), X(48), Y(0), 6), P.line(X(6), Y(104), X(6), Y(0), 6)],
+  };
+};
+
+/**
+ * An electronic health record clinic note, as an AI scribe leaves it for the doctor: a window
+ * frame and title bar, a patient banner (a round photo placeholder and two placeholder bars, no
+ * real identifier), an "AI draft" ribbon at the top right, `sections` sections (SOAP: S, O, A, P)
+ * each with a coloured letter tab on the left and `rows` text-row slots, and at the bottom two
+ * buttons, Edit and Sign. Box w × h. `tabAt(i)` is the centre of section i's tab; `rowAt(i, j)` the
+ * baseline start of row j's text; `ribbonAt`, `editAt`, `signAt` centres; `rowBox(i, j)` is
+ * [x, y, w, h] of a row's slot (for a highlight or a red strike).
+ */
+export const ehrNote = (x: number, y: number, w: number, h: number, sections = 4, rows = 2) => {
+  const tb = Math.max(44, h * 0.07), bn = h * 0.11, foot = h * 0.13, m = w * 0.03;
+  const top = y + tb + bn + h * 0.02, secH = (y + h - foot - top) / sections, tabW = Math.min(w * 0.09, secH * 0.8);
+  const rowH = (secH * 0.86) / rows;
+  const rowX = x + m + tabW + w * 0.03, rowW = w - (rowX - x) - m;
+  const rowBox = (i: number, j: number): [number, number, number, number] => [rowX, top + i * secH + secH * 0.07 + j * rowH, rowW, rowH * 0.9];
+  const btnY = y + h - foot + foot * 0.2, btnH = foot * 0.6, bw = w * 0.24;
+  const cx = x + m + bn * 0.4, cy = y + tb + bn / 2;
+  return {
+    frame: P.rect(x, y, w, h, 12),
+    titleBar: P.rect(x, y, w, tb, 12),
+    titleRule: P.line(x, y + tb, x + w, y + tb, 12),
+    banner: P.rect(x + m * 0.5, y + tb + 6, w - m, bn - 12, 6),
+    photo: P.ellipse(cx, cy, bn * 0.3, bn * 0.3),
+    photoHead: P.ellipse(cx, cy - bn * 0.06, bn * 0.1, bn * 0.1),
+    photoBody: P.ellipse(cx, cy + bn * 0.2, bn * 0.18, bn * 0.12, Math.PI, 2 * Math.PI, 12),
+    idBars: [P.rect(cx + bn * 0.5, cy - bn * 0.2, w * 0.26, bn * 0.14, 4), P.rect(cx + bn * 0.5, cy + bn * 0.06, w * 0.18, bn * 0.14, 4)],
+    ribbon: P.rect(x + w * 0.66, y + tb + bn * 0.22, w * 0.3, bn * 0.56, bn * 0.28),
+    ribbonAt: [x + w * 0.81, y + tb + bn * 0.5] as Pt,
+    tabs: Array.from({ length: sections }, (_, i) => P.rect(x + m, top + i * secH + secH * 0.08, tabW, secH * 0.84, 6)),
+    tabAt: (i: number): Pt => [x + m + tabW / 2, top + i * secH + secH / 2],
+    rules: Array.from({ length: sections - 1 }, (_, i) => P.line(x + m, top + (i + 1) * secH, x + w - m, top + (i + 1) * secH, 12)),
+    rowAt: (i: number, j: number): Pt => { const [bx, by, , bh] = rowBox(i, j); return [bx + 8, by + bh * 0.72]; },
+    rowBox,
+    edit: P.rect(x + w - m - bw * 2.15, btnY, bw, btnH, btnH / 2),
+    sign: P.rect(x + w - m - bw, btnY, bw, btnH, btnH / 2),
+    editAt: [x + w - m - bw * 1.65, btnY + btnH / 2] as Pt,
+    signAt: [x + w - m - bw / 2, btnY + btnH / 2] as Pt,
+    titleAt: [x + w * 0.05, y + tb * 0.68] as Pt,
+  };
+};
+
+/**
+ * A tumour-board meeting: a wall screen (bezel and two panels: on the left an axial CT slice of the
+ * abdomen with the body outline, a vertebra, the liver and a round lesion in it; on the right a
+ * histology field with tumour glands), a long table in perspective, five attendees seen from the
+ * front across the table (head and shoulders, with a laptop or papers in front of two), and two
+ * seen from behind on the near side. Box w × h; the screen fills the top 0.42 h. Wash `ctField`
+ * near-black, `body` grey, `liver` mid-grey, `lesion` darker, `histo` pink, `glands` purple,
+ * `table` wood. `ctBox`, `histoBox` are [x, y, w, h] of the panels; `lesionAt` the lesion centre.
+ */
+export const tumourBoard = (x: number, y: number, w: number, h: number) => {
+  const scx = x + w * 0.2, scw = w * 0.6, scy = y, sch = h * 0.4;
+  const pad = scw * 0.03, pw = (scw - pad * 3) / 2, ph = sch - pad * 2;
+  const ct: [number, number, number, number] = [scx + pad, scy + pad, pw, ph];
+  const hi: [number, number, number, number] = [scx + pad * 2 + pw, scy + pad, pw, ph];
+  const ccx = ct[0] + pw / 2, ccy = ct[1] + ph / 2, rx = pw * 0.42, ry = ph * 0.34;
+  const hcx = hi[0] + pw / 2, hcy = hi[1] + ph / 2, hr = Math.min(pw, ph) * 0.46;
+  const tTop = y + h * 0.62, tBot = y + h * 0.8;
+  const head = (cx: number, cy: number, r: number) => ({
+    head: P.ellipse(cx, cy, r, r * 1.12),
+    shoulders: P.ellipse(cx, cy + r * 2.3, r * 1.9, r * 1.2, Math.PI, 2 * Math.PI, 16),
+  });
+  const far = [0.16, 0.33, 0.5, 0.67, 0.84].map((u) => head(x + w * u, tTop - h * 0.15, h * 0.055));
+  const near = [0.3, 0.7].map((u) => head(x + w * u, tBot + h * 0.08, h * 0.06));
+  return {
+    bezel: P.rect(scx, scy, scw, sch, 8),
+    ctField: P.rect(...ct, 4),
+    histoField: P.rect(...hi, 4),
+    body: P.ellipse(ccx, ccy, rx, ry),
+    vertebra: P.ellipse(ccx, ccy + ry * 0.55, rx * 0.13, ry * 0.2),
+    liver: smoothClosed(ccx - rx * 0.38, ccy - ry * 0.12, rx / 190, [[-50, -45], [10, -55], [45, -30], [30, 10], [-10, 35], [-50, 30], [-62, -5]], 6),
+    lesion: P.ellipse(ccx - rx * 0.36, ccy - ry * 0.2, rx * 0.08, rx * 0.075),
+    lesionAt: [ccx - rx * 0.36, ccy - ry * 0.2] as Pt,
+    histo: P.ellipse(hcx, hcy, hr, hr),
+    glands: [[-0.45, -0.3], [0.1, -0.5], [0.45, -0.1], [-0.2, 0.2], [0.3, 0.45], [-0.5, 0.45]].map(([u, v], i) => P.ellipse(hcx + u * hr, hcy + v * hr, hr * (0.17 + (i % 2) * 0.05), hr * 0.13, 0, 2 * Math.PI, 24)),
+    lumens: [[-0.45, -0.3], [0.1, -0.5], [0.45, -0.1], [-0.2, 0.2], [0.3, 0.45], [-0.5, 0.45]].map(([u, v]) => P.ellipse(hcx + u * hr, hcy + v * hr, hr * 0.06, hr * 0.04)),
+    table: [[x + w * 0.08, tTop], [x + w * 0.92, tTop], [x + w, tBot], [x, tBot], [x + w * 0.08, tTop]] as Pts,
+    tableEdge: P.rect(x, tBot, w, h * 0.03, 2),
+    far: far.map((p) => [p.head, p.shoulders]).flat(),
+    farHeads: far.map((p) => p.head),
+    near: near.map((p) => [p.head, p.shoulders]).flat(),
+    nearHeads: near.map((p) => p.head),
+    papers: [0.33, 0.67].map((u) => P.rect(x + w * u - w * 0.05, tTop + h * 0.03, w * 0.1, h * 0.06, 3)),
+    ctBox: ct, histoBox: hi,
+    tableAt: [x + w / 2, (tTop + tBot) / 2] as Pt,
+  };
+};
+
+/**
+ * A USB-C plug pointing right, with its cable: the rounded moulded body, the narrower metal shell
+ * with the oval slot in it, a strain-relief collar, and the cable curving away to the left. (x, y)
+ * is the tip's centre; s scales (the plug is about 200 long at s = 1). Wash `body` dark grey,
+ * `shell` light grey.
+ */
+export const usbPlug = (x: number, y: number, s = 1) => ({
+  shell: P.rect(x - 60 * s, y - 18 * s, 60 * s, 36 * s, 16 * s),
+  slot: P.rect(x - 50 * s, y - 6 * s, 40 * s, 12 * s, 6 * s),
+  body: P.rect(x - 150 * s, y - 30 * s, 92 * s, 60 * s, 18 * s),
+  collar: P.rect(x - 184 * s, y - 16 * s, 36 * s, 32 * s, 8 * s),
+  cable: path(x, y, s, [-184, 0], [[[-240, 0], [-250, 40], [-310, 50]]]),
+});

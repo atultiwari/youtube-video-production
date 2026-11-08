@@ -261,3 +261,13 @@ language goes first.
   the three, only the wording of the prompt.") it was 99%. Whisper also writes "few-shot" as "few
   short", "vignette" as "vignet" and "sulfate" as "sulphate" on correct audio (a Short at 94.4%):
   list them in `--heard-as` rather than re-recording.
+
+- **Sentence ends, a fourth time** (E13): every one of these came back wrong while Whisper still
+  scored the beat 97–99%: "…what data is collected and why." lost "and why" (`→ []`); "…a doctor's
+  signature at the end." became "there"; "…a human signs at the end." became "science"; "…because a
+  board summary…" slurred into "It took because of"; "…and the oncologists decide." came back as
+  "oncologist decides". Fixed by fuller endings ("…and for what purpose.", "…as the final step.",
+  "…signs off before anything is final.", "…make the decision."). "Commonest" was read as
+  "communist" in one Short (correct in the episode): "most common" is safer. Read every `→ []` and
+  every changed last word, not just the score.
+

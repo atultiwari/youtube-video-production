@@ -208,6 +208,16 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   sections of two bullets; pass `pic = 0.1` (0.14 let headings overlap the bullets on E12's first
   stills) and put a fourth point ("Keep away from children") in the footer, as real leaflets do. Each
   returns named parts so a beat draws them one step at a time.
+  E13 `opdDesk` (an OPD consultation desk in slight perspective: drawer pedestal, modesty panel, a
+  prescription pad and pen, and a phone recording on a stand: red dot, waveform, mic glyph),
+  `seatedPerson` (a patient on a round OPD stool, side view, facing the desk), `ehrNote` (an EHR
+  clinic note: patient banner with grey placeholder bars, never a name; an "AI draft" ribbon; SOAP
+  letter tabs with `rowBox(i, j)` for highlights; Edit and Sign buttons), `tumourBoard` (a wall
+  screen with an axial CT slice, liver lesion and a histology field, a long table, five oncologists
+  across it and two from behind) and `usbPlug` (a USB-C plug and cable, for MCP's "USB-C port for
+  AI") (page 13: `kit-objects-13`). At 36 px an `ehrNote` row holds about 20 characters at w ≈ 490;
+  write notes in clinic shorthand ("Cough for 2 weeks", "SpO2 98%, temp 37 °C"). In a 48 px Short,
+  give it one row per section.
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")
   and size the screen to fit; 24 px banner text failed QA on 25 frames.

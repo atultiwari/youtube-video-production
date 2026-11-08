@@ -12,6 +12,7 @@ import React from "react";
 
 import { P } from "./shapes";
 import { chatWindow, leaflet, mcqSheet } from "./objects";
+import { doctor as doctorBust, ehrNote, opdDesk, seatedPerson, tumourBoard, usbPlug } from "./objects";
 import { attentionArc, bookPile, closedBook, clothBag, examDesk, journalPage, laptop, layerStack, magnifier, openBook, reportSheet, serverRack } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
@@ -542,6 +543,81 @@ export const ObjectsDemo12: React.FC = () => {
           <Label text="1" x={mq.qAt[0]} y={mq.qAt[1] + 10} at={0} size={28} italic={false} weight={800} color="#FFFFFF" />
           {["24-year-old woman, Hb 10.1,", "MCV 63, RBC 6.1 million,", "ferritin normal. Next test?"].map((t, i) => <Label key={i} text={t} x={mq.stemAt(i)[0]} y={mq.stemAt(i)[1]} at={0} size={26} italic={false} anchor="start" />)}
           {["A  Marrow aspiration", "B  Hb HPLC", "C  Vitamin B12", "D  Direct Coombs"].map((t, k) => <Label key={k} text={t} x={mq.opt(k).textAt[0]} y={mq.opt(k).textAt[1]} at={0} size={28} italic={false} anchor="start" />)}
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/** Page 13 (E13): OPD desk with a recording phone, a seated patient, the EHR clinic note (AI draft), a tumour board, a USB-C plug. */
+export const ObjectsDemo13: React.FC = () => {
+  const dk = opdDesk(60, 300, 640, 520);
+  const dr = doctorBust(300, 260, 0.9);
+  const pt = seatedPerson(820, 820, 1, 1);
+  const nt = ehrNote(980, 30, 520, 520, 4, 2);
+  const tb = tumourBoard(980, 600, 800, 360);
+  const pl = usbPlug(1800, 120, 0.8);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Wash shape={dr.head} color="#F1D3B6" at={0} id="drh" alpha={1} />
+          <Wash shape={dr.coat} color="#FFFFFF" at={0} id="drc" alpha={1} />
+          <Ink strokes={[dr.head, dr.coat, ...dr.lapels, ...dr.stethoscope, dr.chestpiece]} from={0} durationInFrames={20} id="drI" width={3} />
+          <Wash shape={dk.top} color="#D9B48A" at={0} id="dkt" alpha={1} />
+          <Wash shape={dk.edge} color="#B98A5E" at={0} id="dke" alpha={1} />
+          <Wash shape={dk.panel} color="#C99E72" at={0} id="dkp" alpha={1} />
+          <Wash shape={dk.pedestal} color="#C99E72" at={0} id="dkd" alpha={1} />
+          <Wash shape={dk.leg} color="#B98A5E" at={0} id="dkl" alpha={1} />
+          <Wash shape={dk.pad} color="#FFFFFF" at={0} id="dkpd" alpha={1} />
+          <Wash shape={dk.phone} color="#2B2F36" at={0} id="dkph" alpha={1} />
+          <Wash shape={dk.screen} color="#1B2433" at={0} id="dks" alpha={1} />
+          <Wash shape={dk.rec} color="#E0473C" at={0} id="dkr" alpha={1} />
+          <Ink strokes={[dk.top, dk.edge, dk.panel, dk.pedestal, ...dk.drawers, ...dk.handles, dk.leg, dk.stand, dk.phone, dk.pad, ...dk.padLines, dk.pen]} from={0} durationInFrames={20} id="dkI" width={3} />
+          <Ink strokes={[...dk.wave, ...dk.mic]} from={0} durationInFrames={20} id="dkW" width={3} color="#7FD3A8" double={false} pen={false} />
+          <Wash shape={pt.head} color="#E8C3A0" at={0} id="pth" alpha={1} />
+          <Wash shape={pt.seat} color="#8A6A4A" at={0} id="pts" alpha={1} />
+          <Ink strokes={[pt.head, ...pt.body, ...pt.arm, ...pt.leg, pt.seat, ...pt.stoolLegs]} from={0} durationInFrames={20} id="ptI" width={4} />
+
+          <Wash shape={nt.frame} color="#FFFFFF" at={0} id="ntf" alpha={1} />
+          <Wash shape={nt.titleBar} color="#2F5E8E" at={0} id="ntt" alpha={1} />
+          <Wash shape={nt.banner} color="#EEF2F6" at={0} id="ntb" alpha={1} />
+          <Wash shape={nt.photo} color="#C9D3DD" at={0} id="ntp" alpha={1} />
+          {nt.idBars.map((s, i) => <Wash key={i} shape={s} color="#9AA6B2" at={0} id={`nti${i}`} alpha={1} />)}
+          <Wash shape={nt.ribbon} color="#E9B949" at={0} id="ntr" alpha={1} />
+          {nt.tabs.map((s, i) => <Wash key={i} shape={s} color={["#E58A7E", "#7FA7CF", "#E9B949", "#8FC27F"][i]} at={0} id={`ntT${i}`} alpha={1} />)}
+          <Wash shape={nt.edit} color="#EEF2F6" at={0} id="nte" alpha={1} />
+          <Wash shape={nt.sign} color="#2E8B57" at={0} id="nts" alpha={1} />
+          <Ink strokes={[nt.frame, nt.titleRule, nt.banner, nt.photo, nt.photoHead, nt.photoBody, nt.ribbon, ...nt.tabs, ...nt.rules, nt.edit, nt.sign]} from={0} durationInFrames={20} id="ntI" width={3} />
+          <Label text="Clinic note" x={nt.titleAt[0]} y={nt.titleAt[1]} at={0} size={28} italic={false} weight={700} color="#FFFFFF" anchor="start" />
+          <Label text="AI draft" x={nt.ribbonAt[0]} y={nt.ribbonAt[1] + 10} at={0} size={28} italic={false} weight={700} />
+          {["S", "O", "A", "P"].map((t, i) => <Label key={i} text={t} x={nt.tabAt(i)[0]} y={nt.tabAt(i)[1] + 11} at={0} size={32} italic={false} weight={800} />)}
+          {["Cough 2 weeks, no fever", "Non-smoker", "Chest clear, SpO2 98%", "Temp 37.0 °C", "Likely post-viral cough", "", "Review in 2 weeks", "X-ray if not better"].map((t, k) => <Label key={k} text={t} x={nt.rowAt(Math.floor(k / 2), k % 2)[0]} y={nt.rowAt(Math.floor(k / 2), k % 2)[1]} at={0} size={26} italic={false} anchor="start" />)}
+          <Label text="Edit" x={nt.editAt[0]} y={nt.editAt[1] + 10} at={0} size={28} italic={false} weight={700} />
+          <Label text="Sign" x={nt.signAt[0]} y={nt.signAt[1] + 10} at={0} size={28} italic={false} weight={700} color="#FFFFFF" />
+
+          <Wash shape={tb.bezel} color="#3A3F46" at={0} id="tbz" alpha={1} />
+          <Wash shape={tb.ctField} color="#14161A" at={0} id="tbc" alpha={1} />
+          <Wash shape={tb.body} color="#8E949B" at={0} id="tbb" alpha={1} />
+          <Wash shape={tb.liver} color="#B9BEC4" at={0} id="tbl" alpha={1} />
+          <Wash shape={tb.lesion} color="#5B6168" at={0} id="tble" alpha={1} />
+          <Wash shape={tb.vertebra} color="#EDEDED" at={0} id="tbv" alpha={1} />
+          <Wash shape={tb.histoField} color="#FFFFFF" at={0} id="tbhf" alpha={1} />
+          <Wash shape={tb.histo} color="#F2C6D6" at={0} id="tbh" alpha={1} />
+          {tb.glands.map((s, i) => <Wash key={i} shape={s} color="#8E5BA8" at={0} id={`tbg${i}`} alpha={1} />)}
+          {tb.lumens.map((s, i) => <Wash key={i} shape={s} color="#FFFFFF" at={0} id={`tbu${i}`} alpha={1} />)}
+          <Wash shape={tb.table} color="#D9B48A" at={0} id="tbt" alpha={1} />
+          <Wash shape={tb.tableEdge} color="#B98A5E" at={0} id="tbe" alpha={1} />
+          {tb.farHeads.map((s, i) => <Wash key={i} shape={s} color="#E8C3A0" at={0} id={`tbf${i}`} alpha={1} />)}
+          {tb.nearHeads.map((s, i) => <Wash key={i} shape={s} color="#3A3027" at={0} id={`tbn${i}`} alpha={1} />)}
+          <Wash shape={tb.papers[0]} color="#FFFFFF" at={0} id="tbp0" alpha={1} />
+          <Wash shape={tb.papers[1]} color="#FFFFFF" at={0} id="tbp1" alpha={1} />
+          <Ink strokes={[tb.bezel, tb.ctField, tb.histoField, tb.body, tb.liver, tb.lesion, tb.vertebra, tb.histo, ...tb.glands, tb.table, tb.tableEdge, ...tb.far, ...tb.near, ...tb.papers]} from={0} durationInFrames={20} id="tbI" width={3} />
+
+          <Wash shape={pl.body} color="#3A3F46" at={0} id="plb" alpha={1} />
+          <Wash shape={pl.shell} color="#C9CED4" at={0} id="pls" alpha={1} />
+          <Wash shape={pl.collar} color="#3A3F46" at={0} id="plc" alpha={1} />
+          <Ink strokes={[pl.body, pl.shell, pl.slot, pl.collar, pl.cable]} from={0} durationInFrames={20} id="plI" width={3} />
         </Picture>
       </Paper>
     </AbsoluteFill>
