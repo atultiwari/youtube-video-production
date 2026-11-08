@@ -291,3 +291,11 @@ language goes first.
   `"STARD": "Starred"`, plus compound keys such as `"STARD-AI": "Starred A I"` because hyphenated names
   are skipped); Whisper writes STARD as "start" or "tart" on correct audio, so list it in `--heard-as`.
   Whisper writes "that is" as "i.e." on correct audio: read the take before re-recording.
+- **One-syllable key words swap, and a passing score hides it** (E15): "dark skin" came back as "tar
+  skin", "risk score" as "risk or", "asthma" as "esna" or "estoma", "If they had labelled a training
+  set" as "had developed", and "in twenty twenty" as "in twenty ten" in a Short, all at 96–99%. When the
+  swapped word is the point of the line (the skin tone, the year, the disease), regenerate even if the
+  beat passes. Two failed takes of "picked for extra help … not who is sick" ("health", "seek") were
+  fixed by rewording to "extra care … not how ill a patient is" (a sentence ending on two short words
+  drops them). Whisper writes "nineteen nineties" as "one thousand nine hundred and ninety s", which
+  scores 87–91% in a short beat on correct audio; "Decades ago" avoided it in a Short.

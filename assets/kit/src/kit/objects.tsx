@@ -2117,3 +2117,135 @@ export const retinalCamera = (x: number, y: number, s = 1) => {
     screenBox: [x + 392 * s, y + 16 * s, 144 * s, 84 * s] as [number, number, number, number],
   };
 };
+
+/* ---- Page 16 (E15, bias zoo): zoo map, zoo gate, a fenced enclosure, the skin-tone scale, a paw print ---- */
+
+/**
+ * A zoo seen from above, as on a visitor map: a boundary wall with the entrance gap at the bottom
+ * centre (two pillars and an arch over it), a path from the gate to a round central plaza, and four
+ * fenced enclosures in the quadrants, each with a row of fence posts along its edge and a sign
+ * board on a post facing the plaza. Box w × h. `pens[i]` (0 top-left, 1 top-right, 2 bottom-left,
+ * 3 bottom-right) gives `box` [x, y, w, h], `outline`, `posts`, `board`, `post`, `signAt` (centre
+ * of the board, for a typeset name) and `centre`. Wash pens grass green, the path sand.
+ */
+export const zooMap = (x: number, y: number, w: number, h: number) => {
+  const cx = x + w / 2, cy = y + h * 0.46;
+  const gw = w * 0.12, gy = y + h, pathW = w * 0.09;
+  const m = w * 0.04, pw = (w - 2 * m - pathW * 1.6) / 2, ph = (h - 2 * m - pathW * 2.2) / 2;
+  const boxes: [number, number, number, number][] = [
+    [x + m, y + m, pw, ph], [x + w - m - pw, y + m, pw, ph],
+    [x + m, y + h - m - ph - pathW * 0.6, pw, ph], [x + w - m - pw, y + h - m - ph - pathW * 0.6, pw, ph],
+  ];
+  const pens = boxes.map(([bx, by, bw, bh]) => {
+    const outline = P.rect(bx, by, bw, bh, 18);
+    const posts: Pts[] = [];
+    const nx = 9, ny = 7;
+    for (let k = 1; k < nx; k++) {
+      const px = bx + (bw * k) / nx;
+      posts.push(P.line(px, by - 7, px, by + 7, 2), P.line(px, by + bh - 7, px, by + bh + 7, 2));
+    }
+    for (let k = 1; k < ny; k++) {
+      const py = by + (bh * k) / ny;
+      posts.push(P.line(bx - 7, py, bx + 7, py, 2), P.line(bx + bw - 7, py, bx + bw + 7, py, 2));
+    }
+    const bwid = bw * 0.9, bh2 = Math.max(48, bh * 0.2), sx = bx + bw / 2, sy = by + bh * 0.06 + bh2 / 2;
+    return {
+      box: [bx, by, bw, bh] as [number, number, number, number],
+      outline, posts,
+      board: P.rect(sx - bwid / 2, sy - bh2 / 2, bwid, bh2, 6),
+      post: P.line(sx, sy + bh2 / 2, sx, sy + bh2 / 2 + bh * 0.06, 2),
+      signAt: [sx, sy] as Pt,
+      signBox: [sx - bwid / 2, sy - bh2 / 2, bwid, bh2] as [number, number, number, number],
+      centre: [bx + bw / 2, by + bh * 0.6] as Pt,
+    };
+  });
+  const pr = Math.min(w, h) * 0.075;
+  return {
+    wall: P.polyline([[cx - gw / 2, gy], [x, gy], [x, y], [x + w, y], [x + w, gy], [cx + gw / 2, gy]], 18),
+    pillars: [P.rect(cx - gw / 2 - 16, gy - 22, 32, 44, 4), P.rect(cx + gw / 2 - 16, gy - 22, 32, 44, 4)],
+    arch: P.quad(cx - gw / 2, gy - 20, cx, gy - 70, cx + gw / 2, gy - 20, 20),
+    pathL: P.line(cx - pathW / 2, gy, cx - pathW / 2, y + m, 10),
+    pathR: P.line(cx + pathW / 2, gy, cx + pathW / 2, y + m, 10),
+    path: P.rect(cx - pathW / 2, y + m, pathW, gy - y - m, 2),
+    crossPath: P.rect(x + m, cy - pathW / 2, w - 2 * m, pathW, 2),
+    plaza: P.ellipse(cx, cy, pr, pr, -Math.PI / 2, Math.PI * 1.5, 48),
+    plazaAt: [cx, cy] as Pt,
+    gateAt: [cx, gy] as Pt,
+    pens,
+  };
+};
+
+/**
+ * A zoo entrance, front view: two brick pillars with caps, a curved name board across the top
+ * (put the zoo's name at `signAt`), and two open iron gate leaves of vertical bars between the
+ * pillars. Local box 600 × 420, top-left (x, y), scale s. Wash `pillars` brick, `board` cream.
+ */
+export const zooGate = (x: number, y: number, s = 1) => {
+  const T = (px: number, py: number): Pt => [x + px * s, y + py * s];
+  const R = (x0: number, y0: number, x1: number, y1: number, r = 6) => rectL(x, y, s, x0, y0, x1, y1, r);
+  const leaf = (x0: number, x1: number) => [
+    P.line(...T(x0, 214), ...T(x1, 226), 10), P.line(...T(x0, 400), ...T(x1, 396), 10),
+    ...Array.from({ length: 5 }, (_, k) => { const px = x0 + ((x1 - x0) * (k + 0.5)) / 5; const t = (px - x0) / (x1 - x0); return P.line(...T(px, 214 + 12 * t - 14), ...T(px, 400 - 4 * t), 10); }),
+  ];
+  return {
+    pillars: [R(0, 120, 74, 420), R(526, 120, 600, 420)],
+    caps: [R(-10, 100, 84, 124, 4), R(516, 100, 610, 124, 4)],
+    bricks: [0, 1].flatMap((k) => [170, 230, 290, 350].map((py) => P.line(...T(k * 526 + 6, py), ...T(k * 526 + 68, py), 6))),
+    board: [...path(x, y, s, [60, 150], [[[160, 40], [440, 40], [540, 150]]]), ...P.line(...T(540, 150), ...T(540, 196), 4), ...P.line(...T(540, 196), ...T(60, 196), 12), ...P.line(...T(60, 196), ...T(60, 150), 4)],
+    leaves: [...leaf(78, 250), ...leaf(522, 350)],
+    ground: P.line(...T(-40, 420), ...T(640, 420), 20),
+    signAt: T(300, 150),
+  };
+};
+
+/**
+ * One zoo enclosure, front view: a wooden fence (two rails on posts, the posts with pointed tops)
+ * on a ground line, and a name plaque screwed to the middle of the fence (`boardPosts` are its two
+ * screws). The exhibit goes in `inside` [x, y, w, h], the whole area above the fence, so nothing
+ * crosses it. Box w × h (fence in the lower 30%). Wash `board`
+ * cream, `fence` timber brown, `grass` green.
+ */
+export const enclosure = (x: number, y: number, w: number, h: number) => {
+  const fy = y + h * 0.7, gy = y + h, n = Math.max(6, Math.round(w / 90));
+  const posts = Array.from({ length: n + 1 }, (_, k) => {
+    const px = x + (w * k) / n;
+    return P.polyline([[px - 9, gy], [px - 9, fy + 10], [px, fy - 8], [px + 9, fy + 10], [px + 9, gy]], 8);
+  });
+  const bw = Math.min(w * 0.72, 680), bh = Math.max(56, (gy - fy) * 0.62), bx = x + (w - bw) / 2, by = fy + (gy - fy) * 0.12;
+  return {
+    posts,
+    rails: [P.line(x, fy + (gy - fy) * 0.3, x + w, fy + (gy - fy) * 0.3, 24), P.line(x, fy + (gy - fy) * 0.72, x + w, fy + (gy - fy) * 0.72, 24)],
+    railBands: [P.rect(x, fy + (gy - fy) * 0.24, w, (gy - fy) * 0.12, 3), P.rect(x, fy + (gy - fy) * 0.66, w, (gy - fy) * 0.12, 3)],
+    grass: P.rect(x - 10, fy + (gy - fy) * 0.5, w + 20, (gy - fy) * 0.5, 4),
+    ground: P.line(x - 30, gy, x + w + 30, gy, 24),
+    board: P.rect(bx, by, bw, bh, 8),
+    boardPosts: [P.ellipse(bx + 14, by + bh / 2, 4, 4), P.ellipse(bx + bw - 14, by + bh / 2, 4, 4)],
+    signAt: [x + w / 2, by + bh * 0.66] as Pt,
+    inside: [x + w * 0.03, y, w * 0.94, fy - y - 16] as [number, number, number, number],
+  };
+};
+
+/**
+ * The Fitzpatrick skin-type scale as a row of n (6) rounded swatches, lightest (I) on the left.
+ * Box w × h. `swatches[i]` closed outlines (wash with TISSUE.skinTones[i]); `labelAt(i)` the point
+ * under swatch i for its numeral; `span(a, b)` a bracket under swatches a..b for a group label,
+ * with `spanAt(a, b)` its label point.
+ */
+export const toneScale = (x: number, y: number, w: number, h: number, n = 6) => {
+  const gap = w * 0.02, sw = (w - gap * (n - 1)) / n;
+  const sx = (i: number) => x + i * (sw + gap);
+  return {
+    swatches: Array.from({ length: n }, (_, i) => P.rect(sx(i), y, sw, h, Math.min(14, sw * 0.12))),
+    labelAt: (i: number): Pt => [sx(i) + sw / 2, y + h + 44],
+    span: (a: number, b: number): Pts => P.polyline([[sx(a), y + h + 62], [sx(a), y + h + 78], [sx(b) + sw, y + h + 78], [sx(b) + sw, y + h + 62]], 12),
+    spanAt: (a: number, b: number): Pt => [(sx(a) + sx(b) + sw) / 2, y + h + 122],
+    box: (i: number): [number, number, number, number] => [sx(i), y, sw, h],
+  };
+};
+
+/** An animal's paw print: a lobed main pad and four oval toe pads. Centre (cx, cy) of the main pad, scale s (pad ~60 px wide at s = 1). */
+export const pawPrint = (cx: number, cy: number, s = 1) => ({
+  pad: path(cx, cy, s, [0, -18], [[[18, -20], [34, 2], [30, 16]], [[26, 30], [10, 26], [0, 22]], [[-10, 26], [-26, 30], [-30, 16]], [[-34, 2], [-18, -20], [0, -18]]]),
+  toes: [[-30, -34, -0.5], [-11, -50, -0.15], [11, -50, 0.15], [30, -34, 0.5]].map(([dx, dy, a]) =>
+    P.ellipse(cx + dx * s, cy + dy * s, 8.5 * s, 12 * s, -Math.PI / 2 + a, Math.PI * 1.5 + a, 28)),
+});

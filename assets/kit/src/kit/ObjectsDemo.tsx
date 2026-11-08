@@ -16,7 +16,8 @@ import { doctor as doctorBust, ehrNote, opdDesk, seatedPerson, tumourBoard, usbP
 import { attentionArc, bookPile, closedBook, clothBag, examDesk, journalPage, laptop, layerStack, magnifier, openBook, reportSheet, serverRack } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
-import { ArticleArt, ClipboardArt, RetinalCameraArt } from "./art";
+import { ArticleArt, ClipboardArt, EnclosureArt, PawArt, RetinalCameraArt, ToneScaleArt, ZooGateArt, ZooMapArt } from "./art";
+import { enclosure, toneScale, zooGate, zooMap } from "./objects";
 import { clipboard, researchArticle, retinalCamera } from "./objects";
 import { AppleArt, CarArt, ColonTileArt, DetectiveArt, DogArt, ForgerArt, FundusArt, HeSlideArt, KidneyArt, MicroscopeArt, NetworkArt, NeuronArt, SquamousTileArt, ThyroidTileArt } from "./art";
 import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
@@ -668,6 +669,38 @@ export const ObjectsDemo15: React.FC = () => (
         {[0, 1, 2].map((i) => <Ink key={i} strokes={[CB.tick(i)]} from={0} durationInFrames={4} id={`tk${i}`} color="#3C8D4F" width={5} double={false} pen={false} />)}
         <RetinalCameraArt x={1250} y={300} s={1.1} at={0} id="rc" />
         <FundusArt cx={RC.screenBox[0] + RC.screenBox[2] / 2} cy={RC.screenBox[1] + RC.screenBox[3] / 2} r={RC.screenBox[3] * 0.42} at={0} id="rcf" />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+/* Page 16 (E15, bias zoo): zoo map, gate, enclosure with an exhibit, Fitzpatrick scale, paw prints, oximeter. */
+const ZM = zooMap(20, 30, 760, 820);
+const ZG = zooGate(840, 40, 0.86);
+const EN = enclosure(1380, 40, 520, 420);
+const TS = toneScale(840, 600, 560, 120);
+const ZOO_NAMES = ["Who is in the data?", "How was it measured?", "When was it collected?", "What is hidden?"];
+export const ObjectsDemo16: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <ZooMapArt x={20} y={30} w={760} h={820} at={0} id="zm" />
+        {ZM.pens.map((p, i) => <Label key={i} text={ZOO_NAMES[i]} x={p.signAt[0]} y={p.signAt[1] + 12} at={0} size={30} italic={false} weight={700} />)}
+        {ZM.pens.map((p, i) => <PawArt key={i} cx={p.centre[0]} cy={p.centre[1] + 20} s={0.9} at={0} id={`pw${i}`} />)}
+        <ZooGateArt x={840} y={40} s={0.86} at={0} id="zg" />
+        <Label text="THE BIAS ZOO" x={ZG.signAt[0]} y={ZG.signAt[1]} at={0} size={44} italic={false} weight={800} />
+        <EnclosureArt x={1380} y={40} w={520} h={420} at={0} id="en" />
+        <Label text="SAMPLING BIAS" x={EN.signAt[0]} y={EN.signAt[1]} at={0} size={36} italic={false} weight={800} />
+        <Wash shape={P.rect(EN.inside[0] + 40, EN.inside[1] + 10, 180, EN.inside[3] - 20, 8)} color={TISSUE.skinTones[0]} at={0} id="ex1" alpha={1} />
+        <Wash shape={P.rect(EN.inside[0] + 260, EN.inside[1] + 10, 180, EN.inside[3] - 20, 8)} color={TISSUE.skinTones[1]} at={0} id="ex2" alpha={1} />
+        <ToneScaleArt x={840} y={600} w={560} h={120} at={0} id="ts" />
+        {["I", "II", "III", "IV", "V", "VI"].map((t, i) => <Label key={t} text={t} x={TS.labelAt(i)[0]} y={TS.labelAt(i)[1]} at={0} size={36} italic={false} weight={700} />)}
+        <Ink strokes={[TS.span(4, 5)]} from={0} durationInFrames={4} id="tsb" width={3} double={false} pen={false} />
+        <Label text="dark skin: few images" x={TS.spanAt(4, 5)[0] - 40} y={TS.spanAt(4, 5)[1]} at={0} size={36} italic={false} />
+        <Wash shape={finger(1460, 640, 0.9).outline} color={TISSUE.skinTones[4]} at={0} id="fg" alpha={0.8} />
+        <Ink strokes={[finger(1460, 640, 0.9).outline, finger(1460, 640, 0.9).nail]} from={0} durationInFrames={4} id="fgi" />
+        <Ink strokes={[oximeter(1460, 640, 0.9).upper, oximeter(1460, 640, 0.9).lower, oximeter(1460, 640, 0.9).hinge, oximeter(1460, 640, 0.9).display]} from={0} durationInFrames={4} id="ox" color="#2F5E8E" />
+        <Label text="94%" x={oximeter(1460, 640, 0.9).readout[0]} y={oximeter(1460, 640, 0.9).readout[1] + 4} at={0} size={40} italic={false} weight={700} />
       </Picture>
     </Paper>
   </AbsoluteFill>

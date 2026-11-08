@@ -5,6 +5,7 @@
  */
 import React from "react";
 
+import { enclosure, pawPrint, toneScale, zooGate, zooMap } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
 import { Dots, Fills, Ink, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
@@ -264,4 +265,74 @@ export const RetinalCameraArt: React.FC<{ x: number; y: number; s?: number; at: 
     <Wash shape={r.screen} color="#14161A" at={at + dur * 0.72} id={`${id}sc`} alpha={1} />
     <Ink strokes={[r.arm, r.monitor, r.screen]} from={at + dur * 0.7} durationInFrames={dur * 0.3} id={`${id}mo`} width={3} />
   </>;
+};
+
+/* ---- Page 16 (E15): the bias zoo ---- */
+export const GRASS = "#B9D7A0", SAND = "#EBD9B0", TIMBER = "#9B6B43", BRICK = "#C77B5A", CREAM = "#FBF3DC";
+
+/** The zoo map from above: wall, gate, path and plaza, then each pen (grass, fence posts, sign board). Pens appear at `pens[i]` (default all at `at`). */
+export const ZooMapArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; pens?: number[]; dur?: number }> = ({ x, y, w, h, at, id, pens, dur = 24 }) => {
+  const z = zooMap(x, y, w, h);
+  return <>
+    <Wash shape={z.path} color={SAND} at={at + dur * 0.3} id={`${id}pw`} alpha={0.9} />
+    <Wash shape={z.crossPath} color={SAND} at={at + dur * 0.3} id={`${id}cw`} alpha={0.9} />
+    <Wash shape={z.plaza} color={SAND} at={at + dur * 0.3} id={`${id}zw`} alpha={0.9} />
+    <Ink strokes={[z.wall]} from={at} durationInFrames={dur * 0.4} id={`${id}wl`} width={6} double={false} />
+    <Wash shape={z.pillars[0]} color={BRICK} at={at + dur * 0.35} id={`${id}p0`} alpha={1} />
+    <Wash shape={z.pillars[1]} color={BRICK} at={at + dur * 0.35} id={`${id}p1`} alpha={1} />
+    <Ink strokes={[...z.pillars, z.arch]} from={at + dur * 0.35} durationInFrames={dur * 0.2} id={`${id}gt`} width={4} double={false} />
+    <Ink strokes={[z.plaza]} from={at + dur * 0.45} durationInFrames={dur * 0.25} id={`${id}pa`} width={3} double={false} color={TIMBER} />
+    {z.pens.map((p, i) => {
+      const a = pens?.[i] ?? at + dur * 0.6;
+      return <React.Fragment key={i}>
+        <Wash shape={p.outline} color={GRASS} at={a} id={`${id}g${i}`} alpha={0.85} />
+        <Ink strokes={[p.outline]} from={a} durationInFrames={8} id={`${id}o${i}`} width={4} double={false} color={TIMBER} />
+        <Ink strokes={p.posts} from={a + 4} durationInFrames={6} id={`${id}fp${i}`} width={3} double={false} pen={false} color={TIMBER} />
+        <Wash shape={p.board} color={CREAM} at={a + 6} id={`${id}b${i}`} alpha={1} />
+        <Ink strokes={[p.board, p.post]} from={a + 6} durationInFrames={6} id={`${id}bo${i}`} width={3} double={false} pen={false} />
+      </React.Fragment>;
+    })}
+  </>;
+};
+
+/** The zoo entrance: pillars (brick), caps, the curved name board, the open gates. Name goes at `zooGate(...).signAt`. */
+export const ZooGateArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number }> = ({ x, y, s = 1, at, id, dur = 20 }) => {
+  const g = zooGate(x, y, s);
+  return <>
+    {g.pillars.map((p, i) => <Wash key={i} shape={p} color={BRICK} at={at} id={`${id}p${i}`} alpha={0.95} />)}
+    <Ink strokes={[...g.pillars, ...g.caps, g.ground]} from={at} durationInFrames={dur * 0.35} id={`${id}o`} width={4} double={false} />
+    <Ink strokes={g.bricks} from={at + dur * 0.3} durationInFrames={dur * 0.15} id={`${id}br`} width={2} double={false} pen={false} color="#8A4B33" />
+    <Wash shape={g.board} color={CREAM} at={at + dur * 0.4} id={`${id}bw`} alpha={1} />
+    <Ink strokes={[g.board]} from={at + dur * 0.4} durationInFrames={dur * 0.25} id={`${id}b`} width={4} double={false} />
+    <Ink strokes={g.leaves} from={at + dur * 0.65} durationInFrames={dur * 0.35} id={`${id}l`} width={3} double={false} pen={false} color="#3E3A36" />
+  </>;
+};
+
+/** A fenced enclosure, front view: grass strip, posts and rails (timber), the name board. Name at `enclosure(...).signAt`; exhibit in `.inside`. */
+export const EnclosureArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; board?: string }> = ({ x, y, w, h, at, id, dur = 18, board = CREAM }) => {
+  const e = enclosure(x, y, w, h);
+  return <>
+    <Wash shape={e.grass} color={GRASS} at={at} id={`${id}g`} alpha={0.8} />
+    <Ink strokes={[e.ground]} from={at} durationInFrames={dur * 0.2} id={`${id}gr`} width={3} double={false} pen={false} />
+    {e.railBands.map((r, i) => <Wash key={i} shape={r} color={TIMBER} at={at + dur * 0.2} id={`${id}rb${i}`} alpha={0.75} />)}
+    {e.posts.map((p, i) => <Wash key={i} shape={p} color={TIMBER} at={at + dur * 0.3} id={`${id}pw${i}`} alpha={0.9} />)}
+    <Ink strokes={[...e.posts, ...e.railBands]} from={at + dur * 0.2} durationInFrames={dur * 0.4} id={`${id}f`} width={3} double={false} color="#5E3F27" />
+    <Wash shape={e.board} color={board} at={at + dur * 0.6} id={`${id}bw`} alpha={1} />
+    <Ink strokes={[e.board, ...e.boardPosts]} from={at + dur * 0.6} durationInFrames={dur * 0.4} id={`${id}b`} width={4} double={false} />
+  </>;
+};
+
+/** The Fitzpatrick scale: six swatches washed with TISSUE.skinTones, outlined. Numerals are the caller's (Labels at labelAt). */
+export const ToneScaleArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number }> = ({ x, y, w, h, at, id, dur = 12 }) => {
+  const t = toneScale(x, y, w, h);
+  return <>
+    {t.swatches.map((s, i) => <Wash key={i} shape={s} color={TISSUE.skinTones[i]} at={at + (dur * i) / 6} id={`${id}w${i}`} alpha={1} />)}
+    <Ink strokes={t.swatches} from={at} durationInFrames={dur} id={`${id}o`} width={3} double={false} pen={false} />
+  </>;
+};
+
+/** A paw print, filled. */
+export const PawArt: React.FC<{ cx: number; cy: number; s?: number; at: number; id: string; color?: string }> = ({ cx, cy, s = 1, at, id, color = "#6B4A33" }) => {
+  const p = pawPrint(cx, cy, s);
+  return <Fills shapes={[p.pad, ...p.toes]} color={color} at={at} alpha={0.9} />;
 };

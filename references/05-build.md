@@ -239,6 +239,15 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   `RetinalCameraArt` (page 15: `kit-objects-15`). Real type on the article needs w ≥ 560 at 36 px,
   and two title lines need 36 px between baselines whatever the page height (the slot spacing is a
   fraction of h, and at h = 800 two 36 px lines overlapped on 78 QA frames).
+  E15 (Nov 2026) `zooMap` (a zoo seen from above: wall with the gate gap at the bottom, a cross of
+  paths and a round plaza, four fenced pens with fence posts and a name board each; `pens[i]` gives
+  `box`, `board`, `signAt`, `signBox`, `centre`), `zooGate` (brick pillars, curved name board,
+  open iron gates), `enclosure` (front-view wooden fence with a name plaque screwed to it; the
+  exhibit goes in `inside`, the whole area above the fence, so no sign post crosses it), `toneScale`
+  (Fitzpatrick I–VI swatches with `labelAt`, `span` and `spanAt` for a bracket under a group) and
+  `pawPrint`, composed as `ZooMapArt`, `ZooGateArt`, `EnclosureArt`, `ToneScaleArt`, `PawArt`
+  (page 16: `kit-objects-16`). Board text must fit the board at 36 px: on a 640-px map a pen board
+  holds about nine capitals ("MEASURED?"), and under ~500 px wash the boards in colour with no text.
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")
   and size the screen to fit; 24 px banner text failed QA on 25 frames.
