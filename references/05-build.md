@@ -270,3 +270,9 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   first (`beat-NN-L<i>`, the picture fully built before an `until` clears it) plus each beat end.
   E12's first pass caught a cramped leaflet, a sheet over the heading and labels running off a
   card, none of which the `ends` stills showed.
+
+- **A long beat heading runs under the note card and QA does not see it** (B1): "Fifteen minutes with
+  any AI paper" (33 characters at the 76 px pen heading) was cut off at "pape" on the contact sheet with
+  0 QA issues, because the probe checks labels against each other, not the heading against the picture
+  box. Keep 16:9 headings to about 30 characters (E14's "A VLM reads a fundus photo" is 26) and look at
+  the ends sheet for the heading line before the full render.
