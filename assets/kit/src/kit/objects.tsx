@@ -1191,3 +1191,131 @@ export const ultrasoundFan = (cx: number, y: number, r: number) => {
     scale: Array.from({ length: 6 }, (_, i) => P.line(cx - r * 0.78, y + r * (0.2 + i * 0.14), cx - r * 0.73, y + r * (0.2 + i * 0.14), 2)),
   };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E09 (Nov 2026): a hospital report page with a real report layout (discharge summary
+ * or histopathology report), a drawstring cloth bag (bag of words), a magnifying glass (keyword
+ * search), a pile of books (training text) and a transformer layer stack. Checked on the
+ * `kit-objects-9` still.
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * A printed hospital report, laid out as real ones are: a letterhead band across the top with a
+ * round logo (a cross inside) and room for the hospital's name; a centred title rule; a
+ * patient-details box ruled into two columns of three fields (field name as a short dark stub,
+ * value as a longer light line); then sections, each a short bold heading stub over 2–3 body
+ * lines; and a signature line with a stamp circle at the bottom right. Box w × h, top-left (x, y).
+ * Text the caller writes: `nameAt` (hospital name, white on the band), `titleAt` (e.g.
+ * "DISCHARGE SUMMARY"), `sectionAt[i]` (left end of section i's heading), `bodyAt[i]` (left end
+ * of its first body line, for a highlighted sentence). Wash `band` blue, `details` pale.
+ * Text drawn on it is a label: keep it ≥ 36 px in a 16:9 picture, so write only the name, title and
+ * one or two key words; the rest stays as ruled lines (it reads as text from across the room).
+ */
+export const reportSheet = (x: number, y: number, w: number, h: number, sections = 3) => {
+  const bandH = h * 0.13, m = w * 0.07;
+  const titleY = y + bandH + h * 0.075;
+  const dY = titleY + h * 0.045, dH = h * 0.17, colW = (w - 2 * m) / 2;
+  const fields = [0, 1, 2].flatMap((r) => [0, 1].map((c) => {
+    const fy = dY + dH * (0.25 + r * 0.27), fx = x + m + c * colW + colW * 0.06;
+    return [P.line(fx, fy, fx + colW * 0.24, fy, 4), P.line(fx + colW * 0.3, fy, fx + colW * (0.84 - ((r + c) % 3) * 0.1), fy, 6)];
+  }));
+  const sTop = dY + dH + h * 0.05, sGap = (y + h * 0.84 - sTop) / sections;
+  const secs = Array.from({ length: sections }, (_, i) => {
+    const sy = sTop + i * sGap;
+    const nLines = i === 0 ? 2 : 3;
+    return {
+      head: P.line(x + m, sy, x + m + w * (0.22 + (i % 2) * 0.08), sy, 6),
+      body: Array.from({ length: nLines }, (_, j) => P.line(x + m, sy + sGap * (0.28 + j * 0.22), x + w - m - ((i + j) % 3) * w * 0.12, sy + sGap * (0.28 + j * 0.22), 10)),
+      at: [x + m, sy] as Pt,
+      bodyAt: [x + m, sy + sGap * 0.28] as Pt,
+    };
+  });
+  const lr = bandH * 0.32, lx = x + m + lr, ly = y + bandH / 2;
+  return {
+    sheet: P.rect(x, y, w, h, 4),
+    band: P.rect(x, y, w, bandH, 4),
+    logo: P.ellipse(lx, ly, lr, lr),
+    logoCross: [P.line(lx, ly - lr * 0.6, lx, ly + lr * 0.6, 4), P.line(lx - lr * 0.6, ly, lx + lr * 0.6, ly, 4)],
+    titleRule: P.line(x + w * 0.25, titleY + h * 0.018, x + w * 0.75, titleY + h * 0.018, 8),
+    details: P.rect(x + m, dY, w - 2 * m, dH, 4),
+    detailsMid: P.line(x + m + colW, dY + dH * 0.1, x + m + colW, dY + dH * 0.9, 6),
+    fields: fields.flat(),
+    sectionHeads: secs.map((s) => s.head),
+    sectionBodies: secs.flatMap((s) => s.body),
+    signature: P.polyline([[x + w * 0.6, y + h * 0.93], [x + w * 0.66, y + h * 0.9], [x + w * 0.7, y + h * 0.93], [x + w * 0.75, y + h * 0.89], [x + w * 0.8, y + h * 0.925]], 8),
+    signRule: P.line(x + w * 0.56, y + h * 0.945, x + w - m, y + h * 0.945, 8),
+    stamp: P.ellipse(x + m + w * 0.1, y + h * 0.915, w * 0.08, w * 0.08),
+    nameAt: [lx + lr * 1.6, ly + bandH * 0.13] as Pt,
+    titleAt: [x + w / 2, titleY] as Pt,
+    sectionAt: secs.map((s) => s.at),
+    bodyAt: secs.map((s) => s.bodyAt),
+  };
+};
+
+/**
+ * A cloth drawstring bag, standing: a rounded sack wider at the bottom, the gathered neck with
+ * folds, the cord tied in a bow. Local box 260 × 300, top-left (x, y), scale s. `mouth` is the
+ * point where things drop in. Wash `sack` a hessian colour.
+ */
+export const clothBag = (x: number, y: number, s = 1) => ({
+  sack: smoothClosed(x, y, s, [[95, 70], [60, 110], [25, 180], [20, 250], [60, 292], [130, 300], [200, 292], [240, 250], [235, 180], [200, 110], [165, 70], [130, 78]], 10),
+  neck: smoothClosed(x, y, s, [[92, 70], [80, 40], [105, 22], [130, 30], [155, 22], [180, 40], [168, 70], [130, 78]], 8),
+  folds: [P.line(x + 110 * s, y + 80 * s, x + 95 * s, y + 140 * s, 6), P.line(x + 150 * s, y + 80 * s, x + 165 * s, y + 140 * s, 6), P.line(x + 130 * s, y + 82 * s, x + 130 * s, y + 130 * s, 6)],
+  cord: [P.quad(x + 88 * s, y + 66 * s, x + 130 * s, y + 84 * s, x + 172 * s, y + 66 * s, 14),
+    P.ellipse(x + 112 * s, y + 92 * s, 18 * s, 10 * s, 0, Math.PI * 2, 18), P.ellipse(x + 148 * s, y + 92 * s, 18 * s, 10 * s, 0, Math.PI * 2, 18),
+    P.line(x + 125 * s, y + 98 * s, x + 112 * s, y + 140 * s, 6), P.line(x + 135 * s, y + 98 * s, x + 150 * s, y + 138 * s, 6)],
+  mouth: [x + 130 * s, y + 20 * s] as Pt,
+});
+
+/** A magnifying glass: the lens ring (wash `lens` pale blue, low alpha), rim and a handle to the lower right. Centre and lens radius. */
+export const magnifier = (cx: number, cy: number, r: number) => {
+  const a = Math.PI / 4, hx = cx + Math.cos(a) * r, hy = cy + Math.sin(a) * r;
+  const L = r * 1.1, t = r * 0.16, dx = Math.cos(a), dy = Math.sin(a);
+  return {
+    lens: P.ellipse(cx, cy, r, r),
+    rim: P.ellipse(cx, cy, r * 1.1, r * 1.1),
+    glint: P.ellipse(cx, cy, r * 0.7, r * 0.7, -Math.PI * 0.85, -Math.PI * 0.55, 10),
+    handle: P.polyline([[hx + dx * r * 0.1 - dy * t, hy + dy * r * 0.1 + dx * t], [hx + dx * L - dy * t, hy + dy * L + dx * t], [hx + dx * L + dy * t, hy + dy * L - dx * t], [hx + dx * r * 0.1 + dy * t, hy + dy * r * 0.1 - dx * t], [hx + dx * r * 0.1 - dy * t, hy + dy * r * 0.1 + dx * t]], 10),
+  };
+};
+
+/**
+ * A pile of three hardback books lying flat, slightly offset: each a cover slab with its page
+ * block (pages as fine lines on the fore-edge) and a spine band. Local box 320 × 200, top-left
+ * (x, y), scale s. `covers[i]` to wash in three colours, bottom book first.
+ */
+export const bookPile = (x: number, y: number, s = 1) => {
+  const books = [[0, 140, 320], [20, 80, 280], [6, 22, 300]].map(([dx, dy, w]) => {
+    const bx = x + dx * s, by = y + dy * s, bw = w * s, bh = 58 * s;
+    return {
+      cover: P.rect(bx, by, bw, bh, 6 * s),
+      pages: P.rect(bx + bw * 0.06, by + bh * 0.2, bw * 0.9, bh * 0.6, 2),
+      leaves: [0.35, 0.5, 0.65].map((u) => P.line(bx + bw * 0.08, by + bh * u, bx + bw * 0.94, by + bh * u, 10)),
+      spine: P.line(bx + bw * 0.03, by + bh * 0.1, bx + bw * 0.03, by + bh * 0.9, 4),
+    };
+  });
+  return { covers: books.map((b) => b.cover), pages: books.map((b) => b.pages), leaves: books.flatMap((b) => b.leaves), spines: books.map((b) => b.spine) };
+};
+
+/**
+ * A transformer drawn as engineers draw it: a stack of n identical layer blocks, each split into
+ * an attention band (top) and a feed-forward band, with an arrow up the left side between layers.
+ * Box w × h for the whole stack, top-left (x, y); layer 0 is the bottom. `blocks[i]`, `attn[i]`
+ * (wash it in the accent) and `centre(i)` per layer.
+ */
+export const layerStack = (x: number, y: number, w: number, h: number, n = 6) => {
+  const gap = h * 0.04, lh = (h - gap * (n - 1)) / n;
+  const top = (i: number) => y + h - (i + 1) * lh - i * gap;
+  return {
+    blocks: Array.from({ length: n }, (_, i) => P.rect(x, top(i), w, lh, 8)),
+    attn: Array.from({ length: n }, (_, i) => P.rect(x + 6, top(i) + 5, w - 12, lh * 0.5 - 6, 5)),
+    splits: Array.from({ length: n }, (_, i) => P.line(x + 6, top(i) + lh * 0.5, x + w - 6, top(i) + lh * 0.5, 8)),
+    links: Array.from({ length: n - 1 }, (_, i) => P.line(x + w / 2, top(i), x + w / 2, top(i + 1) + lh, 3)),
+    centre: (i: number): Pt => [x + w / 2, top(i) + lh / 2],
+    attnAt: (i: number): Pt => [x + w / 2, top(i) + lh * 0.25],
+  };
+};
+
+/** A curved attention arc between two points on one line of text, bowing up by `lift` (or down if negative). */
+export const attentionArc = (x1: number, x2: number, y: number, lift: number): Pts =>
+  P.quad(x1, y, (x1 + x2) / 2, y - lift * 2, x2, y, 28);

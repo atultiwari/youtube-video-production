@@ -11,6 +11,7 @@ import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
 import React from "react";
 
 import { P } from "./shapes";
+import { attentionArc, bookPile, clothBag, layerStack, magnifier, reportSheet } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
 import { AppleArt, CarArt, ColonTileArt, DogArt, KidneyArt, NetworkArt, NeuronArt } from "./art";
@@ -338,6 +339,52 @@ export const ObjectsDemo8: React.FC = () => {
           <Ink strokes={[ch.body, ch.die, ...ch.pins]} from={0} durationInFrames={20} id="chi" width={3} />
           <Ink strokes={[wf.dot, ...wf.arcs]} from={0} durationInFrames={20} id="wfi" width={6} double={false} />
           <Ink strokes={wf.cross} from={0} durationInFrames={20} id="wfx" width={6} color="#C8423B" double={false} />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/** E09 objects: report sheet, cloth bag, magnifier, book pile, layer stack, attention arcs. */
+export const ObjectsDemo9: React.FC = () => {
+  const r = reportSheet(20, 20, 420, 560, 3);
+  const g = clothBag(500, 40, 1);
+  const m = magnifier(900, 160, 90);
+  const bk = bookPile(480, 420, 1);
+  const st = layerStack(840, 380, 220, 420, 6);
+  const xs = [80, 230, 400, 560];
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Wash shape={r.sheet} color="#FFFFFF" at={0} id="rs" alpha={1} />
+          <Wash shape={r.band} color="#2F5E8E" at={0} id="rb" alpha={1} />
+          <Wash shape={r.logo} color="#FFFFFF" at={0} id="rl" alpha={1} />
+          <Wash shape={r.details} color="#EEF2F6" at={0} id="rd" alpha={1} />
+          <Ink strokes={[r.sheet, r.band, r.logo, ...r.logoCross, r.titleRule, r.details, r.detailsMid]} from={0} durationInFrames={20} id="ri" width={3} />
+          <Ink strokes={r.fields} from={0} durationInFrames={20} id="rf" width={4} color="#7A8794" double={false} pen={false} />
+          <Ink strokes={r.sectionHeads} from={0} durationInFrames={20} id="rh" width={7} color="#2B2B2B" double={false} pen={false} />
+          <Ink strokes={r.sectionBodies} from={0} durationInFrames={20} id="rbd" width={3} color="#9AA3AD" double={false} pen={false} />
+          <Ink strokes={[r.signature, r.signRule, r.stamp]} from={0} durationInFrames={20} id="rsg" width={3} color="#2F5E8E" double={false} />
+          <Label text="CITY HOSPITAL" x={r.nameAt[0]} y={r.nameAt[1]} at={0} size={36} italic={false} weight={700} color="#FFFFFF" anchor="start" />
+          <Label text="DISCHARGE SUMMARY" x={r.titleAt[0]} y={r.titleAt[1]} at={0} size={36} italic={false} weight={700} />
+          <Wash shape={g.sack} color="#D8C29A" at={0} id="gs" alpha={1} />
+          <Wash shape={g.neck} color="#C9B083" at={0} id="gn" alpha={1} />
+          <Ink strokes={[g.sack, g.neck, ...g.folds]} from={0} durationInFrames={20} id="gi" />
+          <Ink strokes={g.cord} from={0} durationInFrames={20} id="gc" color="#8A5A2B" width={5} double={false} />
+          <Wash shape={m.lens} color="#DDE8F2" at={0} id="ml" alpha={0.6} />
+          <Wash shape={m.handle} color="#3A424C" at={0} id="mh" alpha={1} />
+          <Ink strokes={[m.rim, m.lens, m.handle]} from={0} durationInFrames={20} id="mi" width={5} />
+          <Ink strokes={[m.glint]} from={0} durationInFrames={20} id="mg" width={5} color="#FFFFFF" double={false} />
+          {bk.covers.map((c, i) => <Wash key={i} shape={c} color={["#2F5E8E", "#B5523B", "#4E8A5C"][i]} at={0} id={`bc${i}`} alpha={1} />)}
+          {bk.pages.map((c, i) => <Wash key={i} shape={c} color="#FBF6EA" at={0} id={`bp${i}`} alpha={1} />)}
+          <Ink strokes={[...bk.covers, ...bk.pages, ...bk.spines]} from={0} durationInFrames={20} id="bki" width={3} />
+          <Ink strokes={bk.leaves} from={0} durationInFrames={20} id="bkl" width={2} color="#B8B0A0" double={false} pen={false} />
+          {st.blocks.map((b, i) => <Wash key={i} shape={b} color="#EFE6D2" at={0} id={`sb${i}`} alpha={1} />)}
+          {st.attn.map((b, i) => <Wash key={i} shape={b} color="#F2C28B" at={0} id={`sa${i}`} alpha={1} />)}
+          <Ink strokes={[...st.blocks, ...st.splits, ...st.links]} from={0} durationInFrames={20} id="sti" width={3} />
+          {xs.map((x, i) => <Label key={i} text={["The", "tumour", "...", "it"][i]} x={x} y={800} at={0} size={40} italic={false} weight={600} />)}
+          <Ink strokes={[attentionArc(560, 230, 760, 70), attentionArc(560, 400, 760, 30)]} from={0} durationInFrames={20} id="aa" width={6} color="#C8423B" double={false} />
         </Picture>
       </Paper>
     </AbsoluteFill>

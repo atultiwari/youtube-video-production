@@ -49,7 +49,7 @@ for (const file of files) {
       if (hits.length < 2) continue;
       warned += 1;
       const ctx = (k) => `"…${words.slice(Math.max(0, k - 3), k + 2).join(" ")}…"`;
-      console.warn(`${file}: beat ${beat.beat} line ${n}: cue "${cue}" occurs ${hits.length}× (${kind}); b.word picks word ${hits[0] + 1}, ${ctx(hits[0])}; later: ${hits.slice(1).map(ctx).join(", ")}. Cue a word unique to the part you mean if that is not the first.`);
+      console.warn(`${file}: beat ${beat.beat} line ${n}: cue "${cue}" occurs ${hits.length}× (${kind}); b.word picks word ${hits[0] + 1}, ${ctx(hits[0])}; later: ${hits.slice(1).map(ctx).join(", ")}. Cue a word unique to the part you mean, or pass the occurrence (b.word("w", line, n), n from 0), if that is not the first.`);
     }
   });
 }

@@ -306,6 +306,15 @@ if (root.includes("kit-objects-7") && !root.includes("kit-objects-8")) {
   else say(`Register page 8 by hand: <Composition id="kit-objects-8" component={ObjectsDemo8} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
 
+// Page 9 (E09, Nov 2026: hospital report sheet with a real report layout, cloth bag, magnifier, book pile, transformer layer stack, attention arcs).
+root = fs.readFileSync(rootPath, "utf8");
+if (root.includes("kit-objects-8") && !root.includes("kit-objects-9")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-8" [^\n]*\n)/, `$1$2<Composition id="kit-objects-9" component={ObjectsDemo9} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo7, ObjectsDemo8 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo7, ObjectsDemo8, ObjectsDemo9 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-9") && root.includes("ObjectsDemo9 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-9 (drawing library, page 9) in Root.tsx"); }
+  else say(`Register page 9 by hand: <Composition id="kit-objects-9" component={ObjectsDemo9} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");

@@ -40,9 +40,11 @@ export interface BeatTiming {
   /**
    * Local frame on which `word` is spoken in line `i`: the first exact match, else the first word
    * that starts with it ("nine" no longer lands on "nineteen", E05; "classroom" still finds
-   * "classrooms" when the singular is not spoken).
+   * "classrooms" when the singular is not spoken). `nth` (0-based) picks a later exact occurrence:
+   * E09's "count" cue landed on "the next step was to count", two seconds before "count each one",
+   * and reordered the beat; tools/lint-beats.mjs warns about repeated cue words.
    */
-  readonly word: (word: string, i: number) => number;
+  readonly word: (word: string, i: number, nth?: number) => number;
 }
 
 /** Curly apostrophes as straight ones, the same as draft-takes.py and word-timestamps.py. */
@@ -57,13 +59,15 @@ export const beatTiming = (grid: Grid, lines: Lines, id: string): BeatTiming => 
     if (!l) throw new Error(`beat ${id} has no line ${i}`);
     return Math.round(l.start * grid.fps);
   };
-  const word = (w: string, i: number): number => {
+  const word = (w: string, i: number, nth = 0): number => {
     const l = beatLines[i];
     if (!l) throw new Error(`beat ${id} has no line ${i}`);
     const words = wordsOf(l.text);
     const cue = w.replace(/[\u2018\u2019]/g, "'").toLowerCase();
     const lower = words.map((x) => x.toLowerCase());
-    const exactIndex = lower.indexOf(cue);
+    let exactIndex = lower.indexOf(cue);
+    for (let k = 0; k < nth && exactIndex >= 0; k++) exactIndex = lower.indexOf(cue, exactIndex + 1);
+    if (nth > 0 && exactIndex < 0) throw new Error(`beat ${id} line ${i}: "${w}" is not spoken ${nth + 1} times in "${l.text}"`);
     const index = exactIndex >= 0 ? exactIndex : lower.findIndex((x) => x.startsWith(cue));
     if (index < 0) throw new Error(`beat ${id} line ${i}: "${w}" is not spoken in "${l.text}"`);
     // Exact when the takes have been transcribed; a word-share estimate in a draft grid

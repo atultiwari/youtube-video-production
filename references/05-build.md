@@ -182,7 +182,12 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   bore read as a washing machine), `ehrScreen` (desktop monitor with title bar, patient sidebar,
   alert `banner`, rows and a trend chart), `cloud`, `chip` (edge device), `wifi` (with a `cross`
   for offline) and `ultrasoundFan` (curved-array sector with a long-axis kidney, `pelvis` dark when
-  blocked) (page 8: `kit-objects-8`). Each
+  blocked) (page 8: `kit-objects-8`); since E09 `reportSheet` (a printed hospital report laid out
+  as real ones are: letterhead band with logo and name, centred title, a two-column patient-details
+  box, section headings over body lines, signature and stamp; write only the name, the title and a
+  key word or two as labels, the rest stays ruled lines), `clothBag` (drawstring sack: bag of
+  words), `magnifier` (keyword search), `bookPile` (training text), `layerStack` (a transformer as
+  stacked layer blocks with attention bands) and `attentionArc` (page 9: `kit-objects-9`). Each
   returns named parts so a beat draws them one step at a time.
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")
@@ -190,6 +195,14 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
 - **A paper-coloured `Wash` does not clear the picture.** Washes are translucent and multiply: a
   "cover" wash over earlier drawings left them showing through (E08 beats 9, 10, 12). Clear with
   `until: "<step>"` instead.
+- **Kickers: about 24 characters at most** (E09): "Where is “discharge” on the map?" and "Do the
+  lines explain the answer?" failed QA as `wraps kicker` on every frame of their beats.
+- **Cue a picture on the line's first words, not a late noun** (E09): a line whose first drawn cue
+  came 3–4 s in left the picture empty after the previous picture's `until` cleared it (eight such
+  gaps in the first stills pass). Put the first item of each line at `b.line(i)` or an early word.
+- **Repeated cue words reorder a beat** (E09): `b.word("count", 0)` hit "the next step was to
+  count" two seconds before "count each one", and the whole beat's sequence shifted. Pass the
+  occurrence, `b.word("count", 0, 1)`, when lint-beats reports the cue as repeated.
 - **Shorts headings: about 22 characters at most.** "The pandemic changed the AI" and "Ranked
   right, numbers wrong" failed QA as `outside heading ""` on every frame of beat 1.
 - **No typeset text inside an object.** Objects return label *points* (ruler `cm`, paper `q(i)`);

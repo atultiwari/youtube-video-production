@@ -231,3 +231,10 @@ language goes first.
 - **Spaced letters in the script fail the Whisper check against correct audio.** "F D A" / "C D S C O"
   in the script were heard as "FDA" / "CDSCO" (93% on a clean take). Write the acronym normally and
   put the spacing in `docs/respell.json` (`"FDA": "F D A"`), then `--allow` it in `check-script.py`.
+
+- **Years 2001–2009 and coined names** (E09): "twenty zero one" is spoken correctly but Whisper writes
+  "two thousand one", which fails check-takes (S2 beat 2 at 90.6%); write "two thousand and one".
+  A coined name the respell map spells out (NegEx → "Neg Ex") is heard as "negx": pass
+  `--heard-as heard-as.json` with `{"NegEx": ["negx"]}` rather than rewording.
+- **Final short phrases slur** (E09): "…share a word, and little else." came back as "it helps" on
+  two takes; a fuller ending ("but nothing more") was 100% on the next take.
