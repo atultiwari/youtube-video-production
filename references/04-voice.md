@@ -312,3 +312,10 @@ language goes first.
   pulled the furthest." left "When the AI … suggested a more worrying category, they followed it much
   more often than the experts did", where "they" now meant every reader. Reread each paragraph you cut
   from before spending the take.
+- **Whisper hears a respelled coinage as a common word, and Sarvam drops small words in a long
+  object phrase** (E17): "SHAP" (respelled "Shap") came back "sharp" on two takes and "ward" came
+  back "watch" twice (Shorts, 93.8–94.6%); "a waterfall chart of Shapley values" and "your hospital
+  screen" passed at once. "the small metal marker on every chest X-ray in your department" lost "in"
+  on two takes; "Every chest X-ray from your department carries a small metal marker" passed. A
+  sentence opening with a bare noun phrase ("Age seventy eight adds three") lost the noun ("h");
+  "An age of seventy eight adds three" passed.

@@ -7,6 +7,7 @@ import React from "react";
 
 import { enclosure, pawPrint, toneScale, zooGate, zooMap } from "./objects";
 import { endoView, mammogram, seeSaw } from "./objects";
+import { breastTile, coreSlide, filmToken, HEAT, heatSpot, modelCard, shapWaterfall, snowBank, superpixels } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
 import { Dots, Fills, Ink, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
@@ -382,5 +383,116 @@ export const EndoViewArt: React.FC<{ cx: number; cy: number; r: number; at: numb
     <Wash shape={e.polyp} color="#D9786A" at={at + dur * 0.7} id={`${id}pw`} alpha={1} />
     <Ink strokes={[e.polyp]} from={at + dur * 0.7} durationInFrames={dur * 0.2} id={`${id}p`} width={3} double={false} color="#8A3A33" />
     {box ? <Ink strokes={e.aiBox} from={boxAt ?? at + dur} durationInFrames={6} id={`${id}ai`} width={5} double={false} pen={false} color="#2FD16A" /> : null}
+  </>;
+};
+
+/* E17 (Nov 2026) */
+
+/** The breast core-biopsy slide: glass, frosted label with barcode and handwriting, coverslip, three cores (tumour denser). */
+export const CoreSlideArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number }> = ({ x, y, w, h, at, id, dur = 20 }) => {
+  const c = coreSlide(x, y, w, h);
+  return <>
+    <Wash shape={c.glass} color="#EEF4F6" at={at} id={`${id}g`} alpha={0.95} highlight />
+    <Ink strokes={[c.glass]} from={at} durationInFrames={dur * 0.2} id={`${id}go`} width={3} double={false} pen={false} />
+    <Wash shape={c.frost} color="#FBFBF8" at={at + dur * 0.15} id={`${id}f`} alpha={1} highlight />
+    <Ink strokes={[c.frost, c.cover]} from={at + dur * 0.15} durationInFrames={dur * 0.2} id={`${id}fo`} width={2} double={false} pen={false} color="#8A8F94" />
+    <Fills shapes={c.barcode} color="#2B2B2B" at={at + dur * 0.35} alpha={1} />
+    <Ink strokes={c.writing} from={at + dur * 0.4} durationInFrames={dur * 0.25} id={`${id}w`} width={2.5} double={false} color="#1F3A8A" />
+    {c.cores.map((k, i) => <Wash key={i} shape={k} color={HE.stroma} at={at + dur * 0.5 + i} id={`${id}c${i}`} alpha={1} />)}
+    <Ink strokes={c.cores} from={at + dur * 0.5} durationInFrames={dur * 0.3} id={`${id}co`} width={1.5} double={false} pen={false} color="#B36A93" />
+    <Wash shape={c.tumour} color={HE.nucleusLight} at={at + dur * 0.8} id={`${id}t`} alpha={0.85} />
+  </>;
+};
+
+/** The H&E breast tile (invasive carcinoma NST or a normal lobule). */
+export const BreastTileArt: React.FC<{ x: number; y: number; w: number; h: number; kind?: "idc" | "normal"; at: number; id: string; dur?: number; outline?: boolean }> = ({
+  x, y, w, h, kind = "idc", at, id, dur = 30, outline = true,
+}) => {
+  const t = breastTile(x, y, w, h, kind, id);
+  const step = dur / 4;
+  const idc = kind === "idc";
+  return <>
+    <Wash shape={t.field} color={idc ? HE.stromaPale : HE.stroma} at={at} id={`${id}f`} alpha={0.95} amount={2} />
+    {t.loose.map((l, i) => <Wash key={i} shape={l} color="#F5D9E4" at={at + step * 0.3} id={`${id}lo${i}`} alpha={1} amount={2} />)}
+    <Ink strokes={t.fibres} from={at + step * 0.3} durationInFrames={step} id={`${id}fb`} color="#D17FA6" width={2} double={false} pen={false} jitterAmount={0.5} />
+    <Fills shapes={t.fat} color="#FFFFFF" at={at + step * 0.6} alpha={1} stroke="#D9A6BE" />
+    {t.groups.map((g, i) => <Wash key={i} shape={g} color={idc ? "#E39AC0" : HE.cyto} at={at + step * 0.8} id={`${id}g${i}`} alpha={0.95} amount={2} />)}
+    <Fills shapes={t.lumens} color={HE.lumen} at={at + step * 1.2} alpha={1} />
+    <Fills shapes={t.spindles} color={HE.nucleus} at={at + step * 1.6} alpha={0.8} />
+    <Fills shapes={t.lymphs} color={HE.lymph} at={at + step * 1.6} alpha={0.9} />
+    <Fills shapes={t.flat} color={HE.nucleus} at={at + step * 2} alpha={0.9} />
+    <Fills shapes={t.nuclei} color={idc ? HE.nucleusLight : HE.nucleus} at={at + step * 2} alpha={0.95} stroke={idc ? HE.nucleus : undefined} />
+    {idc ? <Dots points={t.nucleoli} r={2.2} color="#2A1F5C" at={at + step * 2.5} every={0} /> : null}
+    {outline ? <Ink strokes={[t.field]} from={at} durationInFrames={step} id={`${id}o`} width={3} double={false} pen={false} /> : null}
+    <Ink strokes={t.groups} from={at + step * 2.5} durationInFrames={step} id={`${id}bm`} color="#B36A93" width={1.4} double={false} pen={false} jitterAmount={0.5} />
+  </>;
+};
+
+/** A Grad-CAM heat spot: blue, green, yellow, red contours, translucent so the image shows through. */
+export const HeatSpotArt: React.FC<{ cx: number; cy: number; rx: number; ry: number; at: number; id: string; alpha?: number; dur?: number }> = ({ cx, cy, rx, ry, at, id, alpha = 0.55, dur = 12 }) => {
+  const rings = heatSpot(cx, cy, rx, ry, id);
+  return <>{rings.map((rg, i) => <Wash key={i} shape={rg} color={HEAT[i]} at={at + (i * dur) / 4} id={`${id}h${i}`} alpha={alpha} highlight />)}</>;
+};
+
+/** The SHAP waterfall's marks: axis, ticks, base and final dashes, red (up) and blue (down) bars, connectors. Labels are typeset by the beat. */
+export const WaterfallArt: React.FC<{ x: number; y: number; w: number; h: number; base: number; steps: number[]; max?: number; labelW?: number; at: number; id: string; rowsAt?: number[]; finalAt?: number }> = ({
+  x, y, w, h, base, steps, max = 30, labelW = 0.34, at, id, rowsAt, finalAt,
+}) => {
+  const wf = shapWaterfall(x, y, w, h, base, steps, max, labelW);
+  return <>
+    <Ink strokes={[wf.axis, ...wf.ticks.map((t) => t.tick)]} from={at} durationInFrames={8} id={`${id}ax`} width={3} double={false} pen={false} />
+    <Ink strokes={wf.baseLine} from={at + 4} durationInFrames={8} id={`${id}bl`} width={2} double={false} pen={false} color="#6B6B6B" />
+    {wf.rows.map((r, i) => {
+      const f = rowsAt?.[i] ?? at + 10 + i * 8;
+      return <React.Fragment key={i}>
+        <Wash shape={r.rect} color={r.up ? "#E5534B" : "#4A86D8"} at={f} id={`${id}r${i}`} alpha={0.95} highlight />
+        <Ink strokes={[r.rect]} from={f} durationInFrames={6} id={`${id}ro${i}`} width={2} double={false} pen={false} />
+        {i > 0 ? <Ink strokes={[wf.connectors[i - 1]]} from={f} durationInFrames={4} id={`${id}cn${i}`} width={2} double={false} pen={false} color="#6B6B6B" /> : null}
+      </React.Fragment>;
+    })}
+    <Ink strokes={wf.finalLine} from={finalAt ?? at + 10 + steps.length * 8} durationInFrames={8} id={`${id}fl`} width={3} double={false} pen={false} color="#2B2B2B" />
+  </>;
+};
+
+/** LIME superpixels over a tile: thin outlines, and grey veils over the hidden patches (`hidden` indices) from `hideAt`. */
+export const SuperpixelArt: React.FC<{ x: number; y: number; w: number; h: number; cols?: number; rows?: number; at: number; id: string; hidden?: number[]; hideAt?: number; keep?: number[]; keepAt?: number }> = ({
+  x, y, w, h, cols = 5, rows = 5, at, id, hidden = [], hideAt, keep = [], keepAt,
+}) => {
+  const sp = superpixels(x, y, w, h, cols, rows, id);
+  return <>
+    <Ink strokes={sp.cells} from={at} durationInFrames={10} id={`${id}o`} width={2} double={false} pen={false} color="#FFFFFF" />
+    {hidden.map((k) => <Wash key={k} shape={sp.cells[k]} color="#8C8C8C" at={hideAt ?? at + 10} id={`${id}h${k}`} alpha={0.85} highlight />)}
+    {keep.map((k) => <Ink key={k} strokes={[sp.cells[k]]} from={keepAt ?? at + 14} durationInFrames={6} id={`${id}k${k}`} width={5} double={false} pen={false} color="#2FD16A" />)}
+  </>;
+};
+
+/** A lead side marker on a film (letter typeset by the caller at filmToken().letterAt). */
+export const FilmTokenArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string }> = ({ x, y, s = 60, at, id }) => {
+  const t = filmToken(x, y, s);
+  return <>
+    <Wash shape={t.plate} color="#F4F4F2" at={at} id={`${id}w`} alpha={1} highlight />
+    <Ink strokes={[t.plate, ...t.rivets]} from={at} durationInFrames={6} id={id} width={2} double={false} pen={false} color="#9A9A9A" />
+  </>;
+};
+
+/** A model card: card, fold, coloured band, bullets and text lines. */
+export const ModelCardArt: React.FC<{ x: number; y: number; w: number; h: number; n?: number; color?: string; at: number; id: string; dur?: number }> = ({ x, y, w, h, n = 5, color = "#7FA7CF", at, id, dur = 18 }) => {
+  const m = modelCard(x, y, w, h, n);
+  return <>
+    <Wash shape={m.card} color="#FFFDF7" at={at} id={`${id}c`} alpha={1} highlight />
+    <Ink strokes={[m.card, m.fold]} from={at} durationInFrames={dur * 0.3} id={`${id}o`} width={3} double={false} />
+    <Wash shape={m.band} color={color} at={at + dur * 0.3} id={`${id}b`} alpha={1} highlight />
+    <Fills shapes={m.bullets} color={color} at={at + dur * 0.5} every={1} alpha={1} />
+    <Ink strokes={m.lines} from={at + dur * 0.6} durationInFrames={dur * 0.4} id={`${id}l`} width={2} double={false} pen={false} color="#B9B2A6" />
+  </>;
+};
+
+/** A snow bank and flakes. */
+export const SnowArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string }> = ({ x, y, w, h, at, id }) => {
+  const s = snowBank(x, y, w, h, id);
+  return <>
+    <Wash shape={s.mound} color="#FFFFFF" at={at} id={`${id}m`} alpha={1} highlight />
+    <Ink strokes={[s.mound]} from={at} durationInFrames={8} id={`${id}o`} width={2} double={false} pen={false} color="#A9B8C6" />
+    <Dots points={s.flakes} r={5} color="#C9D6E2" at={at + 4} every={0} />
   </>;
 };

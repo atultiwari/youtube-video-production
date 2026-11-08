@@ -17,6 +17,8 @@ import { attentionArc, bookPile, closedBook, clothBag, examDesk, journalPage, la
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
 import { EndoViewArt, MammogramArt, SeeSawArt } from "./art";
+import { BreastTileArt, CoreSlideArt, FilmTokenArt, HeatSpotArt, ModelCardArt, SnowArt, SuperpixelArt, WaterfallArt } from "./art";
+import { coreSlide, filmToken, modelCard, shapWaterfall } from "./objects";
 import { endoView, mammogram, seeSaw } from "./objects";
 import { ArticleArt, ClipboardArt, EnclosureArt, PawArt, RetinalCameraArt, ToneScaleArt, ZooGateArt, ZooMapArt } from "./art";
 import { enclosure, toneScale, zooGate, zooMap } from "./objects";
@@ -730,6 +732,50 @@ export const ObjectsDemo17: React.FC = () => (
         <Label text="AI" x={EV.aiLabelAt[0]} y={EV.aiLabelAt[1]} at={0} size={32} italic={false} weight={800} color="#2FD16A" />
         <Label text="polyp, AI box" x={1580} y={980} at={0} size={36} italic={false} />
         <Label text="colonoscopy view" x={1580} y={330} at={0} size={36} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+/* E17 page: core-biopsy slide with heat spot on the label, breast tiles, SHAP waterfall, LIME superpixels, film token, model card, snow. */
+const WF_STEPS = [9, 7, 3, -2, -1];
+const WF = shapWaterfall(1180, 40, 700, 440, 8, WF_STEPS, 30);
+const CS = coreSlide(30, 40, 560, 190);
+const FT = filmToken(1500, 600, 56);
+const MC = modelCard(1560, 560, 330, 420);
+export const ObjectsDemo18: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <CoreSlideArt x={30} y={40} w={560} h={190} at={0} id="cs" />
+        <HeatSpotArt cx={CS.labelAt[0]} cy={CS.labelAt[1]} rx={CS.labelBox[2] * 0.75} ry={CS.labelBox[3] * 0.62} at={0} id="hs1" />
+        <Label text="core biopsy, heat on the LABEL" x={310} y={275} at={0} size={30} italic={false} />
+        <CoreSlideArt x={30} y={310} w={560} h={190} at={0} id="cs2" />
+        <HeatSpotArt cx={CS.tumourAt[0]} cy={CS.tumourAt[1] + 270} rx={CS.tumourBox[2] * 0.9} ry={CS.tumourBox[3] * 0.8} at={0} id="hs2" />
+        <Label text="heat on the tumour" x={310} y={545} at={0} size={30} italic={false} />
+        <BreastTileArt x={630} y={40} w={250} h={250} kind="idc" at={0} id="bi" />
+        <BreastTileArt x={900} y={40} w={250} h={250} kind="normal" at={0} id="bn" />
+        <Label text="breast: IDC (NST)" x={755} y={325} at={0} size={28} italic={false} />
+        <Label text="normal lobule" x={1025} y={325} at={0} size={28} italic={false} />
+        <BreastTileArt x={630} y={370} w={330} h={330} kind="idc" at={0} id="bi2" />
+        <HeatSpotArt cx={800} cy={520} rx={140} ry={120} at={0} id="hs3" alpha={0.45} />
+        <Label text="Grad-CAM over IDC" x={795} y={740} at={0} size={28} italic={false} />
+        <WaterfallArt x={1180} y={40} w={700} h={440} base={8} steps={WF_STEPS} max={30} at={0} id="wf" />
+        {["RR 28", "lactate 4", "age 78", "BP normal", "SpO2 97%"].map((t, i) => <Label key={i} text={t} x={WF.rows[i].labelAt[0]} y={WF.rows[i].labelAt[1]} at={0} size={28} italic={false} anchor="end" />)}
+        {WF.ticks.map((t, i) => <Label key={i} text={`${t.v}%`} x={t.at[0]} y={t.at[1]} at={0} size={24} italic={false} />)}
+        <Label text="average 8%" x={WF.baseAt[0]} y={WF.baseAt[1]} at={0} size={26} italic={false} />
+        <Label text="24%" x={WF.finalAt[0] + 34} y={WF.finalAt[1] - 6} at={0} size={28} italic={false} weight={800} />
+        <ColonTileArt x={1000} y={560} w={300} h={300} kind="tumour" at={0} id="lt" />
+        <SuperpixelArt x={1000} y={560} w={300} h={300} at={0} id="sp" hidden={[0, 3, 6, 9, 14, 20, 23]} keep={[12]} />
+        <Label text="LIME patches" x={1150} y={900} at={0} size={28} italic={false} />
+        <FilmTokenArt x={1500} y={600} s={56} at={0} id="ft" />
+        <Label text="L" x={FT.letterAt[0]} y={FT.letterAt[1]} at={0} size={40} italic={false} weight={800} color="#2B2B2B" />
+        <ModelCardArt x={1560} y={560} w={330} h={420} at={0} id="mc" />
+        <Label text="MODEL CARD" x={MC.titleAt[0]} y={MC.titleAt[1]} at={0} size={30} italic={false} weight={800} />
+        {["intended use", "not for", "data", "performance by group", "limits"].map((t, i) => <Label key={i} text={t} x={MC.rowAt(i)[0]} y={MC.rowAt(i)[1] + 8} at={0} size={24} italic={false} anchor="start" />)}
+        <SnowArt x={30} y={780} w={560} h={280} at={0} id="sn" />
+        <DogArt x={160} y={800} s={0.9} at={0} id="dg" />
+        <Label text="wolf or husky? (snow)" x={310} y={760} at={0} size={28} italic={false} />
       </Picture>
     </Paper>
   </AbsoluteFill>

@@ -304,3 +304,22 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   0 QA issues, because the probe checks labels against each other, not the heading against the picture
   box. Keep 16:9 headings to about 30 characters (E14's "A VLM reads a fundus photo" is 26) and look at
   the ends sheet for the heading line before the full render.
+
+- **Caps labels at ≥ 52 px outrun their highlight** (E17): HLabel sizes its highlight at about 0.25 ×
+  size per character, which fits mixed case; "FEATURE IMPORTANCE", "TRANSPARENCY" and
+  "GRAD-CAM (2016)" at 52–58 px ran past both ends of the highlight with white ink on it. QA does not
+  flag it. Use mixed case ("Feature importance") for highlighted titles, or a Stamp for caps.
+- **A Short's first beat is about 4 s: one short note and no second label** (E17): "Your skin marker
+  can change what AI sees" plus a cued label overfilled a 132-frame beat 01 (`overfull` throws in the
+  stills pass); "Ink can fool AI" alone fitted. Keep beat-01 notes under about 20 characters.
+- **Axis and tick labels count for the 36 px minimum** (E17): the SHAP waterfall's 32 px "0%…30%"
+  ticks and a 34 px base label gave 184 QA issues on the first pass; QA reads every Label, chart
+  furniture included.
+- **Drawing library page 18 (E17):** `coreSlide` (breast core biopsy on glass: label with barcode and
+  handwriting, three cores, a denser tumour segment; `labelBox`/`tumourBox` for a heat spot),
+  `breastTile` (`idc`: infiltrating nests, cords and tubules with pleomorphic vesicular nuclei in
+  desmoplastic stroma; `normal`: a two-layered lobule, interlobular stroma, fat), `heatSpot` + `HEAT`
+  (Grad-CAM jet contours, wash translucent), `shapWaterfall` (rows, connectors, base and final
+  dashes), `superpixels` (LIME patches), `filmToken` (lead side marker), `modelCard`, `snowBank`.
+  Art: CoreSlideArt, BreastTileArt, HeatSpotArt, WaterfallArt, SuperpixelArt, FilmTokenArt,
+  ModelCardArt, SnowArt. A heat spot over H&E reads best at alpha 0.45–0.6.

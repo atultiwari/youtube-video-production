@@ -2343,3 +2343,266 @@ export const endoView = (cx: number, cy: number, r: number) => {
     aiLabelAt: [bx + bs / 2, by - 18] as Pt,
   };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E17 (Nov 2026): a breast core-biopsy glass slide with a written label and barcode,
+ * an H&E breast tile (invasive carcinoma or a normal lobule), a Grad-CAM style heat spot, a
+ * SHAP waterfall, LIME superpixels, an X-ray lead marker, a model card and a snow bank.
+ */
+
+/** Grad-CAM / jet colours, outermost (cool) to innermost (hot). */
+export const HEAT = ["#3D7BE0", "#3FC79A", "#F2D33C", "#E8432E"] as const;
+
+/**
+ * A glass slide of a breast core biopsy, as a pathologist holds it, label end on the left: the
+ * glass, a frosted label patch carrying a printed barcode and a handwritten accession number
+ * (open pen strokes), the coverslip, and three long thin cores lying side by side (each a
+ * slightly curved cylinder with rounded ends; the middle one broken into two pieces). Part of the
+ * middle core is denser and more purple (the tumour). Wash `cores` HE.stroma, `tumour`
+ * HE.nucleusLight. `labelBox` / `tumourBox` are [x, y, w, h] for highlights or a heat spot.
+ */
+export const coreSlide = (x: number, y: number, w: number, h: number) => {
+  const r = stream("coreSlide");
+  const fx = x + w * 0.025, fy = y + h * 0.08, fw = w * 0.22, fh = h * 0.84;
+  const capsule = (x1: number, x2: number, yc: number, hw: number, bend: number, key: string): Pts => {
+    const n = 40, top: Pt[] = [], bot: Pt[] = [];
+    const rr = stream(key);
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, cx = x1 + (x2 - x1) * t, cy = yc + Math.sin(t * Math.PI) * bend;
+      const jt = 1 + (rr() - 0.5) * 0.22;
+      top.push([cx, cy - hw * jt]);
+      bot.push([cx, cy + hw * (1 + (rr() - 0.5) * 0.22)]);
+    }
+    const capR = P.ellipse(x2, yc, hw, hw, -Math.PI / 2, Math.PI / 2, 10);
+    const capL = P.ellipse(x1, yc, hw, hw, Math.PI / 2, Math.PI * 1.5, 10);
+    return [...top, ...capR, ...bot.reverse(), ...capL, top[0]];
+  };
+  const cx0 = x + w * 0.32, cx1 = x + w * 0.93, hw = h * 0.045;
+  const ys = [y + h * 0.3, y + h * 0.5, y + h * 0.7];
+  const cores: Pts[] = [
+    capsule(cx0, cx1 - w * 0.03, ys[0], hw, h * 0.02, "core0"),
+    capsule(cx0 + w * 0.02, cx0 + w * 0.3, ys[1], hw * 1.05, -h * 0.015, "core1a"),
+    capsule(cx0 + w * 0.33, cx1, ys[1], hw, h * 0.01, "core1b"),
+    capsule(cx0 + w * 0.04, cx1 - w * 0.08, ys[2], hw * 0.95, h * 0.02, "core2"),
+  ];
+  const tx = cx0 + w * 0.15, tw = w * 0.13;
+  const tumour = P.blob(tx + tw / 2, ys[1], tw / 2, hw * 0.85, "coreTum", 0.12, 40);
+  const barcode: Pts[] = [];
+  let bx = fx + fw * 0.12;
+  while (bx < fx + fw * 0.86) {
+    const bw = fw * (0.015 + r() * 0.03);
+    barcode.push(P.rect(bx, fy + fh * 0.1, bw, fh * 0.26, 0));
+    bx += bw + fw * (0.02 + r() * 0.025);
+  }
+  /** Handwriting: a few connected loops per "word", two lines. */
+  const scrawl = (sx: number, sy: number, len: number, key: string): Pts => {
+    const rr = stream(key), pts: Pt[] = [];
+    const n = 60;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      pts.push([sx + t * len + Math.sin(t * 22) * fw * 0.025, sy - Math.abs(Math.sin(t * 11 + rr())) * fh * 0.07 + (rr() - 0.5) * fh * 0.02]);
+    }
+    return pts;
+  };
+  const writing = [scrawl(fx + fw * 0.12, fy + fh * 0.58, fw * 0.74, "lab1"), scrawl(fx + fw * 0.12, fy + fh * 0.8, fw * 0.5, "lab2")];
+  return {
+    glass: P.rect(x, y, w, h, 4),
+    frost: P.rect(fx, fy, fw, fh, 3),
+    barcode, writing,
+    cover: P.rect(x + w * 0.27, y + h * 0.05, w * 0.7, h * 0.9, 2),
+    cores, tumour,
+    labelBox: [fx, fy, fw, fh] as [number, number, number, number],
+    tumourBox: [tx, ys[1] - hw * 1.6, tw, hw * 3.2] as [number, number, number, number],
+    labelAt: [fx + fw / 2, fy + fh / 2] as Pt,
+    tumourAt: [tx + tw / 2, ys[1]] as Pt,
+  };
+};
+
+/**
+ * A square H&E tile of breast tissue at medium power.
+ * - `idc` (invasive carcinoma of no special type): irregular nests, cords and a few small
+ *   tubules of tumour cells infiltrating pale desmoplastic stroma with wavy collagen fibres;
+ *   large, pleomorphic, vesicular nuclei with visible nucleoli; scattered lymphocytes.
+ * - `normal`: a terminal duct lobular unit: small round acini (two-layered: cuboidal luminal
+ *   cells round a small lumen, flat myoepithelial nuclei outside) in loose pale intralobular
+ *   stroma, set in denser pink interlobular stroma, with fat cells in one corner.
+ * Wash `field` HE.stroma (idc: HE.stromaPale), `loose` HE.stromaPale, `groups` HE.cyto, `fat`
+ * white, `lumens` white; ink `fibres` darker pink; fill `nuclei` HE.nucleusLight (idc) or
+ * HE.nucleus (normal), `flat` and `lymphs` HE.nucleus/HE.lymph, `nucleoli` as dots.
+ */
+export const breastTile = (x: number, y: number, w: number, h: number, kind: "idc" | "normal" = "idc", key = "bt") => {
+  const r = stream(`${key}${kind}`);
+  const S = Math.min(w, h);
+  const groups: Pts[] = [], lumens: Pts[] = [], nuclei: Pts[] = [], flat: Pts[] = [], nucleoli: Pt[] = [], fat: Pts[] = [], loose: Pts[] = [];
+  const fibres: Pts[] = [];
+  const occupied: [number, number, number][] = [];
+  const free = (px: number, py: number, pad: number) => px > x + pad && px < x + w - pad && py > y + pad && py < y + h - pad && occupied.every(([ox, oy, orr]) => Math.hypot(px - ox, py - oy) > orr + pad);
+  if (kind === "idc") {
+    for (let i = 0; i < 9; i++) {
+      const px = x + w * (0.05 + 0.9 * (((i * 37) % 9) / 9 + r() * 0.08)) , py = y + h * (0.1 + (0.8 * ((i * 5) % 9)) / 9 + r() * 0.06);
+      fibres.push(P.wave(px - S * 0.22, px + S * 0.22, py, S * 0.012, 2.5 + r() * 1.5, 40, r() * 6).map(([qx, qy]) => [qx, qy + (qx - px) * 0.25 * (i % 2 ? 1 : -1)] as Pt).filter(([qx, qy]) => qx > x + 4 && qx < x + w - 4 && qy > y + 4 && qy < y + h - 4));
+    }
+    let tries = 0;
+    while (groups.length < 22 && tries++ < 1500) {
+      const cx = x + w * (0.08 + r() * 0.84), cy = y + h * (0.08 + r() * 0.84);
+      const cord = r() < 0.35, tub = !cord && r() < 0.3;
+      const rx = S * (cord ? 0.13 + r() * 0.06 : 0.08 + r() * 0.05), ry = S * (cord ? 0.04 : 0.06 + r() * 0.035);
+      if (!free(cx, cy, Math.max(rx, ry) * 0.75)) continue;
+      occupied.push([cx, cy, Math.max(rx, ry)]);
+      const ang = r() * Math.PI;
+      const rot = (p: Pt): Pt => [cx + (p[0] - cx) * Math.cos(ang) - (p[1] - cy) * Math.sin(ang), cy + (p[0] - cx) * Math.sin(ang) + (p[1] - cy) * Math.cos(ang)];
+      groups.push(P.blob(cx, cy, rx, ry, `${key}g${groups.length}`, 0.22, 40).map(rot));
+      if (tub) lumens.push(P.blob(cx, cy, rx * 0.32, ry * 0.4, `${key}l${groups.length}`, 0.2, 20).map(rot));
+      const nn = Math.round((rx * ry) / (S * S * 0.0007));
+      for (let k = 0; k < nn; k++) {
+        const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 0.78;
+        const p = rot([cx + Math.cos(a) * rx * d, cy + Math.sin(a) * ry * d]);
+        if (tub && Math.hypot((p[0] - cx) / (rx * 0.4), (p[1] - cy) / (ry * 0.5)) < 1) continue;
+        const nr = S * (0.015 + r() * 0.016);
+        nuclei.push(P.blob(p[0], p[1], nr, nr * (0.7 + r() * 0.3), `${key}n${nuclei.length}`, 0.22, 14));
+        nucleoli.push([p[0] + (r() - 0.5) * nr * 0.5, p[1] + (r() - 0.5) * nr * 0.5]);
+      }
+    }
+  } else {
+    const lx = x + w * 0.42, ly = y + h * 0.45, lr = S * 0.32;
+    loose.push(P.blob(lx, ly, lr, lr * 0.85, `${key}lob`, 0.12, 48));
+    occupied.push([lx, ly, lr * 0.95]);
+    const acini: Pt[] = [];
+    for (let k = 0; k < 13; k++) {
+      const a = k * 2.4, d = Math.sqrt((k + 0.5) / 13) * lr * 0.72;
+      acini.push([lx + Math.cos(a) * d, ly + Math.sin(a) * d * 0.85]);
+    }
+    acini.forEach(([ax, ay], k) => {
+      const ar = S * (0.05 + r() * 0.01);
+      groups.push(P.blob(ax, ay, ar, ar * 0.92, `${key}a${k}`, 0.06, 28));
+      lumens.push(P.blob(ax, ay, ar * 0.3, ar * 0.26, `${key}al${k}`, 0.15, 16));
+      for (let j = 0; j < 9; j++) {
+        const t = (j / 9) * Math.PI * 2 + r() * 0.2;
+        const nx = ax + Math.cos(t) * ar * 0.6, ny = ay + Math.sin(t) * ar * 0.6, nr = ar * 0.15;
+        nuclei.push(P.ellipse(nx, ny, nr, nr * 0.85, 0, Math.PI * 2, 12));
+        const mx = ax + Math.cos(t + 0.35) * ar * 0.96, my = ay + Math.sin(t + 0.35) * ar * 0.96;
+        flat.push(P.ellipse(0, 0, ar * 0.17, ar * 0.05, 0, Math.PI * 2, 12).map(([qx, qy]) => [mx + qx * Math.cos(t + 1.92) - qy * Math.sin(t + 1.92), my + qx * Math.sin(t + 1.92) + qy * Math.cos(t + 1.92)] as Pt));
+      }
+    });
+    for (let i = 0; i < 6; i++) {
+      const fy = y + h * (0.08 + i * 0.16);
+      fibres.push(P.wave(x + w * 0.05, x + w * 0.95, fy, S * 0.01, 3, 60, i));
+    }
+    const fx0 = x + w * 0.8, fy0 = y + h * 0.82;
+    for (let k = 0; k < 6; k++) {
+      const fx = fx0 + ((k % 3) - 1) * S * 0.11, fy = fy0 + (Math.floor(k / 3) - 0.5) * S * 0.12;
+      fat.push(P.blob(fx + (r() - 0.5) * S * 0.02, fy, S * 0.062, S * 0.056, `${key}fat${k}`, 0.1, 9));
+    }
+    occupied.push([fx0, fy0, S * 0.2]);
+  }
+  const lymphs = granules(x + w / 2, y + h / 2, Math.hypot(w, h) / 2, kind === "idc" ? 45 : 30, `${key}${kind}ly`, (px, py) => !free(px, py, 6))
+    .map(([px, py]) => P.ellipse(px, py, S * 0.009, S * 0.008, 0, Math.PI * 2, 10));
+  const spindles = granules(x + w / 2, y + h / 2, Math.hypot(w, h) / 2, 14, `${key}${kind}sp`, (px, py) => !free(px, py, 8))
+    .map(([px, py], i) => P.ellipse(0, 0, S * 0.022, S * 0.005, 0, Math.PI * 2, 10).map(([qx, qy]) => [px + qx * Math.cos(i) - qy * Math.sin(i), py + qx * Math.sin(i) + qy * Math.cos(i)] as Pt));
+  return { field: P.rect(x, y, w, h, 4), loose, groups, lumens, nuclei, flat, nucleoli, lymphs, spindles, fibres, fat };
+};
+
+/**
+ * A Grad-CAM style heat spot: four nested irregular contours, outermost first, for washing with
+ * HEAT[0..3] (blue, green, yellow, red) over an image. Centre (cx, cy), outer radii rx, ry.
+ */
+export const heatSpot = (cx: number, cy: number, rx: number, ry: number, key = "hs") =>
+  [1, 0.74, 0.5, 0.28].map((k, i) => P.blob(cx + (i ? (stream(`${key}${i}`)() - 0.5) * rx * 0.12 : 0), cy, rx * k, ry * k, `${key}r${i}`, 0.14 + i * 0.03, 48));
+
+/**
+ * A SHAP waterfall for one prediction, read top to bottom: the model's average (base) value, one
+ * horizontal bar per feature starting where the running total stands (positive bars to the right,
+ * negative to the left), and the final value. Box w × h; the feature names sit in the left
+ * column (`labelAt`, right-aligned at the column edge), the chart to the right with an axis and
+ * ticks along the bottom. `steps` values and `base` in percentage points; `max` the axis end.
+ * Parts: `axis`, `ticks` [{ at: Pt, v }], `baseLine` / `finalLine` (dashed verticals as strokes),
+ * `rows` [{ rect, up, labelAt, valueAt }], `connectors`, `baseAt`, `finalAt`.
+ */
+export const shapWaterfall = (x: number, y: number, w: number, h: number, base: number, steps: number[], max = 30, labelW = 0.34) => {
+  const cx0 = x + w * labelW, cw = w - w * labelW - 20;
+  const X = (v: number) => cx0 + (v / max) * cw;
+  const n = steps.length, top = y + h * 0.14, rowH = (h * 0.72) / n, barH = rowH * 0.62;
+  const axisY = y + h * 0.9;
+  let cum = base;
+  const rows = steps.map((v, i) => {
+    const a = cum, b = cum + v, ry = top + i * rowH + (rowH - barH) / 2;
+    cum = b;
+    const x1 = X(Math.min(a, b)), x2 = X(Math.max(a, b));
+    return { rect: P.rect(x1, ry, Math.max(6, x2 - x1), barH, 4), up: v > 0, labelAt: [cx0 - 18, ry + barH * 0.72] as Pt, valueAt: [v > 0 ? x2 + 12 : x1 - 12, ry + barH * 0.72] as Pt, from: a, to: b, mid: [(x1 + x2) / 2, ry + barH / 2] as Pt };
+  });
+  const dash = (xv: number, y1: number, y2: number): Pts[] => {
+    const out: Pts[] = [];
+    for (let yy = y1; yy < y2; yy += 22) out.push(P.line(xv, yy, xv, Math.min(y2, yy + 12), 2));
+    return out;
+  };
+  const connectors = rows.slice(0, -1).map((rw, i) => P.line(X(rw.to), top + i * rowH + (rowH + barH) / 2, X(rw.to), top + (i + 1) * rowH + (rowH - barH) / 2, 4));
+  return {
+    axis: P.line(cx0, axisY, cx0 + cw, axisY, 24),
+    ticks: Array.from({ length: Math.floor(max / 10) + 1 }, (_, k) => ({ at: [X(k * 10), axisY + 40] as Pt, v: k * 10, tick: P.line(X(k * 10), axisY, X(k * 10), axisY + 10, 2) })),
+    baseLine: dash(X(base), y + h * 0.08, axisY),
+    finalLine: dash(X(cum), top, axisY),
+    rows, connectors,
+    baseAt: [X(base), y + h * 0.06] as Pt,
+    finalAt: [X(cum), axisY - 8] as Pt,
+    X,
+  };
+};
+
+/**
+ * LIME superpixels: a jittered grid of irregular quadrilateral patches covering a box (shared
+ * corners, so the patches tile without gaps). `cells[i]` closed; grey some out to show "hidden".
+ */
+export const superpixels = (x: number, y: number, w: number, h: number, cols = 5, rows = 5, key = "sp") => {
+  const r = stream(key);
+  const V: Pt[][] = [];
+  for (let j = 0; j <= rows; j++) {
+    V.push([]);
+    for (let i = 0; i <= cols; i++) {
+      const edgeX = i === 0 || i === cols, edgeY = j === 0 || j === rows;
+      V[j].push([x + (i / cols) * w + (edgeX ? 0 : (r() - 0.5) * (w / cols) * 0.5), y + (j / rows) * h + (edgeY ? 0 : (r() - 0.5) * (h / rows) * 0.5)]);
+    }
+  }
+  const cells: Pts[] = [];
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) cells.push(P.polyline([V[j][i], V[j][i + 1], V[j + 1][i + 1], V[j + 1][i], V[j][i]], 14));
+  return { cells, cols, rows };
+};
+
+/**
+ * A radiographer's lead side marker as it shows on a film: a small rounded square plate with two
+ * rivets (the letter, R or L, is a typeset Label at `letterAt`). Top-left (x, y), side s.
+ */
+export const filmToken = (x: number, y: number, s = 60) => ({
+  plate: P.rect(x, y, s, s, s * 0.14),
+  rivets: [P.ellipse(x + s * 0.16, y + s * 0.16, s * 0.05, s * 0.05, 0, Math.PI * 2, 10), P.ellipse(x + s * 0.84, y + s * 0.84, s * 0.05, s * 0.05, 0, Math.PI * 2, 10)],
+  letterAt: [x + s / 2, y + s * 0.72] as Pt,
+});
+
+/**
+ * A model card, like a package insert: a card with a folded top-right corner, a coloured title
+ * band, and `n` rows, each a small square bullet and two text lines (labels are typeset at
+ * `rowAt(i)`, left-aligned after the bullet). Box w × h.
+ */
+export const modelCard = (x: number, y: number, w: number, h: number, n = 5) => {
+  const band = h * 0.16, fold = Math.min(w, h) * 0.1;
+  const gap = (h - band - 30) / n;
+  return {
+    card: P.polyline([[x, y], [x + w - fold, y], [x + w, y + fold], [x + w, y + h], [x, y + h], [x, y]], 14),
+    fold: P.polyline([[x + w - fold, y], [x + w - fold, y + fold], [x + w, y + fold]], 10),
+    band: P.rect(x + 1, y + 1, w - fold - 2, band, 2),
+    bullets: Array.from({ length: n }, (_, i) => P.rect(x + 30, y + band + 22 + i * gap + gap * 0.18, gap * 0.3, gap * 0.3, 3)),
+    lines: Array.from({ length: n }, (_, i) => P.line(x + 50 + gap * 0.3, y + band + 22 + i * gap + gap * 0.82, x + w - 40 - (i % 2) * w * 0.15, y + band + 22 + i * gap + gap * 0.82, 10)),
+    titleAt: [x + (w - fold) / 2, y + band * 0.68] as Pt,
+    rowAt: (i: number) => [x + 50 + gap * 0.3, y + band + 22 + i * gap + gap * 0.46] as Pt,
+  };
+};
+
+/** A snow bank: a lumpy white mound along the ground and falling flakes above it. Box w × h, ground at y + h. */
+export const snowBank = (x: number, y: number, w: number, h: number, key = "snow") => {
+  const r = stream(key);
+  const top: Pt[] = [];
+  for (let i = 0; i <= 30; i++) top.push([x + (i / 30) * w, y + h * 0.62 - Math.sin((i / 30) * Math.PI) * h * 0.12 - Math.sin(i * 1.3) * h * 0.03]);
+  return {
+    mound: [...top, [x + w, y + h], [x, y + h], top[0]] as Pts,
+    flakes: Array.from({ length: 26 }, () => [x + r() * w, y + r() * h * 0.5] as Pt),
+  };
+};
