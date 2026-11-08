@@ -238,3 +238,11 @@ language goes first.
   `--heard-as heard-as.json` with `{"NegEx": ["negx"]}` rather than rewording.
 - **Final short phrases slur** (E09): "…share a word, and little else." came back as "it helps" on
   two takes; a fuller ending ("but nothing more") was 100% on the next take.
+- **A trailing "…, or ACRONYM." gets dropped** (E10): "…learning from human feedback, or RLHF." came
+  back without "or R L H F" (a 0.6 s gap, 97.5% overall, so the beat still passed): read the gap
+  between words, not just the score. "…, which is shortened to RLHF." was 99.2% and audible. The
+  same shape worked for "or LLM" and "or SLMs" mid-paragraph; it fails at a sentence end.
+- **Model names with digits** (E10): respelling "Phi" as "Fye" made "Phi three mini" sound like
+  "fifty-three mini"; "Fie" came back as "fee three", which is how many people say it. Write the
+  digit as a word in the script ("GPT three", "R one") and respell only the name.
+

@@ -187,7 +187,11 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   box, section headings over body lines, signature and stamp; write only the name, the title and a
   key word or two as labels, the rest stays ruled lines), `clothBag` (drawstring sack: bag of
   words), `magnifier` (keyword search), `bookPile` (training text), `layerStack` (a transformer as
-  stacked layer blocks with attention bands) and `attentionArc` (page 9: `kit-objects-9`). Each
+  stacked layer blocks with attention bands) and `attentionArc` (page 9: `kit-objects-9`); since E10
+  `laptop` (open, seen from the front and a little above: bezel, webcam, hinge, a keyboard deck that
+  widens towards the viewer with five rows of keys, space bar, touchpad and front lip; `screenBox`
+  for text) and `serverRack` (cabinet, rails with screw holes, rack servers with drive bays, vent
+  slots and status `leds`, feet: "the cloud" or a hospital's own server) (page 10: `kit-objects-10`). Each
   returns named parts so a beat draws them one step at a time.
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")

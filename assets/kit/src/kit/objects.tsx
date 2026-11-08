@@ -1319,3 +1319,76 @@ export const layerStack = (x: number, y: number, w: number, h: number, n = 6) =>
 /** A curved attention arc between two points on one line of text, bowing up by `lift` (or down if negative). */
 export const attentionArc = (x1: number, x2: number, y: number, lift: number): Pts =>
   P.quad(x1, y, (x1 + x2) / 2, y - lift * 2, x2, y, 28);
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E10 (Nov 2026): an open laptop seen from the front and a little above, and a server
+ * rack (a hospital's own server, or "the cloud" made concrete). Checked on `kit-objects-10`.
+ * ------------------------------------------------------------------------------------------- */
+
+const quad = (a: Pt, b: Pt, c: Pt, d: Pt): Pts => P.polyline([a, b, c, d, a], 4);
+
+/**
+ * An open laptop, front view from slightly above. Box w × h: the lid is the top 0.6 h (bezel,
+ * screen, webcam), the hinge, then the keyboard deck drawn in perspective (wider at the front):
+ * five rows of keys, a space bar and a touchpad, and the thin front lip. `screenBox` is
+ * [x, y, w, h] of the screen for labels; wash `lid` dark grey, `screen` a pale colour, `deck` light grey.
+ */
+export const laptop = (x: number, y: number, w: number, h: number) => {
+  const lx = x + w * 0.1, lw = w * 0.8, lh = h * 0.6;
+  const sx = lx + lw * 0.04, sy = y + lh * 0.07, sw = lw * 0.92, sh = lh * 0.86;
+  const top = y + lh, bot = y + h * 0.95;
+  const at = (u: number, v: number): Pt => {
+    // u across (0..1), v from the hinge (0) to the front edge (1): the deck widens towards the front
+    const yy = top + (bot - top) * v, half = (lw / 2) * (1 + v * 0.22);
+    return [x + w / 2 - half + u * half * 2, yy];
+  };
+  const keys: Pts[] = [];
+  for (let r = 0; r < 5; r++) {
+    const v0 = 0.08 + r * 0.115, v1 = v0 + 0.09;
+    const n = 12;
+    for (let k = 0; k < n; k++) {
+      const u0 = 0.06 + k * (0.88 / n), u1 = u0 + 0.88 / n - 0.012;
+      keys.push(quad(at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)));
+    }
+  }
+  return {
+    lid: P.rect(lx, y, lw, lh, w * 0.02),
+    screen: P.rect(sx, sy, sw, sh, w * 0.006),
+    webcam: P.ellipse(lx + lw / 2, y + lh * 0.035, w * 0.006, w * 0.006),
+    hinge: P.line(lx + lw * 0.02, top, lx + lw * 0.98, top, 4),
+    deck: quad(at(0, 0), at(1, 0), at(1, 1), at(0, 1)),
+    keys,
+    space: quad(at(0.3, 0.66), at(0.7, 0.66), at(0.7, 0.75), at(0.3, 0.75)),
+    touchpad: quad(at(0.36, 0.8), at(0.64, 0.8), at(0.64, 0.97), at(0.36, 0.97)),
+    lip: P.line(at(0, 1)[0], bot + h * 0.03, at(1, 1)[0], bot + h * 0.03, 4),
+    lipSides: [P.line(...at(0, 1), at(0, 1)[0], bot + h * 0.03, 2), P.line(...at(1, 1), at(1, 1)[0], bot + h * 0.03, 2)],
+    screenBox: [sx, sy, sw, sh] as [number, number, number, number],
+  };
+};
+
+/**
+ * A server rack: a tall cabinet with a top vent and feet, mounting rails with screw holes, and
+ * `units` rack servers stacked in it. Each server has a front panel with a row of drive bays on
+ * the left, vent slots in the middle and status lights on the right (`leds`: wash them green).
+ * Box w × h (cabinet). Wash `cabinet` near-black, `servers` mid-grey, `bays` darker.
+ */
+export const serverRack = (x: number, y: number, w: number, h: number, units = 5) => {
+  const ix = x + w * 0.1, iw = w * 0.8, iy = y + h * 0.07, ih = h * 0.84;
+  const uh = ih / units, gap = uh * 0.12;
+  const servers = Array.from({ length: units }, (_, i) => P.rect(ix, iy + i * uh + gap / 2, iw, uh - gap, 4));
+  const bays: Pts[] = [], vents: Pts[] = [], leds: Pts[] = [];
+  for (let i = 0; i < units; i++) {
+    const sy = iy + i * uh + gap / 2, sh = uh - gap;
+    for (let k = 0; k < 4; k++) bays.push(P.rect(ix + iw * (0.05 + k * 0.1), sy + sh * 0.2, iw * 0.08, sh * 0.6, 2));
+    for (let k = 0; k < 5; k++) vents.push(P.line(ix + iw * (0.5 + k * 0.05), sy + sh * 0.25, ix + iw * (0.5 + k * 0.05), sy + sh * 0.75, 3));
+    for (let k = 0; k < 2; k++) leds.push(P.ellipse(ix + iw * (0.85 + k * 0.07), sy + sh * 0.5, iw * 0.018, iw * 0.018));
+  }
+  return {
+    cabinet: P.rect(x, y, w, h, 6),
+    topVent: [0, 1, 2, 3].map((k) => P.line(x + w * (0.3 + k * 0.13), y + h * 0.025, x + w * (0.36 + k * 0.13), y + h * 0.025, 3)),
+    rails: [P.line(x + w * 0.06, iy, x + w * 0.06, iy + ih, 3), P.line(x + w * 0.94, iy, x + w * 0.94, iy + ih, 3)],
+    holes: Array.from({ length: units * 2 }, (_, i) => [P.ellipse(x + w * 0.06, iy + (i + 0.5) * (ih / (units * 2)), 3, 3), P.ellipse(x + w * 0.94, iy + (i + 0.5) * (ih / (units * 2)), 3, 3)]).flat(),
+    servers, bays, vents, leds,
+    feet: [P.rect(x + w * 0.04, y + h, w * 0.14, h * 0.025, 2), P.rect(x + w * 0.82, y + h, w * 0.14, h * 0.025, 2)],
+  };
+};

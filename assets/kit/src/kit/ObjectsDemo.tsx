@@ -11,7 +11,7 @@ import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
 import React from "react";
 
 import { P } from "./shapes";
-import { attentionArc, bookPile, clothBag, layerStack, magnifier, reportSheet } from "./objects";
+import { attentionArc, bookPile, clothBag, laptop, layerStack, magnifier, reportSheet, serverRack } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
 import { AppleArt, CarArt, ColonTileArt, DogArt, KidneyArt, NetworkArt, NeuronArt } from "./art";
@@ -385,6 +385,46 @@ export const ObjectsDemo9: React.FC = () => {
           <Ink strokes={[...st.blocks, ...st.splits, ...st.links]} from={0} durationInFrames={20} id="sti" width={3} />
           {xs.map((x, i) => <Label key={i} text={["The", "tumour", "...", "it"][i]} x={x} y={800} at={0} size={40} italic={false} weight={600} />)}
           <Ink strokes={[attentionArc(560, 230, 760, 70), attentionArc(560, 400, 760, 30)]} from={0} durationInFrames={20} id="aa" width={6} color="#C8423B" double={false} />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/** Page 10 (E10): laptop, server rack, with the phone, cloud and dial they appear beside. */
+export const ObjectsDemo10: React.FC = () => {
+  const l = laptop(40, 120, 760, 560);
+  const s = serverRack(900, 60, 360, 760, 6);
+  const p = phone(1300, 160, 180, 400);
+  const c = cloud(1650, 220, 200);
+  const d = dial(1650, 640, 80, 0.7);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Wash shape={l.lid} color="#3A424C" at={0} id="ll" alpha={1} />
+          <Wash shape={l.screen} color="#EAF2FA" at={0} id="ls" alpha={1} />
+          <Wash shape={l.deck} color="#C9CED4" at={0} id="ld" alpha={1} />
+          {l.keys.map((k, i) => <Wash key={i} shape={k} color="#3A424C" at={0} id={`lk${i}`} alpha={0.85} />)}
+          <Wash shape={l.space} color="#3A424C" at={0} id="lsp" alpha={0.85} />
+          <Wash shape={l.touchpad} color="#B5BBC2" at={0} id="ltp" alpha={1} />
+          <Ink strokes={[l.lid, l.screen, l.webcam, l.hinge, l.deck, l.touchpad, l.lip, ...l.lipSides]} from={0} durationInFrames={20} id="li" width={3} />
+          <Ink strokes={[...l.keys, l.space]} from={0} durationInFrames={20} id="lki" width={1.5} color="#2B2B2B" double={false} pen={false} />
+          <Wash shape={s.cabinet} color="#2B3036" at={0} id="sc" alpha={1} />
+          {s.servers.map((k, i) => <Wash key={i} shape={k} color="#8C949C" at={0} id={`ss${i}`} alpha={1} />)}
+          {s.bays.map((k, i) => <Wash key={i} shape={k} color="#4A5158" at={0} id={`sb${i}`} alpha={1} />)}
+          {s.leds.map((k, i) => <Wash key={i} shape={k} color={i % 2 ? "#7BD389" : "#F5B342"} at={0} id={`sl${i}`} alpha={1} />)}
+          {s.feet.map((k, i) => <Wash key={i} shape={k} color="#2B3036" at={0} id={`sf${i}`} alpha={1} />)}
+          <Ink strokes={[s.cabinet, ...s.servers, ...s.feet, ...s.rails]} from={0} durationInFrames={20} id="si" width={3} />
+          <Ink strokes={[...s.bays, ...s.vents, ...s.topVent, ...s.holes]} from={0} durationInFrames={20} id="sv" width={2} color="#1E2226" double={false} pen={false} />
+          <Wash shape={p.body} color="#2B3036" at={0} id="pb" alpha={1} />
+          <Wash shape={p.screen} color="#EAF2FA" at={0} id="ps" alpha={1} />
+          <Ink strokes={[p.body, p.screen, p.camera, p.bar]} from={0} durationInFrames={20} id="pi" width={3} />
+          <Wash shape={c} color="#DDE8F2" at={0} id="cw" alpha={1} />
+          <Ink strokes={[c]} from={0} durationInFrames={20} id="ci" width={4} />
+          <Ink strokes={[d.face, d.grip, ...d.ticks, d.pointer]} from={0} durationInFrames={20} id="di" width={4} />
+          <Label text="laptop" x={420} y={900} at={0} size={40} italic={false} weight={600} />
+          <Label text="server rack" x={1080} y={900} at={0} size={40} italic={false} weight={600} />
         </Picture>
       </Paper>
     </AbsoluteFill>
