@@ -6,6 +6,7 @@
 import React from "react";
 
 import { enclosure, pawPrint, toneScale, zooGate, zooMap } from "./objects";
+import { endoView, mammogram, seeSaw } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
 import { Dots, Fills, Ink, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
@@ -335,4 +336,51 @@ export const ToneScaleArt: React.FC<{ x: number; y: number; w: number; h: number
 export const PawArt: React.FC<{ cx: number; cy: number; s?: number; at: number; id: string; color?: string }> = ({ cx, cy, s = 1, at, id, color = "#6B4A33" }) => {
   const p = pawPrint(cx, cy, s);
   return <Fills shapes={[p.pad, ...p.toes]} color={color} at={at} alpha={0.9} />;
+};
+
+/* ---- Page 17 (E16): see-saw, mammogram, colonoscopy view ---- */
+
+/** A see-saw: fulcrum (grey) and ground, then the plank (timber), handles and seats. Labels go at `seeSaw(...).seatL/seatR`. */
+export const SeeSawArt: React.FC<{ cx: number; cy: number; w: number; tilt?: number; at: number; id: string; dur?: number; fulcrum?: string }> = ({ cx, cy, w, tilt = 0, at, id, dur = 16, fulcrum = "#B9B4AC" }) => {
+  const s = seeSaw(cx, cy, w, tilt);
+  return <>
+    <Wash shape={s.fulcrum} color={fulcrum} at={at} id={`${id}fw`} alpha={1} />
+    <Ink strokes={[s.fulcrum, s.ground]} from={at} durationInFrames={dur * 0.35} id={`${id}f`} width={4} double={false} />
+    <Wash shape={s.plank} color={TIMBER} at={at + dur * 0.3} id={`${id}pw`} alpha={0.9} />
+    <Ink strokes={[s.plank]} from={at + dur * 0.3} durationInFrames={dur * 0.4} id={`${id}p`} width={4} double={false} color="#5E3F27" />
+    {s.seats.map((q, i) => <Wash key={i} shape={q} color="#5E3F27" at={at + dur * 0.7} id={`${id}sw${i}`} alpha={1} />)}
+    <Ink strokes={[...s.handles, ...s.seats, s.bolt]} from={at + dur * 0.7} durationInFrames={dur * 0.3} id={`${id}h`} width={4} double={false} pen={false} color="#3E3A36" />
+  </>;
+};
+
+/** A CC mammogram: black film, breast washed grey-white, strands, then the spiculated mass. Marker text is the caller's (at `markerAt`). */
+export const MammogramArt: React.FC<{ x: number; y: number; w: number; h: number; mass?: boolean; at: number; id: string; dur?: number }> = ({ x, y, w, h, mass = true, at, id, dur = 18 }) => {
+  const m = mammogram(x, y, w, h, mass);
+  return <>
+    <Wash shape={m.film} color="#1F2328" at={at} id={`${id}fw`} alpha={1} highlight />
+    <Ink strokes={[m.film]} from={at} durationInFrames={dur * 0.2} id={`${id}fo`} width={3} double={false} pen={false} />
+    <Wash shape={m.breast} color="#8E949B" at={at + dur * 0.2} id={`${id}bw`} alpha={0.95} />
+    <Ink strokes={[m.breast, m.nipple]} from={at + dur * 0.2} durationInFrames={dur * 0.3} id={`${id}b`} width={3} double={false} color="#E6E8EA" />
+    <Ink strokes={m.strands} from={at + dur * 0.5} durationInFrames={dur * 0.3} id={`${id}s`} width={2} double={false} pen={false} color="#D5D9DD" />
+    {mass ? <>
+      <Wash shape={m.mass} color="#F2F4F5" at={at + dur * 0.8} id={`${id}mw`} alpha={1} />
+      <Ink strokes={m.spicules} from={at + dur * 0.8} durationInFrames={dur * 0.2} id={`${id}sp`} width={2} double={false} pen={false} color="#F2F4F5" />
+    </> : null}
+  </>;
+};
+
+/** A colonoscopy view: monitor frame, pink mucosa, dark lumen, folds, vessels, the polyp; `box` adds the AI's green detection box. */
+export const EndoViewArt: React.FC<{ cx: number; cy: number; r: number; at: number; id: string; dur?: number; box?: boolean; boxAt?: number }> = ({ cx, cy, r, at, id, dur = 18, box = true, boxAt }) => {
+  const e = endoView(cx, cy, r);
+  return <>
+    <Wash shape={e.frame} color="#2A2D31" at={at} id={`${id}fr`} alpha={1} highlight />
+    <Wash shape={e.field} color="#E9A79A" at={at + dur * 0.15} id={`${id}fw`} alpha={1} />
+    <Wash shape={e.lumen} color="#5A2420" at={at + dur * 0.3} id={`${id}lw`} alpha={1} />
+    <Ink strokes={[e.field]} from={at + dur * 0.15} durationInFrames={dur * 0.2} id={`${id}fo`} width={3} double={false} pen={false} color="#7A3A33" />
+    <Ink strokes={e.folds} from={at + dur * 0.35} durationInFrames={dur * 0.3} id={`${id}fd`} width={4} double={false} color="#B5655A" />
+    <Ink strokes={e.vessels} from={at + dur * 0.6} durationInFrames={dur * 0.15} id={`${id}v`} width={2} double={false} pen={false} color="#B0413A" />
+    <Wash shape={e.polyp} color="#D9786A" at={at + dur * 0.7} id={`${id}pw`} alpha={1} />
+    <Ink strokes={[e.polyp]} from={at + dur * 0.7} durationInFrames={dur * 0.2} id={`${id}p`} width={3} double={false} color="#8A3A33" />
+    {box ? <Ink strokes={e.aiBox} from={boxAt ?? at + dur} durationInFrames={6} id={`${id}ai`} width={5} double={false} pen={false} color="#2FD16A" /> : null}
+  </>;
 };

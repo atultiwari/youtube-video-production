@@ -365,6 +365,14 @@ if (root.includes("kit-objects-15") && !root.includes("kit-objects-16")) {
   else say(`Register page 16 by hand: <Composition id="kit-objects-16" component={ObjectsDemo16} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
 
+// Page 17 (E16, Nov 2026: a see-saw that tilts by angle, a CC mammogram with a spiculated mass, a colonoscopy view with the AI's detection box).
+if (root.includes("kit-objects-16") && !root.includes("kit-objects-17")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-16" [^\n]*\n)/, `$1$2<Composition id="kit-objects-17" component={ObjectsDemo17} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo15, ObjectsDemo16 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo15, ObjectsDemo16, ObjectsDemo17 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-17") && root.includes("ObjectsDemo17 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-17 (drawing library, page 17) in Root.tsx"); }
+  else say(`Register page 17 by hand: <Composition id="kit-objects-17" component={ObjectsDemo17} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");

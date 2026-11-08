@@ -2249,3 +2249,97 @@ export const pawPrint = (cx: number, cy: number, s = 1) => ({
   toes: [[-30, -34, -0.5], [-11, -50, -0.15], [11, -50, 0.15], [30, -34, 0.5]].map(([dx, dy, a]) =>
     P.ellipse(cx + dx * s, cy + dy * s, 8.5 * s, 12 * s, -Math.PI / 2 + a, Math.PI * 1.5 + a, 28)),
 });
+
+/* ---- Page 17 (E16, bias in us): a see-saw, a mammogram (CC view), a colonoscopy view with an AI detection box ---- */
+
+/**
+ * A playground see-saw, side view: a long plank on a triangular fulcrum with a bolt at the pivot,
+ * a T-handle near each end and a seat block at each end, on a ground line. Pivot top at (cx, cy),
+ * plank length w; `tilt` in radians, positive = LEFT end down. `seatL` / `seatR` are points just
+ * above the plank at each seat (to stand a label, a person or a weight on), `endL` / `endR` the
+ * plank's end centres. Wash `plank` timber, `fulcrum` grey or a colour.
+ */
+export const seeSaw = (cx: number, cy: number, w: number, tilt = 0) => {
+  const t = w * 0.035, c = Math.cos(tilt), sn = Math.sin(tilt);
+  // along-plank unit vector points right; left end goes down when tilt > 0
+  const U = (d: number, o: number): Pt => [cx + d * c + o * sn, cy - d * sn - o * c + t / 2];
+  const plank = P.polyline([U(-w / 2, -t / 2), U(w / 2, -t / 2), U(w / 2, t / 2), U(-w / 2, t / 2), U(-w / 2, -t / 2)], 10);
+  const handle = (d: number) => [...P.line(...U(d, t / 2), ...U(d, t * 3), 8), ...P.line(...U(d - t * 0.8, t * 3), ...U(d + t * 0.8, t * 3), 6)] as Pts;
+  const seat = (d: number) => P.polyline([U(d - t * 1.8, t / 2), U(d - t * 1.8, t * 1.15), U(d + t * 1.8, t * 1.15), U(d + t * 1.8, t / 2), U(d - t * 1.8, t / 2)], 8);
+  const gy = cy + w * 0.17, bw = w * 0.11;
+  return {
+    plank,
+    fulcrum: P.polyline([[cx, cy + t * 0.6], [cx + bw, gy], [cx - bw, gy], [cx, cy + t * 0.6]], 10),
+    bolt: P.ellipse(cx, cy + t * 0.9, t * 0.32, t * 0.32),
+    handles: [handle(-w * 0.34), handle(w * 0.34)],
+    seats: [seat(-w * 0.44), seat(w * 0.44)],
+    ground: P.line(cx - w * 0.6, gy, cx + w * 0.6, gy, 24),
+    seatL: U(-w * 0.44, t * 1.3),
+    seatR: U(w * 0.44, t * 1.3),
+    endL: U(-w / 2, 0),
+    endR: U(w / 2, 0),
+    groundY: gy,
+  };
+};
+
+/**
+ * A mammogram, craniocaudal (CC) view, as it hangs on the viewer: a dark film; the breast as a
+ * half-dome from the chest wall on the left edge to the nipple on the right; fibroglandular
+ * strands fanning from the chest wall towards the nipple; and, when `mass`, a spiculated mass in
+ * the outer upper quadrant. Box w × h. Parts: `film`, `breast` (closed; wash pale grey),
+ * `nipple`, `strands`, `mass` (closed core), `spicules`, `massAt`, `markerAt` (top-left corner,
+ * for an "L CC" marker) and `massBox` [x, y, w, h] for a ring or a highlight.
+ */
+export const mammogram = (x: number, y: number, w: number, h: number, mass = true) => {
+  const T = (px: number, py: number): Pt => [x + px * w, y + py * h];
+  const breast = [...cubic(T(0.06, 0.06), T(0.4, 0.06), T(0.78, 0.22), T(0.82, 0.48)), ...cubic(T(0.82, 0.52), T(0.78, 0.78), T(0.4, 0.94), T(0.06, 0.94)).slice(0), T(0.06, 0.06)] as Pts;
+  const strands = [0.2, 0.32, 0.44, 0.56, 0.68, 0.8].map((sy, k) => cubic(T(0.08, sy), T(0.3, sy + (0.5 - sy) * 0.2), T(0.55, 0.5 + (sy - 0.5) * 0.45), T(0.74 - (k % 2) * 0.04, 0.5 + (sy - 0.5) * 0.18), 14));
+  const mx = 0.44, my = 0.34, mr = Math.min(w, h) * 0.055;
+  const [mcx, mcy] = T(mx, my);
+  const spicules = Array.from({ length: 11 }, (_, k) => {
+    const a = (k / 11) * Math.PI * 2 + 0.2, l = mr * (1.9 + 0.6 * ((k * 7) % 3) / 2);
+    return P.line(mcx + Math.cos(a) * mr * 0.8, mcy + Math.sin(a) * mr * 0.8, mcx + Math.cos(a) * l, mcy + Math.sin(a) * l, 6);
+  });
+  return {
+    film: P.rect(x, y, w, h, 8),
+    breast,
+    nipple: P.ellipse(T(0.83, 0.5)[0], T(0.83, 0.5)[1], w * 0.014, h * 0.022),
+    strands,
+    mass: mass ? P.blob(mcx, mcy, mr, mr * 0.9, "mammoMass", 0.18, 36) : ([] as unknown as Pts),
+    spicules: mass ? spicules : [],
+    massAt: [mcx, mcy] as Pt,
+    massBox: [mcx - mr * 2.6, mcy - mr * 2.6, mr * 5.2, mr * 5.2] as [number, number, number, number],
+    markerAt: T(0.12, 0.12),
+  };
+};
+
+/**
+ * What the endoscopist sees in colonoscopy: the round endoscopic field on a monitor frame, the
+ * dark lumen ahead (off-centre), three haustral folds as broken rings around it, a few mucosal
+ * vessels, and a sessile polyp on a fold at lower left with the AI's detection box (four corner
+ * brackets) around it. Centre (cx, cy), field radius r. Parts: `frame`, `field` (wash pink),
+ * `lumen` (wash dark), `folds`, `vessels`, `polyp` (closed; wash a deeper pink), `polypAt`,
+ * `aiBox` (corner strokes; draw green), `aiBoxRect` [x, y, w, h] and `aiLabelAt` (above the box).
+ */
+export const endoView = (cx: number, cy: number, r: number) => {
+  const lx = cx + r * 0.16, ly = cy - r * 0.12;
+  const fold = (k: number, gap: number) => {
+    const rr = r * (0.3 + k * 0.2);
+    return P.ellipse(lx - k * r * 0.05, ly + k * r * 0.04, rr, rr * 0.86, -Math.PI / 2 + gap, Math.PI * 1.5 - 0.5 + gap * 0.3, 60);
+  };
+  const px = cx - r * 0.42, py = cy + r * 0.36, pr = r * 0.15;
+  const b = pr * 1.7, bx = px - b, by = py - b * 0.95, bs = b * 2, k = bs * 0.26;
+  const corner = (x0: number, y0: number, dx: number, dy: number) => P.polyline([[x0 + dx * k, y0], [x0, y0], [x0, y0 + dy * k]], 6);
+  return {
+    frame: P.rect(cx - r * 1.12, cy - r * 1.06, r * 2.24, r * 2.12, r * 0.08),
+    field: P.ellipse(cx, cy, r, r),
+    lumen: P.blob(lx, ly, r * 0.15, r * 0.13, "endoLumen", 0.12, 32),
+    folds: [fold(0, 0.3), fold(1, 1.1), fold(2, 2.3)],
+    vessels: [P.wave(cx + r * 0.3, cx + r * 0.75, cy + r * 0.42, r * 0.03, 2, 24), P.wave(cx - r * 0.2, cx + r * 0.2, cy + r * 0.7, r * 0.025, 2, 24), P.wave(cx - r * 0.8, cx - r * 0.45, cy - r * 0.3, r * 0.03, 1.5, 24)],
+    polyp: [...cubic([px - pr * 1.3, py + pr * 0.5], [px - pr * 1.1, py - pr * 1.2], [px + pr * 1.1, py - pr * 1.2], [px + pr * 1.3, py + pr * 0.5]), ...cubic([px + pr * 1.3, py + pr * 0.5], [px + pr * 0.5, py + pr * 0.8], [px - pr * 0.5, py + pr * 0.8], [px - pr * 1.3, py + pr * 0.5]).slice(1)] as Pts,
+    polypAt: [px, py] as Pt,
+    aiBox: [corner(bx, by, 1, 1), corner(bx + bs, by, -1, 1), corner(bx, by + bs, 1, -1), corner(bx + bs, by + bs, -1, -1)],
+    aiBoxRect: [bx, by, bs, bs] as [number, number, number, number],
+    aiLabelAt: [bx + bs / 2, by - 18] as Pt,
+  };
+};

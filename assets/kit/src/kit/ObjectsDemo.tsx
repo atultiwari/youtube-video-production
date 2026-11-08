@@ -16,6 +16,8 @@ import { doctor as doctorBust, ehrNote, opdDesk, seatedPerson, tumourBoard, usbP
 import { attentionArc, bookPile, closedBook, clothBag, examDesk, journalPage, laptop, layerStack, magnifier, openBook, reportSheet, serverRack } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
+import { EndoViewArt, MammogramArt, SeeSawArt } from "./art";
+import { endoView, mammogram, seeSaw } from "./objects";
 import { ArticleArt, ClipboardArt, EnclosureArt, PawArt, RetinalCameraArt, ToneScaleArt, ZooGateArt, ZooMapArt } from "./art";
 import { enclosure, toneScale, zooGate, zooMap } from "./objects";
 import { clipboard, researchArticle, retinalCamera } from "./objects";
@@ -701,6 +703,33 @@ export const ObjectsDemo16: React.FC = () => (
         <Ink strokes={[finger(1460, 640, 0.9).outline, finger(1460, 640, 0.9).nail]} from={0} durationInFrames={4} id="fgi" />
         <Ink strokes={[oximeter(1460, 640, 0.9).upper, oximeter(1460, 640, 0.9).lower, oximeter(1460, 640, 0.9).hinge, oximeter(1460, 640, 0.9).display]} from={0} durationInFrames={4} id="ox" color="#2F5E8E" />
         <Label text="94%" x={oximeter(1460, 640, 0.9).readout[0]} y={oximeter(1460, 640, 0.9).readout[1] + 4} at={0} size={40} italic={false} weight={700} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+/* Page 17 (E16, bias in us): see-saw level and tilted, a CC mammogram with a spiculated mass, a colonoscopy view with the AI box. */
+const SS0 = seeSaw(380, 300, 640, 0);
+const SS1 = seeSaw(380, 720, 640, 0.22);
+const MG = mammogram(760, 60, 520, 420);
+const EV = endoView(1580, 640, 260);
+export const ObjectsDemo17: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <SeeSawArt cx={380} cy={300} w={640} at={0} id="s0" />
+        <Label text="OVER-TRUST" x={SS0.seatL[0]} y={SS0.seatL[1] - 30} at={0} size={36} italic={false} weight={800} />
+        <Label text="UNDER-TRUST" x={SS0.seatR[0]} y={SS0.seatR[1] - 30} at={0} size={36} italic={false} weight={800} />
+        <SeeSawArt cx={380} cy={720} w={640} tilt={0.22} at={0} id="s1" />
+        <Label text="over-trust wins" x={SS1.seatL[0]} y={SS1.seatL[1] - 30} at={0} size={36} italic={false} weight={700} />
+        <MammogramArt x={760} y={60} w={520} h={420} at={0} id="mg" />
+        <Label text="L CC" x={MG.markerAt[0]} y={MG.markerAt[1] + 10} at={0} size={30} italic={false} weight={800} color="#FFFFFF" />
+        <Ink strokes={[P.ellipse(MG.massAt[0], MG.massAt[1], MG.massBox[2] / 2, MG.massBox[3] / 2)]} from={0} durationInFrames={4} id="mgr" color="#E9B949" width={4} double={false} pen={false} />
+        <Label text="spiculated mass" x={1020} y={540} at={0} size={36} italic={false} />
+        <EndoViewArt cx={1580} cy={640} r={260} at={0} id="ev" />
+        <Label text="AI" x={EV.aiLabelAt[0]} y={EV.aiLabelAt[1]} at={0} size={32} italic={false} weight={800} color="#2FD16A" />
+        <Label text="polyp, AI box" x={1580} y={980} at={0} size={36} italic={false} />
+        <Label text="colonoscopy view" x={1580} y={330} at={0} size={36} italic={false} />
       </Picture>
     </Paper>
   </AbsoluteFill>

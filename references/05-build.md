@@ -248,6 +248,25 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   `pawPrint`, composed as `ZooMapArt`, `ZooGateArt`, `EnclosureArt`, `ToneScaleArt`, `PawArt`
   (page 16: `kit-objects-16`). Board text must fit the board at 36 px: on a 640-px map a pen board
   holds about nine capitals ("MEASURED?"), and under ~500 px wash the boards in colour with no text.
+  E16 (Nov 2026) `seeSaw(cx, cy, w, tilt)` (plank on a fulcrum, T-handles, seat blocks; `seatL` /
+  `seatR` stand a label on each end; positive tilt = left end down, so a component can tip it on a
+  cue with `interpolate` on the frame and the drawing follows), `mammogram` (CC view: dark film,
+  breast half-dome from the chest wall, fibroglandular strands, optional spiculated mass with
+  `massAt` / `massBox` for a ring) and `endoView` (the colonoscopy field: lumen, broken haustral
+  rings, vessels, a sessile polyp and the AI's four green corner brackets in `aiBox`), composed as
+  `SeeSawArt`, `MammogramArt`, `EndoViewArt` (page 17: `kit-objects-17`). Labels on a see-saw seat
+  sit about 2 × the label size above `seatL`, or they cross the handles.
+- **Cue words are split at hyphens** (E16): `b.word()` tokenises on letters, digits and apostrophes,
+  so "see-saw", "over-trust", "base-rate", "X-ray" and "never-skilling" are two words each; a cue of
+  `"see-saw"` throws. Cue the first part (`"see"`, `"over"`, `"Base"`, `"ray"`, `"Never"`).
+- **An `HL` wider than ~420 px or taller than ~40 px reads as a blob, not a highlight** (E16): an HL
+  of 620 × 44 behind a box's subtitle covered half the picture. Keep HLs to the text they mark.
+- **A beat of list items 4–5 s apart is static between them** (E16, beat 14: five habit boxes, four
+  gaps of 4 s): give each item a short side note (≤ 10 characters, `HLabel`) on the phrase that
+  explains it. First measure was 19% static; side notes and events on the gap words took it to 4%.
+- **Never start a second `build-all.sh` while one runs** (E16): the killed first run kept writing into
+  the shared `out/<key>-build.log` at its old offset, so the new log showed stale QA lines from old
+  code. Check `pgrep -fl build-all.sh` first; remove the log before rerunning.
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")
   and size the screen to fit; 24 px banner text failed QA on 25 frames.

@@ -299,3 +299,16 @@ language goes first.
   fixed by rewording to "extra care … not how ill a patient is" (a sentence ending on two short words
   drops them). Whisper writes "nineteen nineties" as "one thousand nine hundred and ninety s", which
   scores 87–91% in a short beat on correct audio; "Decades ago" avoided it in a Short.
+- **"a" before an s-word fuses, and a new coinage needs a respelling** (E16): "a widely used sepsis
+  model" came back as "a widely used hypothesis model" (98.2%); "an American health system tested a
+  popular sepsis prediction model" was clean. "deskilling" in a closing list was heard as "disk link"
+  (it was clean as the first word of a sentence); `"deskilling": "de-skilling"` in the respell map fixed
+  it. Sentence boundaries vanish when the next sentence starts with a quantity: "…and the three months
+  after. Among nineteen experienced endoscopists, the rate…" was read as one sentence with the number
+  attached to the wrong clause, and a second take repeated "endoscopists"; "All nineteen endoscopists
+  were experienced. Their rate…" was clean. A possessive at the very start ("Your patient's screening
+  test") lost its "s" on two takes (94.1%); "A screening test for your patient" passed.
+- **Trimming a script for length can orphan a pronoun** (E16): cutting "The least experienced were
+  pulled the furthest." left "When the AI … suggested a more worrying category, they followed it much
+  more often than the experts did", where "they" now meant every reader. Reread each paragraph you cut
+  from before spending the take.
