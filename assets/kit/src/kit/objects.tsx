@@ -1602,11 +1602,12 @@ export const leaflet = (x: number, y: number, w: number, h: number, sections = 3
  * options A–D, each with an OMR answer bubble (a circle you fill in) and a text slot. Box w × h.
  * `stemAt(i)` is the baseline start of stem line i; `opt(k)` gives { bubble: [cx, cy, r],
  * textAt } for option k; `qAt` the centre of the question-number circle; `titleAt` the header
- * centre. Fill `bubble(k)` (a closed circle) to mark the answer.
+ * centre. Fill `bubble(k)` (a closed circle) to mark the answer. Pass `minGap` ≈ 1.25 × the text
+ * size: the stem gap scales with h, and at 48 px on a 580-high Short the lines overlapped (E12S3).
  */
-export const mcqSheet = (x: number, y: number, w: number, h: number, stem = 3) => {
+export const mcqSheet = (x: number, y: number, w: number, h: number, stem = 3, minGap = 0) => {
   const m = w * 0.06, hdH = h * 0.1, top = y + h * 0.03 + hdH + Math.max(h * 0.08, 64);
-  const lineGap = h * 0.075, optTop = top + stem * lineGap + h * 0.04, optGap = (y + h - h * 0.05 - optTop) / 4;
+  const lineGap = Math.max(h * 0.075, minGap), optTop = top + stem * lineGap + h * 0.04, optGap = (y + h - h * 0.05 - optTop) / 4;
   const br = Math.min(optGap * 0.28, w * 0.03);
   const qr = Math.min(h * 0.035, 28), qx = x + m + qr, qy = top - 12;
   const opt = (k: number) => {
