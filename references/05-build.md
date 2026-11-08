@@ -218,6 +218,17 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   AI") (page 13: `kit-objects-13`). At 36 px an `ehrNote` row holds about 20 characters at w ≈ 490;
   write notes in clinic shorthand ("Cough for 2 weeks", "SpO2 98%, temp 37 °C"). In a 48 px Short,
   give it one row per section.
+  E14 `microscope` (upright brightfield, side view: base with lamp port, curved arm, focus knobs,
+  stage with clip, condenser, nosepiece with three objectives, inclined binocular head), `heSlide`
+  (an H&E section under a coverslip), `forger` (the GAN generator: a figure in beret and smock at a
+  studio easel, palette and brush jar; `canvasBox` takes a tile), `detective` (the discriminator:
+  trench coat, brimmed hat, magnifier raised), `drLesions` (microaneurysms, dot/blot haemorrhages,
+  a partial ring of hard exudates by the macula, laid over `fundus`; the fundus is a LEFT eye, disc
+  on the viewer's left), `squamousTile` (nests with keratin pearls) and `thyroidTile` (colloid-filled
+  follicles), with composed `MicroscopeArt`, `HeSlideArt`, `ForgerArt`, `DetectiveArt`, `FundusArt`
+  (`dr` adds the lesions, and the cup is drawn), `SquamousTileArt`, `ThyroidTileArt` in `art.tsx`
+  (page 14: `kit-objects-14`). `ColonTileArt` with one `id` draws the same tile anywhere: use it for
+  "the same fake again and again" (mode collapse) and for noise-over-tile diffusion steps.
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")
   and size the screen to fit; 24 px banner text failed QA on 25 frames.

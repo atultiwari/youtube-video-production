@@ -1803,3 +1803,200 @@ export const usbPlug = (x: number, y: number, s = 1) => ({
   collar: P.rect(x - 184 * s, y - 16 * s, 36 * s, 32 * s, 8 * s),
   cable: path(x, y, s, [-184, 0], [[[-240, 0], [-250, 40], [-310, 50]]]),
 });
+
+/*
+ * Added for E14 (Nov 2026): a brightfield microscope, an H&E tissue slide, the GAN's forger (at an
+ * easel) and detective (with a magnifier), diabetic-retinopathy lesions for `fundus`, a squamous
+ * carcinoma tile (keratin pearls) and a thyroid tile (colloid-filled follicles).
+ */
+
+/**
+ * An upright brightfield microscope in side view, facing left (as in a lab): a heavy base with the
+ * lamp port, the curved arm rising from the back, coarse and fine focus knobs on the arm, the
+ * stage with a slide clip, the condenser under it, the revolving nosepiece with three objectives
+ * (short, medium, long), and an inclined binocular head with two eyepieces. Local box 420 × 560,
+ * top-left (x, y), scale s. Wash `base`, `arm` cream or grey; `stage` near-black; `objectives`
+ * silver. `stageAt` is the slide's place on the stage; `lampAt` the light port; `eyeAt` the eyepiece.
+ */
+export const microscope = (x: number, y: number, s = 1) => {
+  const T = (u: number, v: number): Pt => [x + u * s, y + v * s];
+  const R = (x0: number, y0: number, x1: number, y1: number, r: number) => rectL(x, y, s, x0, y0, x1, y1, r);
+  /** A tube of width w from (u0, v0) to (u1, v1), as a closed quad. */
+  const tube = (u0: number, v0: number, u1: number, v1: number, w: number): Pts => {
+    const L = Math.hypot(u1 - u0, v1 - v0), nx = (-(v1 - v0) / L) * w / 2, ny = ((u1 - u0) / L) * w / 2;
+    return P.polyline([T(u0 + nx, v0 + ny), T(u1 + nx, v1 + ny), T(u1 - nx, v1 - ny), T(u0 - nx, v0 - ny), T(u0 + nx, v0 + ny)], 8);
+  };
+  return {
+    base: R(40, 490, 400, 550, 18),
+    lamp: P.ellipse(...T(170, 490), 28 * s, 8 * s),
+    arm: smoothClosed(x, y, s, [[290, 492], [380, 492], [392, 400], [380, 270], [350, 170], [300, 130], [280, 190], [312, 260], [322, 350], [312, 440]], 8),
+    coarse: P.ellipse(...T(352, 380), 34 * s, 34 * s),
+    fine: P.ellipse(...T(352, 380), 15 * s, 15 * s),
+    stage: R(60, 330, 330, 352, 4),
+    clip: P.polyline([T(96, 326), T(150, 318), T(206, 318)], 8),
+    condenser: R(140, 352, 200, 400, 6),
+    head: P.polyline([T(120, 120), T(320, 120), T(330, 186), T(130, 196), T(120, 120)], 8),
+    nosepiece: P.polyline([T(130, 196), T(250, 190), T(240, 222), T(146, 226), T(130, 196)], 8),
+    objectives: [R(146, 224, 170, 268, 5), R(178, 222, 202, 284, 5), R(210, 220, 232, 298, 5)],
+    eyepieces: [tube(150, 124, 92, 34, 34), tube(186, 122, 132, 28, 34)],
+    tube: P.line(...T(120, 150), ...T(320, 150), 8),
+    stageAt: T(170, 322),
+    lampAt: T(170, 490),
+    eyeAt: T(100, 30),
+  };
+};
+
+/**
+ * A glass slide of an H&E-stained tissue section, label end on the left: glass, frosted label
+ * patch, the coverslip (a thin rectangle) and an irregular tissue section under it (wash pink,
+ * HE.stroma, with a purple core HE.nucleusLight). Box w × h.
+ */
+export const heSlide = (x: number, y: number, w: number, h: number) => ({
+  glass: P.rect(x, y, w, h, 4),
+  frost: P.rect(x + w * 0.02, y + h * 0.08, w * 0.22, h * 0.84, 3),
+  cover: P.rect(x + w * 0.28, y + h * 0.05, w * 0.68, h * 0.9, 2),
+  tissue: P.blob(x + w * 0.62, y + h * 0.5, w * 0.26, h * 0.32, "heslide", 0.22, 64),
+  core: P.blob(x + w * 0.6, y + h * 0.52, w * 0.12, h * 0.16, "hecore", 0.3, 40),
+  label: [x + w * 0.13, y + h * 0.56] as Pt,
+});
+
+/**
+ * The GAN's forger: an artist's studio easel (two front legs, a back leg, the ledge and the top
+ * clamp) holding a square canvas, the forger standing at its left in profile facing right (beret,
+ * head, smock, the arm raised with a fine brush to the canvas), and a small side table with a
+ * palette of paint blobs and a jar of brushes. Local box 760 × 640, top-left (x, y), scale s.
+ * `canvasBox` [x, y, w, h] is where the painting (a tile) goes. Wash `smock` a muted blue, `beret`
+ * dark, `palette` wood, `blobs` in H&E pink and purple.
+ */
+export const forger = (x: number, y: number, s = 1) => {
+  const T = (u: number, v: number): Pt => [x + u * s, y + v * s];
+  const cb: [number, number, number, number] = [x + 360 * s, y + 90 * s, 300 * s, 300 * s];
+  return {
+    legs: [P.line(...T(380, 400), ...T(330, 630), 10), P.line(...T(640, 400), ...T(690, 630), 10), P.line(...T(510, 60), ...T(560, 630), 12)],
+    mast: P.line(...T(510, 30), ...T(510, 400), 12),
+    ledge: rectL(x, y, s, 350, 392, 672, 410, 3),
+    clamp: rectL(x, y, s, 480, 70, 540, 92, 3),
+    canvas: P.rect(...cb, 3),
+    head: P.ellipse(...T(170, 150), 38 * s, 44 * s),
+    beret: smoothClosed(x, y, s, [[120, 118], [150, 92], [205, 92], [228, 112], [212, 124], [150, 124]], 6),
+    stalk: P.line(...T(176, 92), ...T(180, 80), 4),
+    nose: P.polyline([T(206, 146), T(220, 162), T(206, 168)], 6),
+    smock: smoothClosed(x, y, s, [[130, 196], [214, 196], [246, 260], [252, 470], [96, 470], [100, 260]], 8),
+    neck: P.line(...T(168, 192), ...T(170, 198), 2),
+    arm: [P.polyline([T(220, 230), T(282, 300), T(340, 250)], 10), P.ellipse(...T(346, 246), 12 * s, 12 * s)],
+    brush: P.line(...T(352, 240), ...T(410, 196), 10),
+    otherArm: P.polyline([T(112, 240), T(96, 360), T(124, 420)], 10),
+    trousers: [P.line(...T(130, 470), ...T(122, 630), 10), P.line(...T(220, 470), ...T(228, 630), 10)],
+    table: [rectL(x, y, s, 0, 500, 120, 516, 3), P.line(...T(20, 516), ...T(20, 630), 6), P.line(...T(100, 516), ...T(100, 630), 6)],
+    palette: smoothClosed(x, y, s, [[4, 480], [60, 470], [118, 482], [112, 498], [60, 500], [6, 496]], 6),
+    blobs: [[24, 486], [48, 482], [72, 484], [96, 488]].map(([u, v]) => P.ellipse(...T(u, v), 8 * s, 5 * s)),
+    jar: rectL(x, y, s, 70, 420, 104, 478, 6),
+    jarBrushes: [P.line(...T(78, 424), ...T(66, 380), 6), P.line(...T(88, 424), ...T(92, 372), 6), P.line(...T(96, 424), ...T(112, 384), 6)],
+    canvasBox: cb,
+    tipAt: T(410, 196),
+  };
+};
+
+/**
+ * The GAN's detective: a figure in a belted trench coat and a brimmed hat, half-turned to the left,
+ * holding a magnifying glass up in the right hand (the kit `magnifier`). Local box 420 × 620,
+ * top-left (x, y), scale s; the lens is centred at `lensAt` with radius `lensR`. Wash `coat`
+ * khaki, `hat` dark brown, `lens` pale blue (low alpha).
+ */
+export const detective = (x: number, y: number, s = 1) => {
+  const T = (u: number, v: number): Pt => [x + u * s, y + v * s];
+  const lensAt = T(90, 200), lensR = 62 * s;
+  const mg = magnifier(lensAt[0], lensAt[1], lensR);
+  return {
+    head: P.ellipse(...T(250, 150), 40 * s, 46 * s),
+    hat: smoothClosed(x, y, s, [[206, 118], [214, 70], [250, 58], [290, 70], [296, 118]], 8),
+    brim: P.ellipse(...T(251, 120), 72 * s, 13 * s),
+    band: P.line(...T(210, 108), ...T(292, 108), 8),
+    nose: P.polyline([T(212, 150), T(198, 168), T(214, 172)], 6),
+    coat: smoothClosed(x, y, s, [[200, 200], [300, 200], [338, 260], [356, 600], [150, 600], [168, 260]], 8),
+    collar: [P.polyline([T(210, 200), T(240, 262), T(250, 214)], 8), P.polyline([T(290, 200), T(262, 262), T(250, 214)], 8)],
+    belt: P.line(...T(166, 400), ...T(344, 400), 12),
+    buckle: rectL(x, y, s, 236, 390, 264, 410, 3),
+    buttons: [300, 340, 450, 500].map((v) => P.ellipse(...T(232, v), 6 * s, 6 * s)),
+    arm: [P.polyline([T(196, 230), T(150, 300), T(126, 262)], 10), P.ellipse(...T(124, 256), 14 * s, 14 * s)],
+    otherArm: P.polyline([T(310, 240), T(352, 360), T(330, 430)], 10),
+    lens: mg.lens, rim: mg.rim, glint: mg.glint,
+    handle: P.polyline([T(124, 256), T(112, 238), T(100, 222)], 6),
+    lensAt, lensR,
+  };
+};
+
+/**
+ * Diabetic-retinopathy lesions to lay over `fundus(cx, cy, r)` (same arguments): microaneurysms
+ * (tiny red dots), dot and blot haemorrhages (small dark-red dots and larger irregular blots) in
+ * the posterior pole, and hard exudates (small waxy yellow flecks) in a partial ring near the
+ * macula, as in moderate non-proliferative DR with exudates threatening the macula. Fill
+ * `microaneurysms` and `haems` #9B1C1C, `exudates` #F2D16B (see e06 `Fills`). `exudateAt` centre.
+ */
+export const drLesions = (cx: number, cy: number, r: number) => {
+  const rr = stream("dr-lesions");
+  const mx = cx + r * 0.26, my = cy + r * 0.02;
+  const at = (u: number, v: number): Pt => [cx + u * r, cy + v * r];
+  const haemPts: [number, number, number][] = [[0.05, -0.32, 0.035], [0.48, -0.36, 0.03], [0.62, 0.14, 0.04], [0.1, 0.38, 0.03], [0.4, 0.5, 0.035], [-0.05, -0.05, 0.025], [0.7, -0.12, 0.028]];
+  const maPts: [number, number][] = [[0.18, -0.2], [0.36, -0.18], [0.5, 0.26], [0.2, 0.28], [0.58, -0.02], [-0.02, 0.2], [0.3, 0.4]];
+  const exu: Pt[] = [];
+  for (let i = 0; i < 16; i++) {
+    const a = -1.2 + (i / 15) * 2.4 + (rr() - 0.5) * 0.12, d = r * (0.22 + (rr() - 0.5) * 0.04);
+    exu.push([mx + Math.cos(a) * d, my + Math.sin(a) * d]);
+  }
+  return {
+    microaneurysms: maPts.map(([u, v]) => P.ellipse(...at(u, v), r * 0.011, r * 0.011, 0, Math.PI * 2, 10)),
+    haems: haemPts.map(([u, v, k], i) => i % 2 ? P.ellipse(...at(u, v), r * k * 0.55, r * k * 0.55, 0, Math.PI * 2, 12) : P.blob(...at(u, v), r * k, r * k * 0.8, `drh${i}`, 0.3, 18)),
+    exudates: exu.map(([ex, ey], i) => P.blob(ex, ey, r * (0.02 + (i % 3) * 0.007), r * 0.017, `dre${i}`, 0.25, 12)),
+    exudateAt: [mx + r * 0.22, my] as Pt,
+    macula: [mx, my] as Pt,
+  };
+};
+
+/**
+ * A square H&E tile of keratinising squamous cell carcinoma at medium power: pink stroma, nests of
+ * large polygonal tumour cells (pale pink cytoplasm, big dark nuclei) and, in the middle of the
+ * larger nests, keratin pearls (concentric whorls of bright eosinophilic keratin). Wash `field`
+ * HE.stromaPale, `nests` HE.cyto, `pearls` "#F06FA0" then ink `whorls`; fill `nuclei` HE.nucleus.
+ */
+export const squamousTile = (x: number, y: number, w: number, h: number, key = "sq") => {
+  const r = stream(key);
+  const R = Math.min(w, h);
+  const centres: Pt[] = [[0.3, 0.3], [0.72, 0.28], [0.28, 0.74], [0.74, 0.72]].map(([u, v]) => [x + w * u + (r() - 0.5) * R * 0.05, y + h * v + (r() - 0.5) * R * 0.05]);
+  const nests = centres.map(([ncx, ncy], i) => P.blob(ncx, ncy, R * (0.2 + (i % 2) * 0.03), R * 0.18, `${key}n${i}`, 0.18, 48));
+  const pearls = centres.filter((_, i) => i !== 2).map(([ncx, ncy], i) => P.blob(ncx, ncy, R * 0.075, R * 0.065, `${key}p${i}`, 0.12, 32));
+  const whorls = centres.filter((_, i) => i !== 2).flatMap(([ncx, ncy]) => [0.05, 0.035, 0.02].map((k) => P.ellipse(ncx, ncy, R * k, R * k * 0.85, 0.3, 0.3 + Math.PI * 1.7, 24)));
+  const nuclei: Pts[] = [];
+  centres.forEach(([ncx, ncy], i) => {
+    for (let k = 0; k < 22; k++) {
+      const a = r() * Math.PI * 2, d = R * (i === 2 ? 0.02 : 0.095) + r() * R * (i === 2 ? 0.14 : 0.08);
+      const px = ncx + Math.cos(a) * d, py = ncy + Math.sin(a) * d * 0.9;
+      nuclei.push(P.blob(px, py, R * 0.017, R * 0.013, `${key}k${i}${k}`, 0.2, 12));
+    }
+  });
+  return { field: P.rect(x, y, w, h, 4), nests, pearls, whorls, nuclei, pearlAt: centres[0] };
+};
+
+/**
+ * A square H&E tile of thyroid: round follicles of different sizes, each lined by one layer of
+ * cuboidal follicular cells (a ring of small round dark nuclei) round pink colloid, with thin
+ * pale stroma between. Wash `field` HE.stromaPale, `follicles` HE.cyto, `colloid` "#EE9CC0";
+ * fill `nuclei` HE.nucleus.
+ */
+export const thyroidTile = (x: number, y: number, w: number, h: number, key = "th") => {
+  const r = stream(key);
+  const R = Math.min(w, h);
+  const spots: [number, number, number][] = [[0.22, 0.22, 0.15], [0.58, 0.18, 0.12], [0.84, 0.3, 0.1], [0.3, 0.58, 0.12], [0.66, 0.56, 0.16], [0.18, 0.86, 0.09], [0.5, 0.86, 0.1], [0.84, 0.82, 0.1]];
+  const follicles: Pts[] = [], colloid: Pts[] = [], nuclei: Pts[] = [];
+  spots.forEach(([u, v, k], i) => {
+    const fx = x + w * u, fy = y + h * v, fr = R * k;
+    follicles.push(P.blob(fx, fy, fr, fr * 0.92, `${key}f${i}`, 0.08, 40));
+    colloid.push(P.blob(fx, fy, fr * 0.74, fr * 0.68, `${key}c${i}`, 0.1, 36));
+    const n = Math.round(14 + k * 80);
+    for (let j = 0; j < n; j++) {
+      const a = (j / n) * Math.PI * 2 + (r() - 0.5) * 0.1;
+      nuclei.push(P.ellipse(fx + Math.cos(a) * fr * 0.86, fy + Math.sin(a) * fr * 0.8, R * 0.012, R * 0.012, 0, Math.PI * 2, 10));
+    }
+  });
+  return { field: P.rect(x, y, w, h, 4), follicles, colloid, nuclei };
+};

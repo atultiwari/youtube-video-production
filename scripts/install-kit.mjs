@@ -343,6 +343,13 @@ if (root.includes("kit-objects-12") && !root.includes("kit-objects-13")) {
   if (root.includes("kit-objects-13") && root.includes("ObjectsDemo13 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-13 (drawing library, page 13) in Root.tsx"); }
   else say(`Register page 13 by hand: <Composition id="kit-objects-13" component={ObjectsDemo13} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
+// Page 14 (E14, Nov 2026: microscope, H&E slide, the GAN forger at an easel and the detective with a magnifier, DR fundus lesions, squamous and thyroid H&E tiles).
+if (root.includes("kit-objects-13") && !root.includes("kit-objects-14")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-13" [^\n]*\n)/, `$1$2<Composition id="kit-objects-14" component={ObjectsDemo14} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo12, ObjectsDemo13 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo12, ObjectsDemo13, ObjectsDemo14 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-14") && root.includes("ObjectsDemo14 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-14 (drawing library, page 14) in Root.tsx"); }
+  else say(`Register page 14 by hand: <Composition id="kit-objects-14" component={ObjectsDemo14} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
 
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);

@@ -16,7 +16,7 @@ import { doctor as doctorBust, ehrNote, opdDesk, seatedPerson, tumourBoard, usbP
 import { attentionArc, bookPile, closedBook, clothBag, examDesk, journalPage, laptop, layerStack, magnifier, openBook, reportSheet, serverRack } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
-import { AppleArt, CarArt, ColonTileArt, DogArt, KidneyArt, NetworkArt, NeuronArt } from "./art";
+import { AppleArt, CarArt, ColonTileArt, DetectiveArt, DogArt, ForgerArt, FundusArt, HeSlideArt, KidneyArt, MicroscopeArt, NetworkArt, NeuronArt, SquamousTileArt, ThyroidTileArt } from "./art";
 import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
 import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
 import { chapter, CHAPTERS, INK, TISSUE } from "./style";
@@ -623,3 +623,25 @@ export const ObjectsDemo13: React.FC = () => {
     </AbsoluteFill>
   );
 };
+
+/** Page 14 (E14): microscope, H&E slide, the forger at the easel, the detective, a DR fundus (left eye), squamous and thyroid tiles. */
+export const ObjectsDemo14: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <MicroscopeArt x={20} y={40} s={0.9} at={0} id="mi" />
+        <HeSlideArt x={30} y={600} w={380} h={130} at={0} id="hs" />
+        <ForgerArt x={420} y={20} s={0.8} at={0} id="fg" />
+        <ColonTileArt x={420 + 360 * 0.8} y={20 + 90 * 0.8} w={300 * 0.8} h={300 * 0.8} kind="tumour" at={0} id="fgT" />
+        <DetectiveArt x={1060} y={20} s={0.8} at={0} id="dt" />
+        <FundusArt cx={1620} cy={250} r={220} at={0} id="fu" dr={0} />
+        <SquamousTileArt x={440} y={600} w={300} h={300} at={0} id="sq" />
+        <ThyroidTileArt x={780} y={600} w={300} h={300} at={0} id="th" />
+        <ColonTileArt x={1120} y={600} w={300} h={300} kind="normal" at={0} id="cn" />
+        <Label text="squamous (keratin pearls)" x={590} y={940} at={0} size={26} italic={false} />
+        <Label text="thyroid follicles" x={930} y={940} at={0} size={26} italic={false} />
+        <Label text="left eye, NPDR with exudates" x={1620} y={520} at={0} size={26} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);

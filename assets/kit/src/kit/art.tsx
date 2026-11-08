@@ -5,7 +5,7 @@
  */
 import React from "react";
 
-import { apple, car, colonTile, dog, HE, kidney, network, neuron } from "./objects";
+import { apple, car, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, squamousTile, thyroidTile } from "./objects";
 import { Dots, Fills, Ink, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
 
@@ -100,5 +100,114 @@ export const AppleArt: React.FC<{ x: number; y: number; s?: number; at: number; 
     <Wash shape={a.leaf} color="#6FAE5A" at={at + 3} id={`${id}l`} alpha={0.95} />
     <Ink strokes={[a.body, a.stem, a.leaf]} from={at} durationInFrames={dur} id={id} color="#5A1E18" />
     <Ink strokes={[a.shine]} from={at + dur} durationInFrames={4} id={`${id}s`} color="#FFFFFF" width={6} double={false} pen={false} />
+  </>;
+};
+
+/* E14 (Nov 2026): the GAN pair, the microscope, an H&E slide, a DR fundus and two more H&E tiles. */
+
+/** A colour fundus photograph (left eye) with disc, cup, macula and vessels; `dr` adds the
+ * moderate NPDR lesions (microaneurysms, dot/blot haemorrhages, hard exudates near the macula). */
+export const FundusArt: React.FC<{ cx: number; cy: number; r: number; at: number; id: string; dr?: number }> = ({ cx, cy, r, at, id, dr }) => {
+  const f = fundus(cx, cy, r);
+  const l = drLesions(cx, cy, r);
+  return <>
+    <Wash shape={f.field} color="#D9783A" at={at} id={`${id}w`} alpha={1} highlight />
+    <Wash shape={f.disc} color="#F6E3A8" at={at + 4} id={`${id}d`} alpha={1} />
+    <Wash shape={f.cup} color="#FFF8E0" at={at + 6} id={`${id}c`} alpha={1} />
+    <Wash shape={f.macula} color="#9E4A22" at={at + 4} id={`${id}m`} alpha={0.8} />
+    <Ink strokes={[f.field]} from={at} durationInFrames={8} id={id} width={3} />
+    <Ink strokes={f.vessels} from={at + 4} durationInFrames={10} id={`${id}v`} color="#8E1F1A" width={Math.max(3, r / 45)} double={false} pen={false} />
+    {dr !== undefined ? <>
+      <Fills shapes={[...l.microaneurysms, ...l.haems]} color="#7A1414" at={dr} every={1} />
+      <Fills shapes={l.exudates} color="#F7DC6F" at={dr + 8} every={1} stroke="#C9A227" />
+    </> : null}
+  </>;
+};
+
+/** The microscope, base first, then the arm, stage, nosepiece and head. */
+export const MicroscopeArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number }> = ({ x, y, s = 1, at, id, dur = 18 }) => {
+  const m = microscope(x, y, s);
+  return <>
+    <Wash shape={m.base} color="#E8E2D2" at={at} id={`${id}b`} alpha={1} />
+    <Wash shape={m.arm} color="#E8E2D2" at={at} id={`${id}a`} alpha={1} />
+    <Wash shape={m.stage} color="#2B2F36" at={at + dur * 0.3} id={`${id}s`} alpha={1} />
+    <Wash shape={m.condenser} color="#9AA0A6" at={at + dur * 0.3} id={`${id}c`} alpha={1} />
+    {m.objectives.map((o, i) => <Wash key={i} shape={o} color="#C9CED4" at={at + dur * 0.5} id={`${id}o${i}`} alpha={1} />)}
+    <Wash shape={m.coarse} color="#3A3F46" at={at + dur * 0.4} id={`${id}k`} alpha={1} />
+    <Wash shape={m.lamp} color="#FFF3B0" at={at + dur * 0.4} id={`${id}l`} alpha={1} highlight />
+    <Ink strokes={[m.base, m.arm, m.stage, m.clip, m.condenser, m.coarse, m.fine, m.lamp]} from={at} durationInFrames={dur * 0.6} id={id} width={3} />
+    <Wash shape={m.head} color="#E8E2D2" at={at + dur * 0.5} id={`${id}hd`} alpha={1} />
+    {m.eyepieces.map((e, i) => <Wash key={i} shape={e} color="#3A3F46" at={at + dur * 0.6} id={`${id}e${i}`} alpha={1} />)}
+    <Ink strokes={[m.head, m.nosepiece, ...m.objectives, ...m.eyepieces]} from={at + dur * 0.5} durationInFrames={dur * 0.5} id={`${id}h`} width={3} />
+  </>;
+};
+
+/** An H&E slide: glass, frosted end, coverslip, the pink section with its purple core. */
+export const HeSlideArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string }> = ({ x, y, w, h, at, id }) => {
+  const g = heSlide(x, y, w, h);
+  return <>
+    <Wash shape={g.glass} color="#EAF4F8" at={at} id={`${id}g`} alpha={1} />
+    <Wash shape={g.frost} color="#FFFFFF" at={at} id={`${id}f`} alpha={1} />
+    <Wash shape={g.tissue} color={HE.stroma} at={at + 4} id={`${id}t`} alpha={1} />
+    <Wash shape={g.core} color={HE.nucleusLight} at={at + 6} id={`${id}c`} alpha={0.8} />
+    <Ink strokes={[g.glass, g.frost, g.cover]} from={at} durationInFrames={8} id={id} width={3} />
+  </>;
+};
+
+/** The forger at the easel; the painting on the canvas is the caller's (draw a tile in `canvasBox`). */
+export const ForgerArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number }> = ({ x, y, s = 1, at, id, dur = 20 }) => {
+  const f = forger(x, y, s);
+  return <>
+    <Wash shape={f.canvas} color="#FFFDF6" at={at} id={`${id}cv`} alpha={1} />
+    <Ink strokes={[...f.legs, f.mast, f.ledge, f.clamp, f.canvas]} from={at} durationInFrames={dur * 0.4} id={`${id}e`} color="#7A5530" width={4} />
+    <Wash shape={f.smock} color="#9FB7CF" at={at + dur * 0.3} id={`${id}s`} alpha={1} />
+    <Wash shape={f.head} color="#E8C3A0" at={at + dur * 0.3} id={`${id}h`} alpha={1} />
+    <Wash shape={f.beret} color="#4A3B5C" at={at + dur * 0.3} id={`${id}b`} alpha={1} />
+    <Ink strokes={[f.head, f.nose, f.beret, f.stalk, f.smock, ...f.arm, f.otherArm, ...f.trousers]} from={at + dur * 0.3} durationInFrames={dur * 0.4} id={`${id}p`} width={4} />
+    <Ink strokes={[f.brush]} from={at + dur * 0.6} durationInFrames={dur * 0.15} id={`${id}r`} color="#5B3A1E" width={5} double={false} />
+    <Wash shape={f.palette} color="#D9B48A" at={at + dur * 0.6} id={`${id}pl`} alpha={1} />
+    <Fills shapes={f.blobs} color={HE.nucleusLight} at={at + dur * 0.7} every={1} />
+    <Fills shapes={[f.blobs[0], f.blobs[2]]} color={HE.stroma} at={at + dur * 0.75} />
+    <Wash shape={f.jar} color="#CFE3EA" at={at + dur * 0.6} id={`${id}j`} alpha={1} />
+    <Ink strokes={[...f.table, f.palette, f.jar, ...f.jarBrushes]} from={at + dur * 0.6} durationInFrames={dur * 0.3} id={`${id}t`} width={3} />
+  </>;
+};
+
+/** The detective with the magnifier raised. */
+export const DetectiveArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number }> = ({ x, y, s = 1, at, id, dur = 20 }) => {
+  const d = detective(x, y, s);
+  return <>
+    <Wash shape={d.coat} color="#C9B27C" at={at} id={`${id}c`} alpha={1} />
+    <Wash shape={d.head} color="#E8C3A0" at={at} id={`${id}h`} alpha={1} />
+    <Wash shape={d.hat} color="#5A4632" at={at} id={`${id}ht`} alpha={1} />
+    <Wash shape={d.brim} color="#5A4632" at={at} id={`${id}br`} alpha={1} />
+    <Ink strokes={[d.head, d.nose, d.hat, d.brim, d.band, d.coat, ...d.collar, d.belt, d.buckle, ...d.buttons, d.otherArm]} from={at} durationInFrames={dur * 0.6} id={id} width={4} />
+    <Wash shape={d.lens} color="#CFE6F5" at={at + dur * 0.5} id={`${id}l`} alpha={0.55} />
+    <Ink strokes={[...d.arm, d.handle, d.rim, d.lens, d.glint]} from={at + dur * 0.5} durationInFrames={dur * 0.5} id={`${id}m`} width={4} />
+  </>;
+};
+
+/** Keratinising squamous carcinoma tile: stroma, nests, keratin pearls with whorls, nuclei. */
+export const SquamousTileArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number }> = ({ x, y, w, h, at, id, dur = 24 }) => {
+  const t = squamousTile(x, y, w, h, id);
+  return <>
+    <Wash shape={t.field} color={HE.stroma} at={at} id={`${id}f`} alpha={0.95} amount={2} />
+    {t.nests.map((n, i) => <Wash key={i} shape={n} color="#F2C3D8" at={at + dur * 0.2} id={`${id}n${i}`} alpha={1} amount={2} />)}
+    {t.pearls.map((n, i) => <Wash key={i} shape={n} color="#F06FA0" at={at + dur * 0.4} id={`${id}p${i}`} alpha={1} amount={2} />)}
+    <Ink strokes={t.whorls} from={at + dur * 0.5} durationInFrames={dur * 0.3} id={`${id}w`} color="#B23A72" width={1.6} double={false} pen={false} jitterAmount={0.4} />
+    <Fills shapes={t.nuclei} color={HE.nucleus} at={at + dur * 0.6} alpha={0.95} />
+    <Ink strokes={[t.field]} from={at} durationInFrames={dur * 0.3} id={`${id}o`} width={3} double={false} pen={false} />
+  </>;
+};
+
+/** Thyroid tile: stroma, follicles, colloid, a ring of follicular nuclei. */
+export const ThyroidTileArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number }> = ({ x, y, w, h, at, id, dur = 24 }) => {
+  const t = thyroidTile(x, y, w, h, id);
+  return <>
+    <Wash shape={t.field} color={HE.stromaPale} at={at} id={`${id}f`} alpha={0.95} amount={2} />
+    {t.follicles.map((n, i) => <Wash key={i} shape={n} color={HE.cyto} at={at + dur * 0.2} id={`${id}l${i}`} alpha={1} amount={2} />)}
+    {t.colloid.map((n, i) => <Wash key={i} shape={n} color="#EE9CC0" at={at + dur * 0.4} id={`${id}c${i}`} alpha={1} amount={2} />)}
+    <Fills shapes={t.nuclei} color={HE.nucleus} at={at + dur * 0.6} alpha={0.95} />
+    <Ink strokes={[t.field]} from={at} durationInFrames={dur * 0.3} id={`${id}o`} width={3} double={false} pen={false} />
   </>;
 };

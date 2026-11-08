@@ -271,3 +271,12 @@ language goes first.
   "communist" in one Short (correct in the episode): "most common" is safer. Read every `→ []` and
   every changed last word, not just the score.
 
+- **"a GAN" is heard as "again"** (E14): with `"GAN": "Gan"` in the respell map, "A GAN trained on…" and
+  "Train a GAN on…" both came back as "again" (98.8%, so the score hid it); "one of these GANs" was clean,
+  and a Short opening "GANs, a kind of AI…" was heard as "gangs". Never put the article "a" straight
+  before a respelled acronym that starts with a vowel-like sound; say "one of these GANs", "the GAN", or
+  the full name. Medical words at a list start slurred too: "Optic disc with clear margins." came back
+  as "optic tests", then a fuller "…clear margins and a normal cup to disc ratio." dropped its last three
+  words; one long joined sentence ("The optic disc looks healthy, with clear margins and a normal cup, and
+  there are…") was 99%. "the side wrong" was heard as "the sight wrong": say "left and right".
+
