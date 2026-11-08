@@ -280,3 +280,14 @@ language goes first.
   words; one long joined sentence ("The optic disc looks healthy, with clear margins and a normal cup, and
   there are…") was 99%. "the side wrong" was heard as "the sight wrong": say "left and right".
 
+- **A second number in a list slurs, and so do near-words** (B1): "About sixty three percent were white,
+  twenty nine percent African American, and under two percent Asian." came back with "two thousand"
+  for "twenty nine percent" (97.2%, so the score hid it); "nearly thirty percent were African American,
+  and fewer than two percent were Asian" (a verb in each clause) was clean. "Here is our worked
+  example" became "a workbook example"; "measured time saved, while" became "time shift"; "only one in
+  ten has" became "one intent" in a Short (93.5%); "…reported with CONSORT-AI. That is the habit" became
+  "consort i.e. the habit" (a sentence-final acronym, again: "…with the CONSORT-AI checklist." fixed it).
+  Guideline names read well as words with the respell map (`"TRIPOD": "Try-pod"`, `"CONSORT": "Con-sort"`,
+  `"STARD": "Starred"`, plus compound keys such as `"STARD-AI": "Starred A I"` because hyphenated names
+  are skipped); Whisper writes STARD as "start" or "tart" on correct audio, so list it in `--heard-as`.
+  Whisper writes "that is" as "i.e." on correct audio: read the take before re-recording.

@@ -229,6 +229,16 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   (`dr` adds the lesions, and the cup is drawn), `SquamousTileArt`, `ThyroidTileArt` in `art.tsx`
   (page 14: `kit-objects-14`). `ColonTileArt` with one `id` draws the same tile anywhere: use it for
   "the same fake again and again" (mode collapse) and for noise-over-tile diffusion steps.
+  B1 (bonus, Nov 2026) `researchArticle` (a journal article's first page: coloured masthead band,
+  title bars, author and affiliation lines, a shaded Abstract box, a Methods column, a small
+  participant-flow figure and Results; slots for the journal name, title, headings and highlight
+  boxes), `clipboard` (hardboard, hanging hole, chrome clip with lever and rivets, white sheet, `n`
+  tick-box rows with `rowAt`, `boxAt`, `tick(i)` and `row(i)`) and `retinalCamera` (non-mydriatic
+  fundus camera, side view, patient side LEFT: chin-and-forehead rest, lens barrel, sliding base with
+  joystick, monitor with `screenBox` for a fundus), composed as `ArticleArt`, `ClipboardArt`,
+  `RetinalCameraArt` (page 15: `kit-objects-15`). Real type on the article needs w ≥ 560 at 36 px,
+  and two title lines need 36 px between baselines whatever the page height (the slot spacing is a
+  fraction of h, and at h = 800 two 36 px lines overlapped on 78 QA frames).
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")
   and size the screen to fit; 24 px banner text failed QA on 25 frames.

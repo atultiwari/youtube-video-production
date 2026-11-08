@@ -16,6 +16,8 @@ import { doctor as doctorBust, ehrNote, opdDesk, seatedPerson, tumourBoard, usbP
 import { attentionArc, bookPile, closedBook, clothBag, examDesk, journalPage, laptop, layerStack, magnifier, openBook, reportSheet, serverRack } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
+import { ArticleArt, ClipboardArt, RetinalCameraArt } from "./art";
+import { clipboard, researchArticle, retinalCamera } from "./objects";
 import { AppleArt, CarArt, ColonTileArt, DetectiveArt, DogArt, ForgerArt, FundusArt, HeSlideArt, KidneyArt, MicroscopeArt, NetworkArt, NeuronArt, SquamousTileArt, ThyroidTileArt } from "./art";
 import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
 import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
@@ -641,6 +643,31 @@ export const ObjectsDemo14: React.FC = () => (
         <Label text="squamous (keratin pearls)" x={590} y={940} at={0} size={26} italic={false} />
         <Label text="thyroid follicles" x={930} y={940} at={0} size={26} italic={false} />
         <Label text="left eye, NPDR with exudates" x={1620} y={520} at={0} size={26} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+/** Page 15 (B1): the first page of a research article, a checklist clipboard, a retinal camera with a fundus on its monitor. */
+const ART = researchArticle(20, 20, 640, 860);
+const CB = clipboard(700, 20, 520, 860, 10);
+const RC = retinalCamera(1250, 300, 1.1);
+const Q10 = ["What is it for?", "Who were the patients?", "What was the truth?", "Kept separate?", "Which numbers?", "PPV in my clinic?", "Who got no answer?", "What can't it see?", "Lab or real world?", "Who paid?"];
+export const ObjectsDemo15: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <ArticleArt x={20} y={20} w={640} h={860} at={0} id="ar" />
+        <Label text="npj Digital Medicine" x={ART.journalAt[0]} y={ART.journalAt[1]} at={0} size={36} italic={false} weight={700} color="#FFFFFF" anchor="start" />
+        <Label text="Abstract" x={ART.abstractHeadAt[0]} y={ART.abstractHeadAt[1] + 6} at={0} size={36} italic={false} weight={700} anchor="start" />
+        <Label text="Methods" x={ART.methodsHeadAt[0]} y={ART.methodsHeadAt[1] + 6} at={0} size={36} italic={false} weight={700} anchor="start" />
+        <Label text="Results" x={ART.resultsHeadAt[0]} y={ART.resultsHeadAt[1] + 6} at={0} size={36} italic={false} weight={700} anchor="start" />
+        <ClipboardArt x={700} y={20} w={520} h={860} at={0} id="cb" />
+        <Label text="10 questions" x={CB.titleAt[0]} y={CB.titleAt[1] + 12} at={0} size={36} italic={false} weight={700} />
+        {Q10.map((q, i) => <Label key={i} text={q} x={CB.rowAt(i)[0]} y={CB.rowAt(i)[1]} at={0} size={36} italic={false} anchor="start" />)}
+        {[0, 1, 2].map((i) => <Ink key={i} strokes={[CB.tick(i)]} from={0} durationInFrames={4} id={`tk${i}`} color="#3C8D4F" width={5} double={false} pen={false} />)}
+        <RetinalCameraArt x={1250} y={300} s={1.1} at={0} id="rc" />
+        <FundusArt cx={RC.screenBox[0] + RC.screenBox[2] / 2} cy={RC.screenBox[1] + RC.screenBox[3] / 2} r={RC.screenBox[3] * 0.42} at={0} id="rcf" />
       </Picture>
     </Paper>
   </AbsoluteFill>

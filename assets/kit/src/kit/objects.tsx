@@ -2000,3 +2000,120 @@ export const thyroidTile = (x: number, y: number, w: number, h: number, key = "t
   });
   return { field: P.rect(x, y, w, h, 4), follicles, colloid, nuclei };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Page 15 (B1, Nov 2026): the first page of a research article, a checklist clipboard and a
+ * non-mydriatic retinal (fundus) camera. Checked on the `kit-objects-15` still (ObjectsDemo15).
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * The first page of a research article, as a reader meets it: a coloured masthead band (journal
+ * name), a thin rule, the title block (two lines of large type) with an author line and two grey
+ * affiliation lines, a shaded ABSTRACT box with five text lines, then two columns: METHODS on the
+ * left (heading + text lines), and on the right a small participant-flow figure (three stacked
+ * boxes with down arrows and a side "excluded" box, as in a STARD/CONSORT flow diagram) above a
+ * RESULTS heading and lines; a footer rule. Box w × h. Slots: `journalAt`, `titleAt(k)`,
+ * `authorsAt`, `abstractHeadAt`, `methodsHeadAt`, `resultsHeadAt` are text baselines (start
+ * anchor); `abstractBox`, `methodsBox`, `figBox`, `resultsBox` are [x, y, w, h] for highlights.
+ * Wash `sheet` white, `band` the journal colour, `abstract` pale; ink the rest; grey `lines`.
+ */
+export const researchArticle = (x: number, y: number, w: number, h: number) => {
+  const L = (x0: number, x1: number, yy: number) => P.line(x0, yy, x1, yy, 10);
+  const lines = (x0: number, x1: number, y0: number, n: number, gap: number) =>
+    Array.from({ length: n }, (_, k) => L(x0, x1 - (k === n - 1 ? (x1 - x0) * 0.4 : (k % 3 === 1 ? (x1 - x0) * 0.06 : 0)), y0 + k * gap));
+  const mx = x + w * 0.06, Mx = x + w * 0.94, mid = x + w * 0.5;
+  const absY = y + h * 0.27, absH = h * 0.2;
+  const colY = y + h * 0.52;
+  const fx = mid + w * 0.03, fw = Mx - fx, fy = colY + h * 0.02, fh = h * 0.22;
+  const bw = fw * 0.5, bh = fh * 0.2, bx = fx + fw * 0.08;
+  const fbox = (k: number) => P.rect(bx, fy + k * fh * 0.38, bw, bh, 4);
+  const arrow = (k: number) => {
+    const ax = bx + bw / 2, a0 = fy + k * fh * 0.38 + bh, a1 = fy + (k + 1) * fh * 0.38;
+    return [P.line(ax, a0, ax, a1, 6), P.polyline([[ax - 6, a1 - 9], [ax, a1], [ax + 6, a1 - 9]], 4)];
+  };
+  return {
+    sheet: P.rect(x, y, w, h, 4),
+    band: P.rect(x, y, w, h * 0.075, 4),
+    rule: L(mx, Mx, y + h * 0.092),
+    titleLines: [L(mx, Mx - w * 0.04, y + h * 0.13), L(mx, Mx - w * 0.3, y + h * 0.165)],
+    aff: [L(mx, mx + w * 0.62, y + h * 0.232), L(mx, mx + w * 0.48, y + h * 0.247)],
+    abstract: P.rect(mx - w * 0.015, absY, Mx - mx + w * 0.03, absH, 6),
+    abstractLines: lines(mx + w * 0.01, Mx - w * 0.01, absY + absH * 0.42, 5, absH * 0.12),
+    methodsLines: lines(mx, mid - w * 0.03, colY + h * 0.08, 9, h * 0.032),
+    flow: [fbox(0), fbox(1), fbox(2), P.rect(bx + bw + fw * 0.1, fy + fh * 0.38 + bh * 0.1, fw * 0.3, bh * 0.8, 4)],
+    flowArrows: [...arrow(0), ...arrow(1), P.line(bx + bw, fy + fh * 0.38 + bh * 0.5, bx + bw + fw * 0.1, fy + fh * 0.38 + bh * 0.5, 4)],
+    resultsLines: lines(fx, Mx, fy + fh + h * 0.075, 4, h * 0.032),
+    footer: L(mx, Mx, y + h * 0.95),
+    journalAt: [mx, y + h * 0.054] as Pt,
+    titleAt: (k: number): Pt => [mx, y + h * (0.13 + k * 0.035)],
+    authorsAt: [mx, y + h * 0.21] as Pt,
+    abstractHeadAt: [mx + w * 0.01, absY + absH * 0.24] as Pt,
+    methodsHeadAt: [mx, colY + h * 0.035] as Pt,
+    resultsHeadAt: [fx, fy + fh + h * 0.035] as Pt,
+    abstractBox: [mx - w * 0.015, absY, Mx - mx + w * 0.03, absH] as [number, number, number, number],
+    methodsBox: [mx, colY, mid - w * 0.03 - mx, h * 0.38] as [number, number, number, number],
+    figBox: [fx, fy, fw, fh] as [number, number, number, number],
+    resultsBox: [fx, fy + fh, fw, h * 0.18] as [number, number, number, number],
+  };
+};
+
+/**
+ * A clipboard with a checklist: brown hardboard with rounded corners and a hanging hole, a white
+ * sheet held under a chrome spring clip (base plate with two rivets and a curved lever), and `n`
+ * rows each with a square tick box, a rule and room for text. Box w × h. `rowAt(i)` is the text
+ * baseline start of row i, `boxAt(i)` the centre of its tick box, `tick(i)` a tick path in it,
+ * `row(i)` the row's [x, y, w, h]. Wash `board` brown, `sheet` white, `clip` silver.
+ */
+export const clipboard = (x: number, y: number, w: number, h: number, n = 10) => {
+  const sx = x + w * 0.06, sw = w * 0.88, sy = y + h * 0.09, sh = h * 0.87;
+  const cw = w * 0.42, cx = x + (w - cw) / 2, ch = h * 0.075, cy = y + h * 0.035;
+  const top = sy + sh * 0.09, rh = (sh * 0.88) / n, bs = Math.min(rh * 0.62, w * 0.07);
+  const boxAt = (i: number): Pt => [sx + sw * 0.05 + bs / 2, top + i * rh + rh / 2];
+  return {
+    board: P.rect(x, y, w, h, w * 0.05),
+    hole: P.ellipse(x + w / 2, y + h * 0.02, w * 0.035, h * 0.008),
+    sheet: P.rect(sx, sy, sw, sh, 3),
+    clip: P.rect(cx, cy, cw, ch, ch * 0.3),
+    lever: P.ellipse(x + w / 2, cy + ch * 0.55, cw * 0.36, ch * 0.75, Math.PI * 1.08, Math.PI * 1.92, 24),
+    rivets: [P.ellipse(cx + cw * 0.12, cy + ch * 0.62, ch * 0.13, ch * 0.13), P.ellipse(cx + cw * 0.88, cy + ch * 0.62, ch * 0.13, ch * 0.13)],
+    boxes: Array.from({ length: n }, (_, i) => { const [bx, by] = boxAt(i); return P.rect(bx - bs / 2, by - bs / 2, bs, bs, 3); }),
+    rules: Array.from({ length: n }, (_, i) => P.line(sx + sw * 0.05 + bs * 1.4, top + (i + 1) * rh - rh * 0.12, sx + sw * 0.95, top + (i + 1) * rh - rh * 0.12, 12)),
+    rowAt: (i: number): Pt => [sx + sw * 0.05 + bs * 1.5, top + i * rh + rh * 0.66],
+    boxAt,
+    tick: (i: number): Pts => { const [bx, by] = boxAt(i); return P.polyline([[bx - bs * 0.32, by], [bx - bs * 0.06, by + bs * 0.28], [bx + bs * 0.4, by - bs * 0.38]], 6); },
+    row: (i: number): [number, number, number, number] => [sx + sw * 0.03, top + i * rh, sw * 0.94, rh],
+    titleAt: [sx + sw / 2, sy + sh * 0.065] as Pt,
+  };
+};
+
+/**
+ * A non-mydriatic retinal (fundus) camera on its table, side view, patient side on the LEFT: the
+ * chin-and-forehead rest (upright post, curved forehead band, chin cup), the camera head with its
+ * lens barrel pointing at the rest, the sliding base with the operator's joystick on the right,
+ * and a small monitor on an arm behind the head. Local box 560 × 420, top-left (x, y), scale s.
+ * `lensAt` is the front lens centre; `screenBox` [x, y, w, h] the monitor's screen (draw a fundus
+ * there). Wash `body` off-white, `barrel` dark grey, `screen` near-black, `table` wood.
+ */
+export const retinalCamera = (x: number, y: number, s = 1) => {
+  const R = (x0: number, y0: number, x1: number, y1: number, r = 10) => rectL(x, y, s, x0, y0, x1, y1, r);
+  const T = (px: number, py: number): Pt => [x + px * s, y + py * s];
+  return {
+    table: R(0, 360, 560, 384, 4),
+    tableLegs: [P.line(...T(40, 384), ...T(40, 420), 6), P.line(...T(520, 384), ...T(520, 420), 6)],
+    base: R(150, 316, 520, 360, 12),
+    rail: P.line(...T(170, 330), ...T(500, 330), 12),
+    joystick: [P.line(...T(470, 316), ...T(470, 262), 8), P.ellipse(...T(470, 252), 16 * s, 14 * s)],
+    body: R(210, 130, 430, 316, 26),
+    barrel: R(142, 186, 214, 262, 10),
+    lens: P.ellipse(...T(140, 224), 12 * s, 34 * s),
+    knob: P.ellipse(...T(330, 290), 14 * s, 14 * s),
+    post: R(78, 70, 96, 360, 6),
+    forehead: path(x, y, s, [78, 92], [[[48, 84], [36, 100], [36, 118]], [[36, 132], [58, 136], [78, 130]]]),
+    chin: path(x, y, s, [78, 250], [[[58, 250], [28, 254], [24, 266]], [[28, 282], [58, 284], [78, 280]]]),
+    arm: P.line(...T(400, 130), ...T(430, 70), 8),
+    monitor: R(380, 6, 548, 110, 8),
+    screen: R(392, 16, 536, 100, 4),
+    lensAt: T(140, 224),
+    screenBox: [x + 392 * s, y + 16 * s, 144 * s, 84 * s] as [number, number, number, number],
+  };
+};

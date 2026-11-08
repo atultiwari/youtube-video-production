@@ -5,7 +5,7 @@
  */
 import React from "react";
 
-import { apple, car, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, squamousTile, thyroidTile } from "./objects";
+import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
 import { Dots, Fills, Ink, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
 
@@ -209,5 +209,59 @@ export const ThyroidTileArt: React.FC<{ x: number; y: number; w: number; h: numb
     {t.colloid.map((n, i) => <Wash key={i} shape={n} color="#EE9CC0" at={at + dur * 0.4} id={`${id}c${i}`} alpha={1} amount={2} />)}
     <Fills shapes={t.nuclei} color={HE.nucleus} at={at + dur * 0.6} alpha={0.95} />
     <Ink strokes={[t.field]} from={at} durationInFrames={dur * 0.3} id={`${id}o`} width={3} double={false} pen={false} />
+  </>;
+};
+
+/* B1 (Nov 2026): a research article's first page, a checklist clipboard and a retinal camera. */
+
+/** The first page of a research article: sheet and masthead, title block, abstract box, methods
+ * column, the flow figure and results. Text is the caller's (Labels in the returned slots). */
+export const ArticleArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; band?: string; dur?: number }> = ({ x, y, w, h, at, id, band = "#2F5E8E", dur = 20 }) => {
+  const a = researchArticle(x, y, w, h);
+  return <>
+    <Wash shape={a.sheet} color="#FFFFFF" at={at} id={`${id}s`} alpha={1} highlight />
+    <Wash shape={a.band} color={band} at={at + 1} id={`${id}b`} alpha={1} />
+    <Ink strokes={[a.sheet, a.rule, a.footer]} from={at} durationInFrames={dur * 0.35} id={id} width={3} />
+    <Ink strokes={a.titleLines} from={at + dur * 0.2} durationInFrames={dur * 0.15} id={`${id}t`} width={7} color="#3A3F46" double={false} pen={false} />
+    <Ink strokes={a.aff} from={at + dur * 0.3} durationInFrames={dur * 0.1} id={`${id}a`} width={3} color="#B5BBC2" double={false} pen={false} />
+    <Wash shape={a.abstract} color="#EAF1F8" at={at + dur * 0.35} id={`${id}ab`} alpha={1} />
+    <Ink strokes={[a.abstract]} from={at + dur * 0.35} durationInFrames={dur * 0.15} id={`${id}abo`} width={2.5} />
+    <Ink strokes={[...a.abstractLines, ...a.methodsLines, ...a.resultsLines]} from={at + dur * 0.45} durationInFrames={dur * 0.3} id={`${id}l`} width={3} color="#B5BBC2" double={false} pen={false} />
+    {a.flow.map((f, i) => <Wash key={i} shape={f} color={i === 3 ? "#FBE3DF" : "#E4F0DF"} at={at + dur * 0.7} id={`${id}f${i}`} alpha={1} />)}
+    <Ink strokes={[...a.flow, ...a.flowArrows]} from={at + dur * 0.7} durationInFrames={dur * 0.3} id={`${id}fl`} width={2.5} />
+  </>;
+};
+
+/** The checklist clipboard: board, sheet, clip with lever and rivets, tick boxes and row rules.
+ * `ticks` lists the rows already ticked at `at`; tick a row later with the kit's `Ink` on `tick(i)`. */
+export const ClipboardArt: React.FC<{ x: number; y: number; w: number; h: number; n?: number; at: number; id: string; dur?: number }> = ({ x, y, w, h, n = 10, at, id, dur = 20 }) => {
+  const c = clipboard(x, y, w, h, n);
+  return <>
+    <Wash shape={c.board} color="#B98A5E" at={at} id={`${id}bd`} alpha={1} />
+    <Wash shape={c.sheet} color="#FFFFFF" at={at + 2} id={`${id}sh`} alpha={1} />
+    <Ink strokes={[c.board, c.hole, c.sheet]} from={at} durationInFrames={dur * 0.4} id={id} width={3} />
+    <Wash shape={c.clip} color="#C9CED4" at={at + dur * 0.3} id={`${id}cl`} alpha={1} />
+    <Ink strokes={[c.clip, c.lever, ...c.rivets]} from={at + dur * 0.3} durationInFrames={dur * 0.3} id={`${id}c`} width={3} />
+    <Ink strokes={[...c.boxes]} from={at + dur * 0.5} durationInFrames={dur * 0.3} id={`${id}x`} width={2.5} double={false} pen={false} />
+    <Ink strokes={c.rules} from={at + dur * 0.6} durationInFrames={dur * 0.4} id={`${id}r`} width={2} color="#C9CED4" double={false} pen={false} />
+  </>;
+};
+
+/** The retinal camera: table, base and joystick, chin-and-forehead rest, camera head, lens and monitor. */
+export const RetinalCameraArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number }> = ({ x, y, s = 1, at, id, dur = 20 }) => {
+  const r = retinalCamera(x, y, s);
+  return <>
+    <Wash shape={r.table} color="#D9B48A" at={at} id={`${id}t`} alpha={1} />
+    <Wash shape={r.base} color="#C9CED4" at={at + 1} id={`${id}b`} alpha={1} />
+    <Ink strokes={[r.table, ...r.tableLegs, r.base, r.rail]} from={at} durationInFrames={dur * 0.3} id={id} width={3} />
+    <Wash shape={r.body} color="#F2F0EA" at={at + dur * 0.25} id={`${id}y`} alpha={1} />
+    <Wash shape={r.barrel} color="#3A3F46" at={at + dur * 0.3} id={`${id}r`} alpha={1} />
+    <Wash shape={r.lens} color="#5C7FA3" at={at + dur * 0.35} id={`${id}l`} alpha={1} />
+    <Ink strokes={[r.body, r.barrel, r.lens, r.knob, ...r.joystick]} from={at + dur * 0.25} durationInFrames={dur * 0.35} id={`${id}h`} width={3} />
+    <Wash shape={r.post} color="#9AA0A6" at={at + dur * 0.5} id={`${id}p`} alpha={1} />
+    <Ink strokes={[r.post, r.forehead, r.chin]} from={at + dur * 0.5} durationInFrames={dur * 0.25} id={`${id}c`} width={4} />
+    <Wash shape={r.monitor} color="#3A3F46" at={at + dur * 0.7} id={`${id}m`} alpha={1} />
+    <Wash shape={r.screen} color="#14161A" at={at + dur * 0.72} id={`${id}sc`} alpha={1} />
+    <Ink strokes={[r.arm, r.monitor, r.screen]} from={at + dur * 0.7} durationInFrames={dur * 0.3} id={`${id}mo`} width={3} />
   </>;
 };

@@ -350,6 +350,12 @@ if (root.includes("kit-objects-13") && !root.includes("kit-objects-14")) {
   if (root.includes("kit-objects-14") && root.includes("ObjectsDemo14 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-14 (drawing library, page 14) in Root.tsx"); }
   else say(`Register page 14 by hand: <Composition id="kit-objects-14" component={ObjectsDemo14} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
+if (root.includes("kit-objects-14") && !root.includes("kit-objects-15")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-14" [^\n]*\n)/, `$1$2<Composition id="kit-objects-15" component={ObjectsDemo15} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo13, ObjectsDemo14 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo13, ObjectsDemo14, ObjectsDemo15 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-15") && root.includes("ObjectsDemo15 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-15 (drawing library, page 15) in Root.tsx"); }
+  else say(`Register page 15 by hand: <Composition id="kit-objects-15" component={ObjectsDemo15} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
 
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
