@@ -255,3 +255,9 @@ language goes first.
   (`"LLM-as-judge": "L L M, as judge"`; the comma stops "L L Ms judge").
 - **Whisper writes "eighty six and a half percent" as "86.5%"** and "Med-PaLM two" as "MedPalm 2"
   (S4 at 90.5% on a correct take). Check the transcript before regenerating a beat full of numbers.
+
+- **A short sentence-final clause, again** (E12): "…between the three. Only the prompt did." came
+  back as "prompted tit" (97% overall). Merged into one sentence with a fuller ending ("…between
+  the three, only the wording of the prompt.") it was 99%. Whisper also writes "few-shot" as "few
+  short", "vignette" as "vignet" and "sulfate" as "sulphate" on correct audio (a Short at 94.4%):
+  list them in `--heard-as` rather than re-recording.

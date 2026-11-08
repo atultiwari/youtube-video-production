@@ -11,6 +11,7 @@ import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
 import React from "react";
 
 import { P } from "./shapes";
+import { chatWindow, leaflet, mcqSheet } from "./objects";
 import { attentionArc, bookPile, closedBook, clothBag, examDesk, journalPage, laptop, layerStack, magnifier, openBook, reportSheet, serverRack } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
@@ -482,6 +483,65 @@ export const ObjectsDemo11: React.FC = () => {
           </React.Fragment>)}
           <Label text="exam desk, book in the rack" x={350} y={960} at={0} size={36} italic={false} weight={600} />
           <Label text="open textbook" x={1040} y={600} at={0} size={36} italic={false} weight={600} />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/** Page 12 (E12): chat window with a user and an assistant bubble, a patient leaflet, an MCQ sheet with the answer bubble filled. */
+export const ObjectsDemo12: React.FC = () => {
+  const cw = chatWindow(40, 80, 700, 820);
+  const [bx, by, bw] = cw.body;
+  const lf = leaflet(800, 60, 520, 900, 3, 2);
+  const mq = mcqSheet(1380, 80, 500, 880, 3);
+  const bub = (x0: number, y0: number, w0: number, h0: number) => P.rect(x0, y0, w0, h0, 22);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Wash shape={cw.frame} color="#FFFFFF" at={0} id="cwf" alpha={1} />
+          <Wash shape={cw.titleBar} color="#E6E9EE" at={0} id="cwt" alpha={1} />
+          {cw.buttons.map((b, i) => <Wash key={i} shape={b} color={["#E0605A", "#E9B949", "#6DBE5A"][i]} at={0} id={`cwb${i}`} alpha={1} />)}
+          <Wash shape={cw.avatar} color="#C9643D" at={0} id="cwa" alpha={1} />
+          <Wash shape={cw.input} color="#F4F5F7" at={0} id="cwi" alpha={1} />
+          <Wash shape={cw.send} color="#2F5E8E" at={0} id="cws" alpha={1} />
+          <Wash shape={bub(bx + bw * 0.3, by + 20, bw * 0.7, 120)} color="#DDE8F2" at={0} id="ub" alpha={1} />
+          <Wash shape={bub(bx, by + 180, bw * 0.85, 220)} color="#F7F7F2" at={0} id="ab" alpha={1} />
+          <Ink strokes={[cw.frame, cw.titleRule, ...cw.buttons, cw.avatar, cw.scroll, cw.input, cw.send, bub(bx + bw * 0.3, by + 20, bw * 0.7, 120), bub(bx, by + 180, bw * 0.85, 220)]} from={0} durationInFrames={20} id="cwI" width={3} />
+          <Ink strokes={[...cw.spark, ...cw.sendArrow]} from={0} durationInFrames={20} id="cwS" width={3} color="#FFFFFF" double={false} pen={false} />
+          <Label text="Assistant" x={cw.nameAt[0]} y={cw.nameAt[1]} at={0} size={28} italic={false} weight={700} anchor="start" />
+          <Label text="Write about iron tablets" x={bx + bw * 0.34} y={by + 92} at={0} size={30} italic={false} anchor="start" />
+          <Label text="Iron is absorbed in the" x={bx + 24} y={by + 240} at={0} size={30} italic={false} anchor="start" />
+          <Label text="duodenum, bound to ferritin…" x={bx + 24} y={by + 285} at={0} size={30} italic={false} anchor="start" />
+          <Label text="Message…" x={cw.inputAt[0]} y={cw.inputAt[1]} at={0} size={28} italic={false} color="#8A929B" anchor="start" />
+
+          <Wash shape={lf.sheet} color="#FFFFFF" at={0} id="lfs" alpha={1} />
+          <Wash shape={lf.band} color="#2F7F8E" at={0} id="lfb" alpha={1} />
+          <Wash shape={lf.footer} color="#2F7F8E" at={0} id="lff" alpha={1} />
+          <Wash shape={lf.logo} color="#FFFFFF" at={0} id="lfl" alpha={1} />
+          <Wash shape={lf.picture} color="#EEF5F6" at={0} id="lfp" alpha={1} />
+          <Wash shape={lf.pill} color="#C8423B" at={0} id="lfpi" alpha={1} />
+          <Wash shape={lf.water} color="#BFDDF0" at={0} id="lfw" alpha={1} />
+          {lf.heads.map((s, i) => <Wash key={i} shape={s} color="#D8ECEF" at={0} id={`lfh${i}`} alpha={1} />)}
+          {lf.dots.map((s, i) => <Wash key={i} shape={s} color="#2F7F8E" at={0} id={`lfd${i}`} alpha={1} />)}
+          <Ink strokes={[lf.sheet, lf.band, lf.footer, lf.logo, lf.picture, lf.pill, lf.glass, ...lf.heads, lf.phone]} from={0} durationInFrames={20} id="lfI" width={3} />
+          <Ink strokes={[lf.pillScore, ...lf.logoCross]} from={0} durationInFrames={20} id="lfC" width={2} color="#9AA3AD" double={false} pen={false} />
+          <Label text="Taking iron tablets" x={lf.titleAt[0]} y={lf.titleAt[1]} at={0} size={36} italic={false} weight={700} color="#FFFFFF" />
+          {["When to take it", "Avoid with it", "Call us if"].map((t, i) => <Label key={i} text={t} x={lf.headAt(i)[0]} y={lf.headAt(i)[1] + 11} at={0} size={30} italic={false} weight={700} anchor="start" />)}
+          {["30 min before breakfast", "with water or orange juice", "tea, coffee, milk, eggs", "leave a 2-hour gap", "stools black and tarry", "you see blood"].map((t, k) => <Label key={k} text={t} x={lf.bulletAt(Math.floor(k / 2), k % 2)[0]} y={lf.bulletAt(Math.floor(k / 2), k % 2)[1]} at={0} size={28} italic={false} anchor="start" />)}
+          <Label text="Questions? Call the pharmacy" x={lf.footAt[0]} y={lf.footAt[1]} at={0} size={26} italic={false} color="#FFFFFF" anchor="start" />
+
+          <Wash shape={mq.sheet} color="#FFFFFF" at={0} id="mqs" alpha={1} />
+          <Wash shape={mq.header} color="#E1D6F0" at={0} id="mqh" alpha={1} />
+          <Wash shape={mq.qCircle} color="#2F5E8E" at={0} id="mqq" alpha={1} />
+          <Wash shape={mq.bubble(1)} color="#22272E" at={0} id="mqa" alpha={1} />
+          <Ink strokes={[mq.sheet, mq.ear, mq.header, mq.marks, mq.qCircle, ...mq.bubbles]} from={0} durationInFrames={20} id="mqI" width={3} />
+          <Label text="Haematology · SBA" x={mq.titleAt[0]} y={mq.titleAt[1]} at={0} size={28} italic={false} weight={700} />
+          <Label text="1" x={mq.marksAt[0]} y={mq.marksAt[1]} at={0} size={28} italic={false} weight={700} />
+          <Label text="1" x={mq.qAt[0]} y={mq.qAt[1] + 10} at={0} size={28} italic={false} weight={800} color="#FFFFFF" />
+          {["24-year-old woman, Hb 10.1,", "MCV 63, RBC 6.1 million,", "ferritin normal. Next test?"].map((t, i) => <Label key={i} text={t} x={mq.stemAt(i)[0]} y={mq.stemAt(i)[1]} at={0} size={26} italic={false} anchor="start" />)}
+          {["A  Marrow aspiration", "B  Hb HPLC", "C  Vitamin B12", "D  Direct Coombs"].map((t, k) => <Label key={k} text={t} x={mq.opt(k).textAt[0]} y={mq.opt(k).textAt[1]} at={0} size={28} italic={false} anchor="start" />)}
         </Picture>
       </Paper>
     </AbsoluteFill>

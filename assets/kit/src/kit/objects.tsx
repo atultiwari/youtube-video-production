@@ -1513,3 +1513,118 @@ export const journalPage = (x: number, y: number, w: number, h: number, n = 3) =
     slot: (i: number): [number, number, number, number] => [x + w * 0.03, refTop + h * 0.015 + i * step, w * 0.94, step * 0.9],
   };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Page 12 (E12, Nov 2026): a chat app window, a patient information leaflet and an MCQ exam sheet.
+ * Checked on the `kit-objects-12` still (ObjectsDemo12).
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * A desktop chat-assistant window, as people see it: rounded window frame, a title bar with the
+ * three window buttons (close, minimise, zoom) and the assistant's round avatar beside a name
+ * slot, a thin scroll bar on the right, and at the bottom a rounded message box with a round send
+ * button holding an up arrow. Box w × h. `body` is [x, y, w, h] of the conversation area (place
+ * bubbles there); `nameAt` is the baseline start of the assistant's name; `inputAt` the baseline
+ * start of text typed in the message box. Wash `titleBar` light grey, `send` the accent.
+ */
+export const chatWindow = (x: number, y: number, w: number, h: number) => {
+  const tb = Math.max(46, h * 0.09), ib = Math.max(64, h * 0.13), m = w * 0.03;
+  const bx = x + m, bw = w - 2 * m, iy = y + h - ib + ib * 0.14, ih = ib * 0.66;
+  const sr = ih * 0.36, scx = x + w - m - sr - ih * 0.15, scy = iy + ih / 2;
+  const ar = tb * 0.3, ax = x + w * 0.2, ay = y + tb / 2;
+  return {
+    frame: P.rect(x, y, w, h, 16),
+    titleBar: P.rect(x, y, w, tb, 16),
+    titleRule: P.line(x, y + tb, x + w, y + tb, 16),
+    buttons: [0, 1, 2].map((i) => P.ellipse(x + 26 + i * 26, y + tb / 2, 8, 8)),
+    avatar: P.ellipse(ax, ay, ar, ar),
+    spark: [P.line(ax, ay - ar * 0.55, ax, ay + ar * 0.55, 4), P.line(ax - ar * 0.55, ay, ax + ar * 0.55, ay, 4),
+      P.line(ax - ar * 0.35, ay - ar * 0.35, ax + ar * 0.35, ay + ar * 0.35, 4), P.line(ax - ar * 0.35, ay + ar * 0.35, ax + ar * 0.35, ay - ar * 0.35, 4)],
+    nameAt: [ax + ar * 1.7, ay + tb * 0.16] as Pt,
+    scroll: P.rect(x + w - 12, y + tb + 14, 5, (h - tb - ib) * 0.35, 3),
+    body: [bx, y + tb + 12, bw - 14, h - tb - ib - 18] as [number, number, number, number],
+    input: P.rect(bx, iy, bw, ih, ih / 2),
+    send: P.ellipse(scx, scy, sr, sr),
+    sendArrow: [P.line(scx, scy + sr * 0.5, scx, scy - sr * 0.5, 4), P.polyline([[scx - sr * 0.4, scy - sr * 0.1], [scx, scy - sr * 0.5], [scx + sr * 0.4, scy - sr * 0.1]], 4)],
+    inputAt: [bx + ih * 0.45, scy + ih * 0.13] as Pt,
+  };
+};
+
+/**
+ * A printed patient information leaflet, A4 portrait, folded once (a faint vertical crease): a
+ * coloured header band with the hospital's round logo (a cross), a title slot, a pictogram panel
+ * with a tablet (a round pill with its score line) and a glass of water, `sections` headed
+ * sections each with a heading bar and bullet dots, and a footer band with a phone handset for
+ * "questions? call us" (or a warning line). `pic` is the pictogram panel's share of h (0.1 when the
+ * leaflet carries four or more lines a section at 36 px: E12 found 0.14 left headings overlapping). Box w × h. `titleAt` is the centre of the title; `headAt(i)` the start of
+ * section i's heading at the bar's middle (add 0.35 × size for a baseline); `crease` is optional
+ * (it crosses the text, so most pictures leave it out); `bulletAt(i, j)` the baseline start of bullet j's text (dot to
+ * its left); `footAt` the footer text start. Wash `band`/`footer` a hospital colour, `heads` pale.
+ */
+export const leaflet = (x: number, y: number, w: number, h: number, sections = 3, bullets = 2, pic = 0.14) => {
+  const bandH = h * 0.12, m = w * 0.07, footH = h * 0.08;
+  const lr = bandH * 0.3, lx = x + m + lr, ly = y + bandH / 2;
+  const picY = y + bandH + h * 0.03, picH = h * pic;
+  const sTop = picY + picH + h * 0.035, sH = (y + h - footH - h * 0.02 - sTop) / sections;
+  const headH = sH * 0.3;
+  const headAt = (i: number): Pt => [x + m + w * 0.03, sTop + i * sH + headH / 2];
+  const bulletAt = (i: number, j: number): Pt => [x + m + w * 0.07, sTop + i * sH + headH + (j + 0.72) * ((sH * 0.68) / bullets)];
+  const pcx = x + w * 0.32, pcy = picY + picH / 2, pr = picH * 0.3;
+  const gx = x + w * 0.6, gw = picH * 0.42, gy = picY + picH * 0.14, gh = picH * 0.72;
+  const hx = x + m + 6, hy = y + h - footH / 2;
+  return {
+    sheet: P.rect(x, y, w, h, 4),
+    crease: P.line(x + w / 2, y + bandH + 4, x + w / 2, y + h - footH - 4, 20),
+    band: P.rect(x, y, w, bandH, 4),
+    logo: P.ellipse(lx, ly, lr, lr),
+    logoCross: [P.line(lx, ly - lr * 0.6, lx, ly + lr * 0.6, 4), P.line(lx - lr * 0.6, ly, lx + lr * 0.6, ly, 4)],
+    titleAt: [x + w / 2 + lr, ly + bandH * 0.13] as Pt,
+    picture: P.rect(x + m, picY, w - 2 * m, picH, 10),
+    pill: P.ellipse(pcx, pcy, pr, pr),
+    pillScore: P.line(pcx - pr * 0.7, pcy, pcx + pr * 0.7, pcy, 4),
+    glass: P.polyline([[gx, gy], [gx + gw, gy], [gx + gw * 0.86, gy + gh], [gx + gw * 0.14, gy + gh], [gx, gy]], 6),
+    water: P.polyline([[gx + gw * 0.04, gy + gh * 0.3], [gx + gw * 0.96, gy + gh * 0.3], [gx + gw * 0.86, gy + gh], [gx + gw * 0.14, gy + gh], [gx + gw * 0.04, gy + gh * 0.3]], 6),
+    heads: Array.from({ length: sections }, (_, i) => P.rect(x + m, sTop + i * sH, w - 2 * m, headH, 6)),
+    dots: Array.from({ length: sections }, (_, i) => Array.from({ length: bullets }, (_, j) => {
+      const [bx, by] = bulletAt(i, j);
+      return P.ellipse(bx - w * 0.035, by - h * 0.008, 6, 6);
+    })).flat(),
+    footer: P.rect(x, y + h - footH, w, footH, 4),
+    phone: P.polyline([[hx, hy - 12], [hx + 6, hy - 16], [hx + 10, hy - 10], [hx + 6, hy - 4], [hx + 12, hy + 6], [hx + 18, hy + 2], [hx + 24, hy + 6], [hx + 20, hy + 12], [hx + 10, hy + 10], [hx, hy - 2], [hx, hy - 12]], 4),
+    headAt, bulletAt,
+    footAt: [hx + 40, hy + footH * 0.16] as Pt,
+  };
+};
+
+/**
+ * A single-best-answer MCQ exam sheet: the paper with a dog-ear, a header box (exam name) with a
+ * marks box at its right, the question number in a circle, `stem` lines of the question, and four
+ * options A–D, each with an OMR answer bubble (a circle you fill in) and a text slot. Box w × h.
+ * `stemAt(i)` is the baseline start of stem line i; `opt(k)` gives { bubble: [cx, cy, r],
+ * textAt } for option k; `qAt` the centre of the question-number circle; `titleAt` the header
+ * centre. Fill `bubble(k)` (a closed circle) to mark the answer.
+ */
+export const mcqSheet = (x: number, y: number, w: number, h: number, stem = 3) => {
+  const m = w * 0.06, hdH = h * 0.1, top = y + h * 0.03 + hdH + Math.max(h * 0.08, 64);
+  const lineGap = h * 0.075, optTop = top + stem * lineGap + h * 0.04, optGap = (y + h - h * 0.05 - optTop) / 4;
+  const br = Math.min(optGap * 0.28, w * 0.03);
+  const qr = Math.min(h * 0.035, 28), qx = x + m + qr, qy = top - 12;
+  const opt = (k: number) => {
+    const cy = optTop + k * optGap + optGap * 0.42, cx = x + m * 1.9 + br;
+    return { bubble: [cx, cy, br] as [number, number, number], textAt: [cx + br * 2.2, cy + br * 0.45] as Pt };
+  };
+  return {
+    sheet: path(0, 0, 1, [x, y], [[[x + w * 0.4, y], [x + w * 0.7, y], [x + w - 34, y]], [[x + w - 20, y + 10], [x + w - 10, y + 22], [x + w, y + 34]], [[x + w, y + h * 0.4], [x + w, y + h * 0.7], [x + w, y + h]], [[x + w * 0.7, y + h], [x + w * 0.3, y + h], [x, y + h]], [[x, y + h * 0.7], [x, y + h * 0.3], [x, y]]]),
+    ear: P.polyline([[x + w - 34, y], [x + w - 34, y + 34], [x + w, y + 34]], 8),
+    header: P.rect(x + m, y + h * 0.03, w - 2 * m - w * 0.16, hdH, 4),
+    marks: P.rect(x + w - m - w * 0.13, y + h * 0.03, w * 0.13, hdH, 4),
+    titleAt: [x + m + (w - 2 * m - w * 0.16) / 2, y + h * 0.03 + hdH * 0.66] as Pt,
+    marksAt: [x + w - m - w * 0.065, y + h * 0.03 + hdH * 0.66] as Pt,
+    qCircle: P.ellipse(qx, qy, qr, qr),
+    qAt: [qx, qy] as Pt,
+    stemAt: (i: number): Pt => [x + m + qr * 2.8, top + i * lineGap],
+    bubbles: [0, 1, 2, 3].map((k) => { const [cx, cy, r] = opt(k).bubble; return P.ellipse(cx, cy, r, r); }),
+    bubble: (k: number) => { const [cx, cy, r] = opt(k).bubble; return P.ellipse(cx, cy, r * 0.72, r * 0.72); },
+    opt,
+  };
+};

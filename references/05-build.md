@@ -197,7 +197,16 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   closed book), `closedBook` (hardback, spine band, page block showing its thickness, title panel),
   `openBook` (pages curving into the gutter, page stacks, heading bars, text lines; `line(side, i)` /
   `lineBox` to highlight "the passage") and `journalPage` (running head, two-column body, a
-  "References" rule and numbered entry slots for typeset citations) (page 11: `kit-objects-11`). Each
+  "References" rule and numbered entry slots for typeset citations) (page 11: `kit-objects-11`).
+  E12 `chatWindow` (a desktop chat-assistant window: title bar with the three window buttons, the
+  assistant's avatar and name slot, a scroll bar, a rounded message box with a round send button;
+  `body` is where bubbles go), `leaflet` (a patient information leaflet: band with a round hospital
+  logo, a pictogram panel with a scored tablet and a glass of water, headed sections with bullet
+  dots, a footer band with a phone handset or a warning line) and `mcqSheet` (a single-best-answer
+  sheet: header and marks box, numbered stem, four options with OMR answer bubbles; fill
+  `bubble(k)` to mark the answer) (page 12: `kit-objects-12`). At 36 px a leaflet holds three
+  sections of two bullets; pass `pic = 0.1` (0.14 let headings overlap the bullets on E12's first
+  stills) and put a fourth point ("Keep away from children") in the footer, as real leaflets do. Each
   returns named parts so a beat draws them one step at a time.
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")
@@ -224,3 +233,9 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   --frame=59`) before any beat uses it.
 - **Show the owner the episode's key objects on one still early**, with the storyboard, not
   first in the finished video.
+
+- **Review every picture, not just beat ends** (E12): `node tools/stills.mjs <comp> <beats.json>
+  <outDir> lines:public/<key>/lines.json` renders a still just before each spoken line after the
+  first (`beat-NN-L<i>`, the picture fully built before an `until` clears it) plus each beat end.
+  E12's first pass caught a cramped leaflet, a sheet over the heading and labels running off a
+  card, none of which the `ends` stills showed.
