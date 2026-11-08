@@ -297,6 +297,15 @@ if (root.includes("kit-objects-6") && !root.includes("kit-objects-7")) {
   else say(`Register page 7 by hand: <Composition id="kit-objects-7" component={ObjectsDemo7} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
 
+// Page 8 (E08, Nov 2026: CT scanner with gantry ring and patient table, desktop EHR screen, cloud, microchip, Wi-Fi, kidney ultrasound fan).
+root = fs.readFileSync(rootPath, "utf8");
+if (root.includes("kit-objects-7") && !root.includes("kit-objects-8")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-7" [^\n]*\n)/, `$1$2<Composition id="kit-objects-8" component={ObjectsDemo8} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/import \{ ObjectsDemo, ObjectsDemo2, ObjectsDemo3, ObjectsDemo4, ObjectsDemo5, ObjectsDemo6, ObjectsDemo7 \} from "\.\/kit\/ObjectsDemo";/, `import { ObjectsDemo, ObjectsDemo2, ObjectsDemo3, ObjectsDemo4, ObjectsDemo5, ObjectsDemo6, ObjectsDemo7, ObjectsDemo8 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-8") && root.includes("ObjectsDemo8 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-8 (drawing library, page 8) in Root.tsx"); }
+  else say(`Register page 8 by hand: <Composition id="kit-objects-8" component={ObjectsDemo8} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");

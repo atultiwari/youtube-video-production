@@ -11,7 +11,7 @@ import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
 import React from "react";
 
 import { P } from "./shapes";
-import { bell, blister, coin, errorLandscape, hospitalBed, tree, vial } from "./objects";
+import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
 import { AppleArt, CarArt, ColonTileArt, DogArt, KidneyArt, NetworkArt, NeuronArt } from "./art";
 import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
@@ -294,6 +294,50 @@ export const ObjectsDemo7: React.FC = () => {
           <Label text="Bed 12" x={495} y={640} at={0} size={26} italic={false} weight={700} />
           <Wash shape={bd.mattress} color="#DDE8F2" at={0} id="bm" alpha={0.9} />
           <Ink strokes={[bd.headboard, bd.footboard, bd.mattress, bd.pillow, ...bd.frame, ...bd.rail, ...bd.legs, ...bd.castors]} from={0} durationInFrames={20} id="bdi" />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/** E08 objects: CT scanner with patient, EHR screen with an alert banner, cloud, chip, Wi-Fi. */
+export const ObjectsDemo8: React.FC = () => {
+  const ct = ctScanner(20, 60, 1.05);
+  const e = ehrScreen(720, 40, 360, 250);
+  const cl = cloud(180, 640, 260);
+  const ch = chip(520, 660, 150);
+  const wf = wifi(800, 720, 1);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Wash shape={ct.side} color="#D9DDE2" at={0} id="cts" alpha={1} />
+          <Wash shape={ct.housing} color="#F3F4F6" at={0} id="cth" alpha={1} />
+          <Wash shape={ct.ring} color="#BFD6EA" at={0} id="ctr" alpha={1} />
+          <Wash shape={ct.bore} color="#5A6470" at={0} id="ctb" alpha={1} />
+          <Wash shape={ct.rim} color="#3A424C" at={0} id="ctm" alpha={1} />
+          <Wash shape={ct.plinth} color="#C9CDD2" at={0} id="ctpl" alpha={1} />
+          <Wash shape={ct.pedestal} color="#C9CDD2" at={0} id="ctp" alpha={1} />
+          <Wash shape={ct.table} color="#AEB4BB" at={0} id="ctt" alpha={1} />
+          <Wash shape={ct.mattress} color="#7FA7D6" at={0} id="ctmt" alpha={1} />
+          <Wash shape={ct.patientBody} color="#E8C9A8" at={0} id="ctpb" alpha={1} />
+          <Wash shape={ct.patientHead} color="#E8C9A8" at={0} id="ctph" alpha={1} />
+          <Wash shape={ct.display} color="#2F5E8E" at={0} id="ctd" alpha={1} />
+          <Ink strokes={[ct.side, ct.plinth, ct.housing, ct.ring, ct.bore, ct.rim, ct.display, ...ct.leds, ct.pedestal, ct.foot, ct.table, ct.mattress, ct.patientBody, ct.patientHead]} from={0} durationInFrames={20} id="cti" />
+          <Wash shape={e.screen} color="#F4F7FA" at={0} id="es" alpha={1} />
+          <Wash shape={e.titleBar} color="#2F5E8E" at={0} id="et" alpha={1} />
+          <Wash shape={e.sidebar} color="#DDE6EF" at={0} id="esb" alpha={1} />
+          <Wash shape={e.banner} color="#F2B8B0" at={0} id="eb" alpha={1} />
+          <Ink strokes={[e.case, e.screen, e.neck, e.foot, e.titleBar, e.sidebar, ...e.entries, e.banner, ...e.rows, e.chartBox]} from={0} durationInFrames={20} id="ei" width={3} />
+          <Ink strokes={[e.chart]} from={0} durationInFrames={20} id="ec" width={3} color="#C8423B" double={false} />
+          <Label text="SEPSIS RISK HIGH" x={e.bannerAt[0]} y={e.bannerAt[1] + 8} at={0} size={20} italic={false} weight={700} color="#8E2B25" />
+          <Wash shape={cl} color="#DDE8F2" at={0} id="clw" alpha={1} />
+          <Ink strokes={[cl]} from={0} durationInFrames={20} id="cli" />
+          <Wash shape={ch.body} color="#3A424C" at={0} id="chb" alpha={1} />
+          <Wash shape={ch.die} color="#9AA3AD" at={0} id="chd" alpha={1} />
+          <Ink strokes={[ch.body, ch.die, ...ch.pins]} from={0} durationInFrames={20} id="chi" width={3} />
+          <Ink strokes={[wf.dot, ...wf.arcs]} from={0} durationInFrames={20} id="wfi" width={6} double={false} />
+          <Ink strokes={wf.cross} from={0} durationInFrames={20} id="wfx" width={6} color="#C8423B" double={false} />
         </Picture>
       </Paper>
     </AbsoluteFill>

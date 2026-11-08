@@ -220,3 +220,14 @@ language goes first.
   look at the segment times: a repeat with no audio under it is Whisper, not the voice.
 - **One real drop**: beat 01 lost a whole sentence ("The other one might be."); the Whisper check
   caught it and one `--force` regeneration fixed it.
+
+## Measured on E08 (Nov 2026)
+
+- **Short standalone sentences get dropped.** A Short's beat "…blocked. The cause was mundane. The
+  new images were saved in a different file format." lost "The cause was mundane" on one take and
+  the whole last sentence on the next; joined into one sentence ("And the cause was mundane, because
+  the new images had been saved…") it came back whole. After one drop, merge the short sentence
+  into its neighbour rather than regenerating again.
+- **Spaced letters in the script fail the Whisper check against correct audio.** "F D A" / "C D S C O"
+  in the script were heard as "FDA" / "CDSCO" (93% on a clean take). Write the acronym normally and
+  put the spacing in `docs/respell.json` (`"FDA": "F D A"`), then `--allow` it in `check-script.py`.

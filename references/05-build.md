@@ -176,8 +176,22 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   follow a prevalence function of the frame (`prevAt` steps whole percents, so 1,000 patients at
   90%/90% always show integer cells), `Slider` (prevalence), `PPVBar` (the alert row as true vs
   false alarms), `Squares` ("7 of 10" grids), `Plot`/`curve`/`dashed`/`Under` for ROC, PR and
-  calibration curves (page 7: `kit-objects-7`). Each
+  calibration curves (page 7: `kit-objects-7`); since E08 `ctScanner` (three-quarter CT: a rounded
+  gantry whose bore fills most of it, side depth, plinth, a slim panel *beside* the bore, the
+  patient table on its pedestal, optional patient; a square housing with a display above a small
+  bore read as a washing machine), `ehrScreen` (desktop monitor with title bar, patient sidebar,
+  alert `banner`, rows and a trend chart), `cloud`, `chip` (edge device), `wifi` (with a `cross`
+  for offline) and `ultrasoundFan` (curved-array sector with a long-axis kidney, `pelvis` dark when
+  blocked) (page 8: `kit-objects-8`). Each
   returns named parts so a beat draws them one step at a time.
+- **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
+  must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")
+  and size the screen to fit; 24 px banner text failed QA on 25 frames.
+- **A paper-coloured `Wash` does not clear the picture.** Washes are translucent and multiply: a
+  "cover" wash over earlier drawings left them showing through (E08 beats 9, 10, 12). Clear with
+  `until: "<step>"` instead.
+- **Shorts headings: about 22 characters at most.** "The pandemic changed the AI" and "Ranked
+  right, numbers wrong" failed QA as `outside heading ""` on every frame of beat 1.
 - **No typeset text inside an object.** Objects return label *points* (ruler `cm`, paper `q(i)`);
   the beat writes the text there with `Label`/HL at a size that passes QA (36 px at 16:9, 48 px in
   Shorts). An episode component that adds its own text (E04's X-ray letter tag) takes a size prop

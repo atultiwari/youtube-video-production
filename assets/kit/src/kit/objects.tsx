@@ -1086,3 +1086,108 @@ export const bell = (cx: number, cy: number, s = 1) => ({
     P.ellipse(cx, cy - 10 * s, (100 + i * 26) * s, (100 + i * 26) * s, Math.PI * 0.88, Math.PI * 1.18, 10),
   ]),
 });
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E08 (Nov 2026): a CT scanner (gantry ring and patient table), a desktop EHR screen,
+ * a cloud, a microchip (edge device) and a Wi-Fi signal. Checked on the `kit-objects-8` still.
+ * ------------------------------------------------------------------------------------------- */
+
+const poly = (x: number, y: number, s: number, pts: [number, number][], close = true): Pts => {
+  const out: Pt[] = pts.map(([u, v]) => [x + u * s, y + v * s] as const);
+  return P.polyline(close ? [...out, out[0]] : out, 14);
+};
+
+/**
+ * A CT scanner in three-quarter view: the gantry housing (a big rounded doughnut block with its
+ * side depth and plinth), the round bore filling most of it with an inner rim and a light ring, a
+ * slim control panel and two LEDs beside the bore (not above it: that reads as a washing machine), and the patient table running out of the bore to the right on a pedestal.
+ * Optional `patient` lies on the table, head in the bore. Local box 620 × 360, top-left (x, y),
+ * scale s. Wash `housing` and `side` off-white, `bore` dark grey, `mattress` blue, `table` grey.
+ */
+export const ctScanner = (x: number, y: number, s = 1) => ({
+  housing: rectL(x, y, s, 30, 0, 360, 344, 120),
+  side: poly(x, y, s, [[60, 20], [12, 60], [8, 290], [52, 332]]),
+  plinth: rectL(x, y, s, 70, 336, 320, 360, 6),
+  ring: P.ellipse(x + 195 * s, y + 172 * s, 140 * s, 140 * s),
+  bore: P.ellipse(x + 195 * s, y + 172 * s, 122 * s, 122 * s),
+  rim: P.ellipse(x + 195 * s, y + 172 * s, 100 * s, 100 * s),
+  display: rectL(x, y, s, 328, 84, 346, 124, 4),
+  leds: [P.ellipse(x + 337 * s, y + 70 * s, 5 * s, 5 * s), P.ellipse(x + 322 * s, y + 56 * s, 5 * s, 5 * s)],
+  table: rectL(x, y, s, 110, 208, 620, 230, 6),
+  mattress: rectL(x, y, s, 116, 194, 600, 210, 8),
+  pedestal: poly(x, y, s, [[420, 230], [570, 230], [550, 336], [440, 336]]),
+  foot: rectL(x, y, s, 390, 336, 600, 360, 6),
+  patientHead: P.ellipse(x + 152 * s, y + 174 * s, 22 * s, 20 * s),
+  patientBody: smoothClosed(x, y, s, [[178, 168], [240, 158], [380, 160], [500, 168], [576, 176], [580, 190], [500, 194], [240, 194], [178, 192]], 6),
+  centre: [x + 195 * s, y + 172 * s] as Pt,
+});
+
+/**
+ * A desktop computer monitor showing an electronic health record: the case, the screen, a neck and
+ * a foot; on screen a title bar, a patient-list sidebar with entries, an alert banner (wash it red
+ * when an alert fires), text rows and a small trend chart. Box w × h for the case (the stand hangs
+ * below it, about 0.2 h). `banner` centre is `bannerAt`.
+ */
+export const ehrScreen = (x: number, y: number, w: number, h: number) => {
+  const sx = x + w * 0.04, sy = y + h * 0.05, sw = w * 0.92, sh = h * 0.82;
+  const bx = sx + sw * 0.28, bw = sw * 0.68;
+  return {
+    case: P.rect(x, y, w, h, 14),
+    screen: P.rect(sx, sy, sw, sh, 4),
+    neck: P.rect(x + w * 0.45, y + h, w * 0.1, h * 0.12, 3),
+    foot: P.rect(x + w * 0.3, y + h * 1.12, w * 0.4, h * 0.06, 8),
+    titleBar: P.rect(sx, sy, sw, sh * 0.1, 3),
+    sidebar: P.rect(sx, sy + sh * 0.1, sw * 0.24, sh * 0.9, 2),
+    entries: [0, 1, 2, 3, 4].map((i) => P.line(sx + sw * 0.03, sy + sh * (0.2 + i * 0.15), sx + sw * 0.2, sy + sh * (0.2 + i * 0.15), 6)),
+    banner: P.rect(bx, sy + sh * 0.15, bw, sh * 0.16, 6),
+    rows: [0, 1, 2].map((i) => P.line(bx, sy + sh * (0.42 + i * 0.1), bx + bw * (i === 1 ? 0.6 : 0.85), sy + sh * (0.42 + i * 0.1), 8)),
+    chartBox: P.rect(bx, sy + sh * 0.7, bw * 0.5, sh * 0.24, 3),
+    chart: [0, 0.2, 0.35, 0.5, 0.65, 0.8, 1].map((u, i) => [bx + bw * 0.03 + u * bw * 0.44, sy + sh * (0.9 - [0.05, 0.1, 0.06, 0.12, 0.09, 0.14, 0.16][i])] as const) as Pts,
+    bannerAt: [bx + bw / 2, sy + sh * 0.23] as Pt,
+  };
+};
+
+/** A cloud: a flat-bottomed bumpy outline, centre (cx, cy), width w (height about 0.6 w). */
+export const cloud = (cx: number, cy: number, w: number) =>
+  smoothClosed(cx, cy, w / 200, [[-96, 34], [-104, 8], [-80, -14], [-66, -44], [-30, -60], [2, -52], [22, -76], [62, -74], [82, -44], [102, -28], [108, 6], [96, 34], [0, 38]], 8);
+
+/** A microchip seen from above: the package, the die, and five pins on each side. Centre, size. */
+export const chip = (cx: number, cy: number, size: number) => {
+  const h = size / 2, pin = size * 0.16;
+  const at = (i: number) => -h + size * (0.18 + i * 0.16);
+  return {
+    body: P.rect(cx - h, cy - h, size, size, size * 0.06),
+    die: P.rect(cx - h * 0.5, cy - h * 0.5, h, h, size * 0.03),
+    pins: [0, 1, 2, 3, 4].flatMap((i) => [
+      P.line(cx + at(i), cy - h, cx + at(i), cy - h - pin, 3), P.line(cx + at(i), cy + h, cx + at(i), cy + h + pin, 3),
+      P.line(cx - h, cy + at(i), cx - h - pin, cy + at(i), 3), P.line(cx + h, cy + at(i), cx + h + pin, cy + at(i), 3),
+    ]),
+  };
+};
+
+/** A Wi-Fi signal: a dot and three arcs opening upwards; `cross` strikes it out (no signal). */
+export const wifi = (cx: number, cy: number, s = 1) => ({
+  dot: P.ellipse(cx, cy, 10 * s, 10 * s),
+  arcs: [1, 2, 3].map((i) => P.ellipse(cx, cy, 34 * i * s, 34 * i * s, -Math.PI * 0.78, -Math.PI * 0.22, 16)),
+  cross: [P.line(cx - 90 * s, cy - 110 * s, cx + 90 * s, cy + 20 * s, 8), P.line(cx + 90 * s, cy - 110 * s, cx - 90 * s, cy + 20 * s, 8)],
+});
+
+/**
+ * An ultrasound image as the screen shows it: the fan-shaped sector (apex at the top, curved
+ * bottom edge) and, inside it, a kidney in long axis: the bright capsule, the cortex and the
+ * central sinus; `pelvis` is the dark fluid-filled pelvis of a blocked (hydronephrotic) kidney.
+ * Apex (cx, y), radius r (the sector spans ±40°, a curved-array probe face at the top). Wash `fan` near-black, `kidney` mid-grey.
+ */
+export const ultrasoundFan = (cx: number, y: number, r: number) => {
+  const a0 = Math.PI / 2 - 0.7, a1 = Math.PI / 2 + 0.7, r0 = r * 0.12;
+  const outer = P.ellipse(cx, y, r, r, a0, a1, 32);
+  const inner = P.ellipse(cx, y, r0, r0, a1, a0, 8);
+  const ky = y + r * 0.6, kw = r * 0.4, kh = r * 0.2;
+  return {
+    fan: P.polyline([...inner, ...outer, inner[0]], 14),
+    kidney: P.ellipse(cx, ky, kw, kh * 0.8, -Math.PI / 2, Math.PI * 1.5, 48),
+    sinus: smoothClosed(cx, ky, 1, [[-kw * 0.62, 0], [-kw * 0.4, -kh * 0.42], [kw * 0.1, -kh * 0.5], [kw * 0.6, -kh * 0.3], [kw * 0.66, kh * 0.1], [kw * 0.3, kh * 0.45], [-kw * 0.3, kh * 0.42]], 8),
+    pelvis: smoothClosed(cx, ky, 1, [[-kw * 0.42, -kh * 0.05], [-kw * 0.3, -kh * 0.3], [-kw * 0.12, -kh * 0.12], [kw * 0.05, -kh * 0.34], [kw * 0.18, -kh * 0.1], [kw * 0.4, -kh * 0.2], [kw * 0.36, kh * 0.08], [kw * 0.1, kh * 0.3], [-kw * 0.2, kh * 0.26]], 8),
+    scale: Array.from({ length: 6 }, (_, i) => P.line(cx - r * 0.78, y + r * (0.2 + i * 0.14), cx - r * 0.73, y + r * (0.2 + i * 0.14), 2)),
+  };
+};
