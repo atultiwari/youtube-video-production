@@ -11,7 +11,7 @@ import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
 import React from "react";
 
 import { P } from "./shapes";
-import { attentionArc, bookPile, clothBag, laptop, layerStack, magnifier, reportSheet, serverRack } from "./objects";
+import { attentionArc, bookPile, closedBook, clothBag, examDesk, journalPage, laptop, layerStack, magnifier, openBook, reportSheet, serverRack } from "./objects";
 import { bell, blister, chip, cloud, coin, ctScanner, ehrScreen, errorLandscape, hospitalBed, tree, vial, wifi } from "./objects";
 import { PPVBar, Slider, Table } from "./metrics";
 import { AppleArt, CarArt, ColonTileArt, DogArt, KidneyArt, NetworkArt, NeuronArt } from "./art";
@@ -425,6 +425,63 @@ export const ObjectsDemo10: React.FC = () => {
           <Ink strokes={[d.face, d.grip, ...d.ticks, d.pointer]} from={0} durationInFrames={20} id="di" width={4} />
           <Label text="laptop" x={420} y={900} at={0} size={40} italic={false} weight={600} />
           <Label text="server rack" x={1080} y={900} at={0} size={40} italic={false} weight={600} />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
+
+/** Page 11 (E11): exam-hall desk with a closed book in its rack, an open textbook, a closed textbook, a journal reference list. */
+export const ObjectsDemo11: React.FC = () => {
+  const d = examDesk(40, 300, 620, 560);
+  const [rx, ry, rw, rh] = d.rack;
+  const cb = closedBook(rx + rw * 0.2, ry + rh * 0.18, rw * 0.36, rh * 0.62);
+  const sheetQ = [d.onTop(0.3, 0.2), d.onTop(0.62, 0.2), d.onTop(0.64, 0.85), d.onTop(0.28, 0.85)];
+  const ob = openBook(720, 120, 640, 420);
+  const c2 = closedBook(760, 640, 260, 340);
+  const j = journalPage(1420, 80, 460, 900, 3);
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <Wash shape={d.top} color="#D9B98A" at={0} id="dt" alpha={1} />
+          <Wash shape={d.edge} color="#A9844F" at={0} id="de" alpha={1} />
+          <Wash shape={d.rackBack} color="#5A4630" at={0} id="drb" alpha={1} />
+          {d.legs.map((l, i) => <Wash key={i} shape={l} color="#7D858D" at={0} id={`dl${i}`} alpha={1} />)}
+          <Ink strokes={[d.top, d.edge, d.rackBox, d.rackBack, ...d.legs, d.footBar, ...d.feet]} from={0} durationInFrames={20} id="di" width={3} />
+          <Ink strokes={d.grain} from={0} durationInFrames={20} id="dg" width={2} color="#A9844F" double={false} pen={false} />
+          <Wash shape={P.polyline([...sheetQ, sheetQ[0]], 6)} color="#FFFFFF" at={0} id="ds" alpha={1} />
+          <Ink strokes={[P.polyline([...sheetQ, sheetQ[0]], 6)]} from={0} durationInFrames={20} id="dsi" width={2} />
+          <Wash shape={cb.pageBlock} color="#FBF6EA" at={0} id="cbp" alpha={1} />
+          <Wash shape={cb.cover} color="#2F5E8E" at={0} id="cbc" alpha={1} />
+          <Wash shape={cb.spine} color="#21456B" at={0} id="cbs" alpha={1} />
+          <Ink strokes={[cb.pageBlock, cb.cover, cb.spine, ...cb.pageLines]} from={0} durationInFrames={20} id="cbi" width={2} />
+          <Wash shape={ob.cover} color="#8B3A2E" at={0} id="obc" alpha={1} />
+          <Wash shape={ob.left} color="#FBF6EA" at={0} id="obl" alpha={1} />
+          <Wash shape={ob.right} color="#FBF6EA" at={0} id="obr" alpha={1} />
+          {ob.heads.map((s, i) => <Wash key={i} shape={s} color="#8B3A2E" at={0} id={`obh${i}`} alpha={0.85} />)}
+          <Wash shape={ob.figure} color="#DDE8F2" at={0} id="obf" alpha={1} />
+          <Ink strokes={[ob.cover, ob.left, ob.right, ob.gutter, ob.figure, ...ob.stacks]} from={0} durationInFrames={20} id="obi" width={3} />
+          <Ink strokes={ob.lines} from={0} durationInFrames={20} id="obt" width={3} color="#9AA3AD" double={false} pen={false} />
+          <Ink strokes={[ob.line(1, 4)]} from={0} durationInFrames={20} id="obhl" width={22} color="#F6E7B0" double={false} pen={false} />
+          <Wash shape={c2.pageBlock} color="#FBF6EA" at={0} id="c2p" alpha={1} />
+          <Wash shape={c2.cover} color="#4E8A5C" at={0} id="c2c" alpha={1} />
+          <Wash shape={c2.spine} color="#3A6B46" at={0} id="c2s" alpha={1} />
+          <Wash shape={c2.panel} color="#F3EEE2" at={0} id="c2pn" alpha={1} />
+          <Ink strokes={[c2.pageBlock, c2.cover, c2.spine, c2.panel, ...c2.rules, ...c2.spineBands, ...c2.pageLines]} from={0} durationInFrames={20} id="c2i" width={3} />
+          <Label text="PHARMACOLOGY" x={c2.titleAt[0]} y={c2.titleAt[1] + 8} at={0} size={22} italic={false} weight={700} />
+          <Wash shape={j.sheet} color="#FFFFFF" at={0} id="js" alpha={1} />
+          <Wash shape={j.head} color="#2F5E8E" at={0} id="jh" alpha={1} />
+          <Ink strokes={[j.sheet, j.headRule, j.refRule]} from={0} durationInFrames={20} id="ji" width={3} />
+          <Ink strokes={j.body} from={0} durationInFrames={20} id="jb" width={3} color="#9AA3AD" double={false} pen={false} />
+          <Label text="References" x={j.refHeadAt[0]} y={j.refHeadAt[1]} at={0} size={30} italic={false} weight={700} anchor="start" />
+          {[0, 1, 2].map((i) => <React.Fragment key={i}>
+            <Label text={`${i + 1}.`} x={j.number(i)[0]} y={j.number(i)[1]} at={0} size={22} italic={false} weight={600} anchor="start" />
+            <Label text="Bhattacharyya M, Miller VM, et al." x={j.entry(i)[0]} y={j.entry(i)[1]} at={0} size={22} italic={false} anchor="start" />
+            <Label text="Cureus. 2023;15(5):e39238." x={j.entry(i)[0]} y={j.entry(i)[1] + 30} at={0} size={22} italic anchor="start" />
+          </React.Fragment>)}
+          <Label text="exam desk, book in the rack" x={350} y={960} at={0} size={36} italic={false} weight={600} />
+          <Label text="open textbook" x={1040} y={600} at={0} size={36} italic={false} weight={600} />
         </Picture>
       </Paper>
     </AbsoluteFill>

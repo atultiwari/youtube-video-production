@@ -1392,3 +1392,124 @@ export const serverRack = (x: number, y: number, w: number, h: number, units = 5
     feet: [P.rect(x + w * 0.04, y + h, w * 0.14, h * 0.025, 2), P.rect(x + w * 0.82, y + h, w * 0.14, h * 0.025, 2)],
   };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E11 (Nov 2026): the exam-hall desk (closed-book vs open-book exam), an open textbook,
+ * a closed textbook, and a journal reference list (the fabricated-citation picture). Checked on
+ * `kit-objects-11`.
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * A single exam-hall desk in three-quarter front view, as in Indian exam halls: a wooden top in
+ * perspective (back edge narrower), the front edge's thickness, a book rack (open shelf) under
+ * the top, four steel tube legs and a foot bar. Box w × h, top-left (x, y). `onTop(u, v)` maps
+ * (0..1 across, 0 back .. 1 front) to a point on the top, `rack` is [x, y, w, h] of the shelf's
+ * opening (put the closed book there). Wash `top` light wood, `edge` darker wood, `rackBack` dark.
+ */
+export const examDesk = (x: number, y: number, w: number, h: number) => {
+  const backInset = w * 0.08, topH = h * 0.26, edgeH = h * 0.05;
+  const bl: Pt = [x + backInset, y], br: Pt = [x + w - backInset, y], fr: Pt = [x + w, y + topH], fl: Pt = [x, y + topH];
+  const onTop = (u: number, v: number): Pt => {
+    const lx = bl[0] + (fl[0] - bl[0]) * v, rx = br[0] + (fr[0] - br[0]) * v;
+    return [lx + (rx - lx) * u, y + topH * v];
+  };
+  const ey = y + topH + edgeH;
+  const rx0 = x + w * 0.06, rw = w * 0.88, ry = ey, rh = h * 0.16;
+  const legTop = ry + rh, legBot = y + h;
+  const leg = (lx: number, back = false): Pts => P.rect(lx, back ? legTop - h * 0.04 : legTop, w * 0.025, (back ? legBot - h * 0.08 : legBot) - (back ? legTop - h * 0.04 : legTop), 3);
+  return {
+    top: P.polyline([bl, br, fr, fl, bl], 6),
+    edge: P.rect(x, y + topH, w, edgeH, 3),
+    grain: [0.3, 0.55, 0.8].map((v) => P.line(...onTop(0.06, v), ...onTop(0.94 - v * 0.1, v), 12)),
+    rack: [rx0, ry, rw, rh] as [number, number, number, number],
+    rackBox: P.rect(rx0, ry, rw, rh, 2),
+    rackBack: P.rect(rx0 + w * 0.02, ry + rh * 0.12, rw - w * 0.04, rh * 0.76, 2),
+    legs: [leg(x + w * 0.04), leg(x + w * 0.935), leg(x + w * 0.13, true), leg(x + w * 0.845, true)],
+    footBar: P.line(x + w * 0.05, legBot - h * 0.12, x + w * 0.95, legBot - h * 0.12, 12),
+    feet: [P.rect(x + w * 0.03, legBot - 4, w * 0.045, 8, 3), P.rect(x + w * 0.925, legBot - 4, w * 0.045, 8, 3)],
+    onTop,
+  };
+};
+
+/**
+ * A closed hardback textbook, front cover facing us, lying flat-ish: cover, a spine band on the
+ * left, the page block showing along the right and bottom edges (thickness), a title panel and two
+ * title rules. Box w × h. Wash `cover` a book colour, `pageBlock` cream, `panel` lighter.
+ */
+export const closedBook = (x: number, y: number, w: number, h: number) => {
+  const t = Math.min(w, h) * 0.06;
+  return {
+    pageBlock: P.polyline([[x + w, y + t], [x + w + t, y + t * 1.6], [x + w + t, y + h + t * 0.6], [x + t, y + h + t * 0.6], [x, y + h], [x + w, y + h], [x + w, y + t]], 6),
+    pageLines: [0.3, 0.55, 0.8].map((u) => P.line(x + w + t * u, y + t * (1 + u * 0.6), x + w + t * u, y + h + t * u * 0.6, 10)),
+    cover: P.rect(x, y, w, h, 4),
+    spine: P.rect(x, y, w * 0.12, h, 3),
+    spineBands: [0.15, 0.85].map((v) => P.line(x + w * 0.01, y + h * v, x + w * 0.11, y + h * v, 6)),
+    panel: P.rect(x + w * 0.24, y + h * 0.16, w * 0.64, h * 0.3, 4),
+    rules: [0.58, 0.66].map((v) => P.line(x + w * 0.3, y + h * v, x + w * 0.82, y + h * v, 10)),
+    titleAt: [x + w * 0.56, y + h * 0.33] as Pt,
+  };
+};
+
+/**
+ * An open textbook seen from above and in front: two pages whose top and bottom edges curve down
+ * into the gutter, the page stacks fanning at the outer edges, the cover showing beneath, and on
+ * each page a heading bar and ruled text lines that follow the page curve. Box w × h.
+ * `line(side, i)` is text line i on page side 0 (left) or 1 (right) as a stroke (wash a fat copy of
+ * it to highlight the passage); `lineBox(side, i)` gives [cx, cy, w] for a highlight.
+ */
+export const openBook = (x: number, y: number, w: number, h: number, nLines = 9) => {
+  const gx = x + w / 2, sag = h * 0.06, top = y + sag, bot = y + h - sag * 0.6;
+  const pageEdge = (x0: number, x1: number, yy: number, dir: 1 | -1): Pts =>
+    // a page edge: flat at the outer side, curving down (dir) into the gutter
+    cubic([x0, yy], [x0 + (x1 - x0) * 0.6, yy - sag * 0.4], [x1 - (x1 - x0) * 0.08, yy - sag * 0.2], [x1, yy + sag * dir], 24);
+  const leftTop = pageEdge(x + w * 0.02, gx, top, 1), rightTop = pageEdge(x + w * 0.98, gx, top, 1);
+  const leftBot = pageEdge(x + w * 0.02, gx, bot, 1), rightBot = pageEdge(x + w * 0.98, gx, bot, 1);
+  const page = (t: Pts, b: Pts): Pts => [...t, ...[...b].reverse(), t[0]];
+  const lineY = (i: number) => top + h * 0.2 + i * ((bot - top - h * 0.28) / (nLines - 1));
+  const textLine = (side: 0 | 1, i: number): Pts => {
+    const xa = side === 0 ? x + w * 0.07 : gx + w * 0.05, xb = side === 0 ? gx - w * 0.05 : x + w * 0.93;
+    const yy = lineY(i), short = i % 4 === 3 ? 0.65 : 1;
+    const xe = side === 0 ? xa + (xb - xa) * short : xb;
+    const xs = side === 0 ? xa : xb - (xb - xa) * short;
+    const dip = (px: number) => yy + sag * 0.5 * Math.pow(1 - Math.abs(px - gx) / (w / 2), 3);
+    return Array.from({ length: 17 }, (_, k) => { const px = xs + (xe - xs) * (k / 16); return [px, dip(px)] as Pt; });
+  };
+  return {
+    cover: P.polyline([[x - w * 0.015, top + sag * 0.2], [x + w * 1.015, top + sag * 0.2], [x + w * 1.015, bot + sag * 0.9], [gx, bot + sag * 1.4], [x - w * 0.015, bot + sag * 0.9], [x - w * 0.015, top + sag * 0.2]], 8),
+    stacks: [1, 2, 3].flatMap((k) => [
+      P.line(x + w * 0.02 - k * 3, top + k * 3, x + w * 0.02 - k * 3, bot + k * 3, 12),
+      P.line(x + w * 0.98 + k * 3, top + k * 3, x + w * 0.98 + k * 3, bot + k * 3, 12),
+    ]),
+    left: page(leftTop, leftBot),
+    right: page(rightTop, rightBot),
+    gutter: P.line(gx, top + sag, gx, bot + sag, 16),
+    heads: [P.rect(x + w * 0.07, top + h * 0.06, w * 0.26, h * 0.06, 3), P.rect(gx + w * 0.05, top + h * 0.06, w * 0.2, h * 0.06, 3)],
+    figure: P.rect(gx + w * 0.26, top + h * 0.05, w * 0.18, h * 0.16, 3),
+    lines: [0, 1].flatMap((side) => Array.from({ length: nLines }, (_, i) => textLine(side as 0 | 1, i))),
+    line: textLine,
+    lineBox: (side: 0 | 1, i: number): [number, number, number] =>
+      [side === 0 ? (x + w * 0.07 + gx - w * 0.05) / 2 : (gx + w * 0.05 + x + w * 0.93) / 2, lineY(i) + sag * 0.15, w * 0.4],
+  };
+};
+
+/**
+ * A journal article page at its reference list: a sheet with the journal's running head (a thin
+ * coloured band with a rule), a two-column body above, the "References" heading rule, and `n`
+ * numbered entry slots. `entry(i)` is [x, y] of entry i's first baseline (put the typeset citation
+ * there, about 0.9 × w wide, two lines per entry); `number(i)` is where the "[i]" goes. Box w × h.
+ */
+export const journalPage = (x: number, y: number, w: number, h: number, n = 3) => {
+  const bodyTop = y + h * 0.1, refTop = y + h * 0.36, step = (h * 0.6) / n;
+  const col = (cx0: number, cx1: number) => [0, 1, 2, 3].map((k) => P.line(cx0, bodyTop + h * 0.04 + k * h * 0.045, cx1 - (k === 3 ? (cx1 - cx0) * 0.35 : 0), bodyTop + h * 0.04 + k * h * 0.045, 10));
+  return {
+    sheet: P.rect(x, y, w, h, 4),
+    head: P.rect(x, y, w, h * 0.06, 4),
+    headRule: P.line(x + w * 0.04, y + h * 0.075, x + w * 0.96, y + h * 0.075, 16),
+    body: [...col(x + w * 0.05, x + w * 0.48), ...col(x + w * 0.52, x + w * 0.95)],
+    refRule: P.line(x + w * 0.05, refTop, x + w * 0.95, refTop, 16),
+    refHeadAt: [x + w * 0.05, refTop - h * 0.02] as Pt,
+    entry: (i: number): Pt => [x + w * 0.1, refTop + h * 0.1 + i * step],
+    number: (i: number): Pt => [x + w * 0.05, refTop + h * 0.1 + i * step],
+    slot: (i: number): [number, number, number, number] => [x + w * 0.03, refTop + h * 0.015 + i * step, w * 0.94, step * 0.9],
+  };
+};

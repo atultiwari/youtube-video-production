@@ -191,7 +191,13 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   `laptop` (open, seen from the front and a little above: bezel, webcam, hinge, a keyboard deck that
   widens towards the viewer with five rows of keys, space bar, touchpad and front lip; `screenBox`
   for text) and `serverRack` (cabinet, rails with screw holes, rack servers with drive bays, vent
-  slots and status `leds`, feet: "the cloud" or a hospital's own server) (page 10: `kit-objects-10`). Each
+  slots and status `leds`, feet: "the cloud" or a hospital's own server) (page 10: `kit-objects-10`); since
+  E11 `examDesk` (Indian exam-hall desk in three-quarter view: wooden top in perspective, front edge,
+  book rack under the top, steel legs, foot bar; `onTop(u, v)` places things on it, `rack` holds a
+  closed book), `closedBook` (hardback, spine band, page block showing its thickness, title panel),
+  `openBook` (pages curving into the gutter, page stacks, heading bars, text lines; `line(side, i)` /
+  `lineBox` to highlight "the passage") and `journalPage` (running head, two-column body, a
+  "References" rule and numbered entry slots for typeset citations) (page 11: `kit-objects-11`). Each
   returns named parts so a beat draws them one step at a time.
 - **Text written on a drawn screen is a label too** (E08): an EHR banner or phone screen line
   must pass the same 36/48 px minimum, so keep it to about nine characters ("BLEED?", "HIGH RISK")

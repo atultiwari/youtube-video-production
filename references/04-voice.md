@@ -246,3 +246,12 @@ language goes first.
   "fifty-three mini"; "Fie" came back as "fee three", which is how many people say it. Write the
   digit as a word in the script ("GPT three", "R one") and respell only the name.
 
+- **Short last words and acronyms at a sentence end, again** (E11): "…are how we make it rarer." lost
+  "rarer" (Whisper still scored the beat 98.4%: the drop shows only as `[rarer] → []`, so read every
+  `→ []`); "…which is shortened to RAG." came back as "ragged." Both fixed by giving the sentence a
+  fuller ending ("…make it happen far less often."; "…shortened to RAG, and it works in two steps.").
+- **The respell map skips words joined by hyphens** (E11): its pattern ignores a key with a hyphen
+  next to it, so `"LLM"` does not touch "LLM-as-judge". Add the compound as its own key
+  (`"LLM-as-judge": "L L M, as judge"`; the comma stops "L L Ms judge").
+- **Whisper writes "eighty six and a half percent" as "86.5%"** and "Med-PaLM two" as "MedPalm 2"
+  (S4 at 90.5% on a correct take). Check the transcript before regenerating a beat full of numbers.
