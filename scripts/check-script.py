@@ -61,12 +61,19 @@ def main() -> int:
                         help="also check that the first line addresses the viewer")
     parser.add_argument("--allow", default="",
                         help="comma-separated two-letter abbreviations that are fine, e.g. ML,DL")
+    parser.add_argument("--respell", type=Path,
+                        help="the sarvam-tts.py --respell map: its written forms are blanked before linting, "
+                             "so a respelled trial name (Tele-HF -> 'Tele H F') is not flagged (E23)")
     args = parser.parse_args()
 
     # Markdown headings (`# Title`, `## 01 · Beat`) are structure, not narration: blank them
     # out, keeping line numbers, so they are neither linted (their digits) nor taken as the
     # opening line. E01 and E02 failed both checks on headings alone (Nov 2026).
     text = "\n".join("" if l.lstrip().startswith("#") else l for l in args.script.read_text().splitlines())
+    if args.respell:
+        import json
+        for written in sorted(json.loads(args.respell.read_text()), key=len, reverse=True):
+            text = re.sub(rf"(?<![\w-]){re.escape(written)}(?![\w-])", lambda m: "x" * len(m.group(0)), text)
     problems: list[str] = []
 
     for line_no, sentence in fused_headings(text):

@@ -9,13 +9,14 @@ import { enclosure, pawPrint, toneScale, zooGate, zooMap } from "./objects";
 import { endoView, mammogram, seeSaw } from "./objects";
 import { papSmear, PAP, passport, scales, worldMap } from "./objects";
 import { chestXray, headCT, skinProbe, uNet } from "./objects";
+import { bathroomScale, bpMonitor, dashboard, ecgPatch, house, meshHeart, paBranch, paSensor, ppgWave, smartwatch, tablet, watchBack } from "./objects";
 import { ductSection, paraffinBlock, dnaHelix, exprHeatmap, HER2C, her2Tile, KG, knowledgeGraph, type KgNode } from "./objects";
 import { HE_LAB, type HeLab, isoBox, KI67, ki67Tile, LN, lymphNode, nodeMetTile, nodeSlide, tilePyramid, wsiScanner } from "./objects";
 import { breastTile, coreSlide, filmToken, HEAT, heatSpot, modelCard, shapWaterfall, snowBank, superpixels } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
-import { Dots, Fills, Ink, Wash } from "./Picture";
+import { Dots, Fills, Ink, Label, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
-import { P } from "./shapes";
+import { P, type Pts } from "./shapes";
 
 /** The H&E colon tile: stroma wash, crypt cytoplasm, mucin, lumens, nuclei, then the outlines. */
 export const ColonTileArt: React.FC<{ x: number; y: number; w: number; h: number; kind?: "normal" | "tumour"; at: number; id: string; dur?: number; outline?: boolean }> = ({
@@ -874,5 +875,171 @@ export const ParaffinBlockArt: React.FC<{ x: number; y: number; w: number; h: nu
     <Ink strokes={[b.wax]} from={at + st * 1.5} durationInFrames={st} id={`${id}wo`} width={2} double={false} pen={false} color="#B9A77A" />
     <Wash shape={b.tissue} color="#E3C3C8" at={at + st * 2.5} id={`${id}t`} alpha={1} amount={1} highlight />
     <Ink strokes={[b.tissue]} from={at + st * 2.5} durationInFrames={st} id={`${id}to`} width={2} double={false} pen={false} color="#A57A82" />
+  </>;
+};
+
+/* E23 (Nov 2026): wearables, home sensors, the dashboard, the implanted PA sensor, the virtual heart. */
+
+const W23 = { case: "#3A3F47", screen: "#1F2328", strap: "#5B7FA6", green: "#3FA34D", red: "#C8423B", vessel: "#E7A9A3", metal: "#AEB4BB" };
+
+/** A smartwatch: straps, case, black screen, crown. Children of the screen go in `screen` (drawn after the screen fills). */
+export const SmartwatchArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; strap?: string; screen?: React.ReactNode }> = ({ x, y, w, h, at, id, dur = 16, strap = W23.strap, screen }) => {
+  const k = smartwatch(x, y, w, h);
+  const st = dur / 4;
+  return <>
+    <Wash shape={k.strapTop} color={strap} at={at} id={`${id}st`} alpha={1} amount={1} highlight />
+    <Wash shape={k.strapBot} color={strap} at={at} id={`${id}sb`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.strapTop, k.strapBot]} from={at} durationInFrames={st} id={`${id}so`} width={3} double={false} pen={false} />
+    <Fills shapes={k.holes} color="#2B2F36" at={at + st} alpha={0.9} />
+    <Wash shape={k.case} color={W23.case} at={at + st} id={`${id}c`} alpha={1} amount={1} highlight />
+    <Fills shapes={[k.crown, k.button]} color={W23.metal} at={at + st} alpha={1} stroke="#1F2328" />
+    <Ink strokes={[k.case]} from={at + st} durationInFrames={st} id={`${id}co`} width={3} double={false} pen={false} />
+    <Wash shape={k.screen} color={W23.screen} at={at + st * 2} id={`${id}sc`} alpha={1} amount={1} highlight />
+    {screen}
+  </>;
+};
+
+/** The back of the watch: case back, lens, diodes; the green LEDs light at `litAt`. */
+export const WatchBackArt: React.FC<{ cx: number; cy: number; r: number; at: number; id: string; dur?: number; litAt?: number }> = ({ cx, cy, r, at, id, dur = 14, litAt }) => {
+  const k = watchBack(cx, cy, r);
+  const st = dur / 3;
+  return <>
+    <Wash shape={k.back} color="#D9DCE0" at={at} id={`${id}b`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.back]} from={at} durationInFrames={st} id={`${id}bo`} width={3} double={false} pen={false} />
+    <Wash shape={k.lens} color="#2B2F36" at={at + st} id={`${id}l`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.ring]} from={at + st} durationInFrames={st} id={`${id}r`} width={2} double={false} pen={false} color="#7D838A" />
+    <Fills shapes={k.diodes} color="#5E7FA3" at={at + st * 2} alpha={1} />
+    <Fills shapes={k.leds} color={litAt !== undefined ? W23.green : "#6B6F75"} at={litAt ?? at + st * 2} alpha={1} />
+  </>;
+};
+
+/** A pulse waveform, regular or irregular, with optional interval ticks under each peak. */
+export const PpgArt: React.FC<{ x1: number; x2: number; y: number; amp: number; beats: number; irregular?: boolean; at: number; id: string; dur?: number; color?: string; ticks?: boolean; width?: number }> = ({ x1, x2, y, amp, beats, irregular = false, at, id, dur = 20, color = W23.green, ticks = false, width = 5 }) => {
+  const k = ppgWave(x1, x2, y, amp, beats, irregular, id);
+  return <>
+    <Ink strokes={[k.trace]} from={at} durationInFrames={dur} id={`${id}t`} width={width} double={false} pen={false} color={color} />
+    {ticks ? <Ink strokes={k.peaks.map((px) => P.line(px, y + 18, px, y + 40, 4))} from={at + dur} durationInFrames={6} id={`${id}k`} width={4} double={false} pen={false} color="#3A332C" /> : null}
+  </>;
+};
+
+/** A bathroom scale with an optional reading in its display. */
+export const ScaleArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; reading?: string }> = ({ x, y, w, h, at, id, dur = 14, reading }) => {
+  const k = bathroomScale(x, y, w, h);
+  const st = dur / 3;
+  return <>
+    <Wash shape={k.body} color="#EEF1F4" at={at} id={`${id}b`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.body]} from={at} durationInFrames={st} id={`${id}bo`} width={3} double={false} pen={false} />
+    <Fills shapes={k.pads} color="#C9CDD2" at={at + st} alpha={1} stroke="#7D838A" />
+    <Ink strokes={k.treads} from={at + st} durationInFrames={st} id={`${id}tr`} width={2} double={false} pen={false} color="#8E949B" />
+    <Wash shape={k.display} color="#2B2F36" at={at + st * 2} id={`${id}d`} alpha={1} amount={1} highlight />
+    {reading ? <Label text={reading} x={k.readout[0]} y={k.readout[1] + h * 0.05} at={at + st * 2.5} size={Math.round(h * 0.12)} italic={false} weight={700} color="#7FE08A" /> : null}
+  </>;
+};
+
+/** A blood-pressure monitor with its cuff and tube; optional readings. */
+export const BpMonitorArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; sys?: string; dia?: string }> = ({ x, y, w, h, at, id, dur = 16, sys, dia }) => {
+  const k = bpMonitor(x, y, w, h);
+  const st = dur / 4;
+  return <>
+    <Wash shape={k.cuff} color="#4D6F99" at={at} id={`${id}c`} alpha={1} amount={1} highlight />
+    <Wash shape={k.strip} color="#9FB6D1" at={at + st} id={`${id}s`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.cuff, k.strip]} from={at} durationInFrames={st} id={`${id}co`} width={3} double={false} pen={false} />
+    <Ink strokes={[k.tube]} from={at + st} durationInFrames={st} id={`${id}t`} width={4} double={false} pen={false} color="#3A3F47" />
+    <Wash shape={k.unit} color="#F4F1EA" at={at + st * 2} id={`${id}u`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.unit]} from={at + st * 2} durationInFrames={st} id={`${id}uo`} width={3} double={false} pen={false} />
+    <Wash shape={k.display} color="#CFE3D2" at={at + st * 3} id={`${id}d`} alpha={1} amount={1} highlight />
+    <Fills shapes={[k.button]} color="#2F5E8E" at={at + st * 3} alpha={1} stroke="#1F2328" />
+    {sys ? <Label text={sys} x={k.sysAt[0]} y={k.sysAt[1] + h * 0.06} at={at + dur} size={Math.round(h * 0.17)} italic={false} weight={700} color="#1F2328" /> : null}
+    {dia ? <Label text={dia} x={k.diaAt[0]} y={k.diaAt[1] + h * 0.06} at={at + dur + 2} size={Math.round(h * 0.17)} italic={false} weight={700} color="#1F2328" /> : null}
+  </>;
+};
+
+/** A house: roof, walls, chimney, windows (lit yellow), door. */
+export const HouseArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; walls?: string }> = ({ x, y, w, h, at, id, dur = 18, walls = "#F6E7C8" }) => {
+  const k = house(x, y, w, h);
+  const st = dur / 4;
+  return <>
+    <Wash shape={k.walls} color={walls} at={at} id={`${id}w`} alpha={1} amount={1} highlight />
+    <Wash shape={k.chimney} color="#B5654A" at={at + st} id={`${id}ch`} alpha={1} amount={1} highlight />
+    <Wash shape={k.roof} color="#C8423B" at={at + st} id={`${id}r`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.walls, k.roof, k.chimney]} from={at} durationInFrames={st * 2} id={`${id}o`} width={3} double={false} />
+    <Fills shapes={k.windows} color="#F3D36B" at={at + st * 2} alpha={1} stroke="#3A332C" />
+    <Ink strokes={k.bars} from={at + st * 2.5} durationInFrames={st} id={`${id}b`} width={2} double={false} pen={false} />
+    <Fills shapes={[k.door]} color="#8A5A3B" at={at + st * 3} alpha={1} stroke="#3A332C" />
+    <Fills shapes={[k.knob]} color="#E9B949" at={at + st * 3} alpha={1} />
+  </>;
+};
+
+/**
+ * The remote-monitoring dashboard: dark screen, title bar, patient rows with trend lines and a
+ * status dot each (green; rows in `red` turn red at `flagAt`). Labels are the caller's (HLabel).
+ */
+export const DashboardArt: React.FC<{ x: number; y: number; w: number; h: number; rows?: number; cols?: number; at: number; id: string; dur?: number; red?: number[]; flagAt?: number; rising?: number[] }> = ({ x, y, w, h, rows = 5, cols = 3, at, id, dur = 24, red = [], flagAt, rising }) => {
+  const k = dashboard(x, y, w, h, rows, cols, rising ?? red);
+  const st = dur / 4;
+  const sparkColors = ["#7FB8E8", "#F3C26B", "#7FE08A", "#E8A0C8"];
+  return <>
+    <Wash shape={k.frame} color="#24303D" at={at} id={`${id}f`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.frame]} from={at} durationInFrames={st} id={`${id}fo`} width={4} double={false} pen={false} />
+    <Wash shape={k.bar} color="#2F5E8E" at={at + st * 0.5} id={`${id}b`} alpha={1} amount={1} highlight />
+    {k.rowRects.map((r, i) => <Wash key={i} shape={r} color={i % 2 ? "#2C3A49" : "#33445A"} at={at + st + i * (st / rows)} id={`${id}r${i}`} alpha={1} amount={1} highlight />)}
+    {Array.from({ length: cols }, (_, c) => <Ink key={c} strokes={k.sparks.map((row) => row[c])} from={at + st * 2 + c * (st / cols)} durationInFrames={st} id={`${id}s${c}`} width={3} double={false} pen={false} color={sparkColors[c % 4]} />)}
+    <Fills shapes={k.dots.filter((_, i) => !red.includes(i) || flagAt === undefined)} color={W23.green} at={at + dur - 2} alpha={1} />
+    {flagAt !== undefined ? <>
+      <Fills shapes={k.dots.filter((_, i) => red.includes(i))} color={W23.green} at={at + dur - 2} alpha={1} />
+      <Fills shapes={k.dots.filter((_, i) => red.includes(i)).map((d) => d.map(([px, py]) => [px, py] as const) as Pts)} color={W23.red} at={flagAt} alpha={1} />
+    </> : null}
+  </>;
+};
+
+/** An ECG patch: skin-tone adhesive, white pod, grey electrodes, green light. */
+export const EcgPatchArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number }> = ({ x, y, w, h, at, id, dur = 12 }) => {
+  const k = ecgPatch(x, y, w, h);
+  return <>
+    <Wash shape={k.strip} color="#F2E3CF" at={at} id={`${id}s`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.strip]} from={at} durationInFrames={dur / 3} id={`${id}so`} width={3} double={false} pen={false} />
+    <Fills shapes={k.electrodes} color="#AEB4BB" at={at + dur / 3} alpha={1} stroke="#5B6168" />
+    <Fills shapes={[k.pod]} color="#FFFFFF" at={at + dur / 2} alpha={1} stroke="#3A3F47" />
+    <Fills shapes={[k.light]} color={W23.green} at={at + dur * 0.8} alpha={1} />
+  </>;
+};
+
+/** The pulmonary artery Y with the implanted sensor in the left branch (from `sensorAt`). */
+export const PaSensorArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number; sensorAt?: number }> = ({ x, y, s = 1, at, id, dur = 18, sensorAt }) => {
+  const b = paBranch(x, y, s);
+  const k = paSensor(b.sensorAt[0], b.sensorAt[1], 90 * s, 0.06);
+  const t = sensorAt ?? at + dur * 0.6;
+  return <>
+    <Wash shape={b.outline} color={W23.vessel} at={at} id={`${id}v`} alpha={1} amount={1} highlight />
+    <Ink strokes={[b.outline]} from={at} durationInFrames={dur * 0.5} id={`${id}vo`} width={4} double={false} color="#8A3B36" />
+    <Ink strokes={k.loops} from={t} durationInFrames={dur * 0.3} id={`${id}lp`} width={3} double={false} pen={false} color="#5B6168" />
+    <Fills shapes={[k.body]} color={W23.metal} at={t} alpha={1} stroke="#3A3F47" />
+    <Fills shapes={[k.window]} color="#2F5E8E" at={t + dur * 0.2} alpha={1} />
+  </>;
+};
+
+/** A tablet with optional screen content. */
+export const TabletArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; screenColor?: string; screen?: React.ReactNode }> = ({ x, y, w, h, at, id, dur = 12, screenColor = "#EAF1F7", screen }) => {
+  const k = tablet(x, y, w, h);
+  return <>
+    <Wash shape={k.body} color="#3A3F47" at={at} id={`${id}b`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.body]} from={at} durationInFrames={dur / 2} id={`${id}bo`} width={3} double={false} pen={false} />
+    <Wash shape={k.screen} color={screenColor} at={at + dur / 2} id={`${id}s`} alpha={1} amount={1} highlight />
+    <Fills shapes={[k.camera]} color="#1F2328" at={at + dur / 2} alpha={1} />
+    {screen}
+  </>;
+};
+
+/** The virtual heart: outline and vessels, then the mesh, then the scar (and optional ablation dot at `ablateAt`). */
+export const MeshHeartArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number; scarAt?: number; ablateAt?: number; tint?: string }> = ({ x, y, s = 1, at, id, dur = 24, scarAt, ablateAt, tint = "#E7B3AE" }) => {
+  const k = meshHeart(x, y, s);
+  const st = dur / 3;
+  return <>
+    <Wash shape={k.body} color={tint} at={at} id={`${id}b`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.body, k.aorta, k.pulmonary, ...k.vena]} from={at} durationInFrames={st} id={`${id}o`} width={4} double={false} color="#8A3B36" />
+    <Ink strokes={[k.groove]} from={at + st} durationInFrames={st / 2} id={`${id}g`} width={3} double={false} pen={false} color="#8A3B36" />
+    <Ink strokes={k.mesh} from={at + st} durationInFrames={st * 2} id={`${id}m`} width={2} double={false} pen={false} color="#2F5E8E" />
+    {scarAt !== undefined ? <Wash shape={k.scar} color="#6B5B73" at={scarAt} id={`${id}sc`} alpha={1} amount={1} highlight /> : null}
+    {ablateAt !== undefined ? <Fills shapes={[P.ellipse(x + 98 * s, y + 160 * s, 10 * s, 10 * s, 0, Math.PI * 2, 16)]} color="#E9B949" at={ablateAt} alpha={1} stroke="#3A332C" /> : null}
   </>;
 };

@@ -3444,3 +3444,235 @@ export const paraffinBlock = (x: number, y: number, w: number, h: number) => {
   const bars = [0.35, 0.5, 0.65].map((t, i) => P.rect(x + w * 0.04, y + h * t, w * (0.12 - i * 0.02), h * 0.05, 1));
   return { frame, label, slots, wax, tissue, bars, labelAt: [x + w * 0.1, y + h * 0.5] as Pt, tissueAt: [x + w * 0.6, y + h * 0.55] as Pt };
 };
+
+/* ------------------------------------------------------------------------------------------------
+ * E23 (Nov 2026): beyond the hospital: wearables, home sensors, the remote-monitoring dashboard,
+ * an implanted pulmonary-artery pressure sensor, a virtual (digital-twin) heart.
+ * --------------------------------------------------------------------------------------------- */
+
+const closedPoly = (pts: Pt[], step = 12): Pts => P.polyline([...pts, pts[0]] as Pt[], step);
+
+/**
+ * A smartwatch, front view. (x, y, w, h) is the case; the straps run h × 0.62 above and below it.
+ * Parts: `strapTop`, `strapBot` (closed, wash), `holes` (in the lower strap), `case` (closed,
+ * wash dark), `screen` (closed, wash near-black), `crown` and `button` on the right edge.
+ * `screenBox` is [x, y, w, h] of the screen for a notification or an ECG trace.
+ */
+export const smartwatch = (x: number, y: number, w: number, h: number) => {
+  const sl = h * 0.62;
+  const sx = x + w * 0.09, sy = y + h * 0.09, sw = w * 0.82, sh = h * 0.82;
+  return {
+    strapTop: closedPoly([[x + w * 0.14, y + h * 0.1], [x + w * 0.19, y - sl], [x + w * 0.81, y - sl], [x + w * 0.86, y + h * 0.1]]),
+    strapBot: closedPoly([[x + w * 0.14, y + h * 0.9], [x + w * 0.19, y + h + sl], [x + w * 0.81, y + h + sl], [x + w * 0.86, y + h * 0.9]]),
+    holes: [0.3, 0.48, 0.66].map((t) => P.ellipse(x + w / 2, y + h + sl * t + h * 0.1, w * 0.04, w * 0.04, 0, Math.PI * 2, 14)),
+    case: P.rect(x, y, w, h, w * 0.24),
+    screen: P.rect(sx, sy, sw, sh, w * 0.17),
+    crown: P.rect(x + w - 2, y + h * 0.24, w * 0.08, h * 0.17, w * 0.025),
+    button: P.rect(x + w - 2, y + h * 0.52, w * 0.045, h * 0.22, w * 0.015),
+    screenBox: [sx, sy, sw, sh] as [number, number, number, number],
+  };
+};
+
+/**
+ * The back of a smartwatch (the side on the skin), centre (cx, cy), radius r: the case back,
+ * the raised sensor lens, green light emitters (`leds`) and light-sensitive diodes (`diodes`)
+ * around the centre. Wash the LEDs green when lit.
+ */
+export const watchBack = (cx: number, cy: number, r: number) => ({
+  back: P.rect(cx - r, cy - r, 2 * r, 2 * r, r * 0.48),
+  lens: P.ellipse(cx, cy, r * 0.62, r * 0.62, 0, Math.PI * 2, 48),
+  ring: P.ellipse(cx, cy, r * 0.4, r * 0.4, 0, Math.PI * 2, 40),
+  leds: [[-1, 0], [1, 0]].map(([u]) => P.ellipse(cx + u * r * 0.2, cy, r * 0.1, r * 0.1, 0, Math.PI * 2, 16)),
+  diodes: [[0, -1], [0, 1], [-1, -1], [1, 1], [1, -1], [-1, 1]].slice(0, 4).map(([u, v], i) =>
+    P.rect(cx + (i < 2 ? 0 : u * 0.34) * r - r * 0.07, cy + (i < 2 ? v * 0.48 : v * 0.34) * r - r * 0.05, r * 0.14, r * 0.1, r * 0.02)),
+});
+
+/**
+ * A pulse (photoplethysmography) waveform across [x1, x2] on baseline y: a fast upstroke, a
+ * rounded peak, the dicrotic notch, a slow fall. `irregular` varies the beat-to-beat interval as
+ * in atrial fibrillation (and the height a little). Returns the trace and the x of each peak
+ * (`peaks`), so the intervals (a tachogram) can be marked.
+ */
+export const ppgWave = (x1: number, x2: number, y: number, amp: number, beats: number, irregular = false, key = "ppg") => {
+  const rnd = stream(key);
+  const gaps = Array.from({ length: beats }, () => (irregular ? 0.55 + rnd() * 0.9 : 1));
+  const total = gaps.reduce((a, b) => a + b, 0);
+  const shape: [number, number][] = [[0, 0], [0.08, -0.05], [0.2, -1], [0.3, -0.82], [0.4, -0.5], [0.46, -0.56], [0.55, -0.38], [0.8, -0.1], [1, 0]];
+  const pts: Pt[] = [];
+  const peaks: number[] = [];
+  let bx = x1;
+  gaps.forEach((g) => {
+    const span = ((x2 - x1) * g) / total, a = amp * (irregular ? 0.75 + rnd() * 0.3 : 1);
+    for (const [u, v] of shape) pts.push([bx + u * span, y + v * a]);
+    peaks.push(bx + 0.2 * span);
+    bx += span;
+  });
+  return { trace: pts as Pts, peaks };
+};
+
+/** A bathroom weighing scale from above: the platform, a display window at the top, two foot pads. `readout` centres a reading in the display. */
+export const bathroomScale = (x: number, y: number, w: number, h: number) => ({
+  body: P.rect(x, y, w, h, w * 0.14),
+  display: P.rect(x + w * 0.3, y + h * 0.08, w * 0.4, h * 0.16, w * 0.03),
+  pads: [P.rect(x + w * 0.14, y + h * 0.36, w * 0.3, h * 0.52, w * 0.12), P.rect(x + w * 0.56, y + h * 0.36, w * 0.3, h * 0.52, w * 0.12)],
+  treads: [0.46, 0.56, 0.66, 0.76].flatMap((t) => [P.line(x + w * 0.19, y + h * t, x + w * 0.39, y + h * t, 6), P.line(x + w * 0.61, y + h * t, x + w * 0.81, y + h * t, 6)]),
+  readout: [x + w / 2, y + h * 0.16] as Pt,
+});
+
+/**
+ * An automatic upper-arm blood-pressure monitor: the unit (x, y, w, h) with its display (two
+ * reading rows: `sysAt`, `diaAt`) and start button, and the arm cuff to its left (width w × 0.9)
+ * with its fastening strip, joined to the unit by the air tube.
+ */
+export const bpMonitor = (x: number, y: number, w: number, h: number) => {
+  const cx = x - w * 1.05, cw = w * 0.9, cy = y + h * 0.12, ch = h * 0.76;
+  return {
+    unit: P.rect(x, y, w, h, w * 0.12),
+    display: P.rect(x + w * 0.12, y + h * 0.1, w * 0.76, h * 0.5, w * 0.05),
+    button: P.ellipse(x + w / 2, y + h * 0.78, w * 0.11, w * 0.11, 0, Math.PI * 2, 24),
+    cuff: P.rect(cx, cy, cw, ch, cw * 0.14),
+    strip: P.rect(cx + cw * 0.12, cy + ch * 0.12, cw * 0.28, ch * 0.76, cw * 0.05),
+    tube: P.quad(cx + cw, cy + ch * 0.5, x - w * 0.05, y + h * 1.15, x, y + h * 0.8, 24),
+    sysAt: [x + w / 2, y + h * 0.3] as Pt,
+    diaAt: [x + w / 2, y + h * 0.52] as Pt,
+  };
+};
+
+/** A house: walls, pitched roof, chimney, door with a knob, two windows with glazing bars. (x, y, w, h) includes the roof. `inside` is [x, y, w, h] of the wall face. */
+export const house = (x: number, y: number, w: number, h: number) => {
+  const wy = y + h * 0.38, wh = h * 0.62;
+  return {
+    walls: P.rect(x + w * 0.06, wy, w * 0.88, wh, 4),
+    roof: closedPoly([[x - w * 0.02, wy + 4], [x + w / 2, y], [x + w * 1.02, wy + 4]], 16),
+    chimney: closedPoly([[x + w * 0.72, y + h * 0.17], [x + w * 0.72, y + h * 0.04], [x + w * 0.82, y + h * 0.04], [x + w * 0.82, y + h * 0.25]], 10),
+    door: P.rect(x + w * 0.42, wy + wh * 0.42, w * 0.16, wh * 0.58, 3),
+    knob: P.ellipse(x + w * 0.545, wy + wh * 0.72, w * 0.012, w * 0.012, 0, Math.PI * 2, 10),
+    windows: [P.rect(x + w * 0.14, wy + wh * 0.2, w * 0.2, wh * 0.3, 3), P.rect(x + w * 0.66, wy + wh * 0.2, w * 0.2, wh * 0.3, 3)],
+    bars: [0.24, 0.76].flatMap((u) => [P.line(x + w * u, wy + wh * 0.2, x + w * u, wy + wh * 0.5, 6), P.line(x + w * (u - 0.1), wy + wh * 0.35, x + w * (u + 0.1), wy + wh * 0.35, 6)]),
+    inside: [x + w * 0.06, wy, w * 0.88, wh] as [number, number, number, number],
+  };
+};
+
+/**
+ * A remote-monitoring dashboard: a screen (x, y, w, h) with a title bar, `rows` patient rows and
+ * columns: name, `cols` small trend lines (weight, blood pressure, rhythm…), and a status dot.
+ * Parts: `frame`, `bar`, `rowRects` (closed, wash alternate rows), `sparks[row][col]` (Pts),
+ * `dots` (closed, wash green or red), `nameAt[row]`, `headAt[col]` (label anchors above columns),
+ * `colX` (left edge of each trend column). `rising[row]` makes that row's first trend climb at the end.
+ */
+export const dashboard = (x: number, y: number, w: number, h: number, rows = 5, cols = 3, rising: number[] = []) => {
+  const bh = h * 0.13, rh = (h - bh - h * 0.04) / rows, nameW = w * 0.24, dotW = w * 0.1;
+  const cw = (w - nameW - dotW - w * 0.04) / cols;
+  const colX = Array.from({ length: cols }, (_, c) => x + w * 0.02 + nameW + c * cw);
+  const rowRects: Pts[] = [], dots: Pts[] = [], nameAt: Pt[] = [];
+  const sparks: Pts[][] = [];
+  for (let r = 0; r < rows; r++) {
+    const ry = y + bh + h * 0.02 + r * rh;
+    rowRects.push(P.rect(x + w * 0.015, ry + 3, w * 0.97, rh - 6, 6));
+    nameAt.push([x + w * 0.02 + nameW * 0.08, ry + rh * 0.62]);
+    dots.push(P.ellipse(x + w - dotW / 2 - w * 0.02, ry + rh / 2, rh * 0.2, rh * 0.2, 0, Math.PI * 2, 20));
+    const rnd = stream(`dash${r}`);
+    sparks.push(colX.map((cx0, c) => {
+      const n = 9, pts: Pt[] = [];
+      for (let i = 0; i < n; i++) {
+        const u = i / (n - 1);
+        let v = 0.5 + (rnd() - 0.5) * 0.35;
+        if (c === 0 && rising.includes(r) && u > 0.55) v = 0.5 - (u - 0.55) * 1.6;
+        pts.push([cx0 + cw * 0.08 + u * cw * 0.84, ry + rh * 0.22 + v * rh * 0.56]);
+      }
+      return P.polyline(pts, 8);
+    }));
+  }
+  return {
+    frame: P.rect(x, y, w, h, 14),
+    bar: P.rect(x + 4, y + 4, w - 8, bh - 4, 10),
+    rowRects, sparks, dots, nameAt, colX,
+    headAt: colX.map((cx0) => [cx0 + cw / 2, y + bh * 0.7] as Pt),
+    titleAt: [x + w * 0.04, y + bh * 0.7] as Pt,
+    rowH: rh,
+  };
+};
+
+/** A wearable ECG patch (x, y, w, h): the adhesive strip (stadium), the recorder pod in the middle, an electrode at each end. */
+export const ecgPatch = (x: number, y: number, w: number, h: number) => ({
+  strip: P.rect(x, y, w, h, h / 2),
+  pod: P.rect(x + w * 0.32, y + h * 0.16, w * 0.36, h * 0.68, h * 0.18),
+  electrodes: [P.ellipse(x + w * 0.13, y + h / 2, h * 0.24, h * 0.24, 0, Math.PI * 2, 24), P.ellipse(x + w * 0.87, y + h / 2, h * 0.24, h * 0.24, 0, Math.PI * 2, 24)],
+  light: P.ellipse(x + w * 0.6, y + h * 0.35, h * 0.06, h * 0.06, 0, Math.PI * 2, 12),
+});
+
+/**
+ * The pulmonary artery as a Y (local box 400 × 300 at (x, y) × s): the trunk rising from the
+ * bottom, splitting into right and left branches. `outline` is closed (wash vessel red-pink);
+ * `sensorAt` is a point in the left branch (viewer's right) where an implanted sensor sits.
+ */
+export const paBranch = (x: number, y: number, s = 1) => {
+  const T = ([px, py]: [number, number]): Pt => [x + px * s, y + py * s];
+  // Trunk leaves the right ventricle (bottom), bends up and back, and divides; each branch tapers.
+  const pts: [number, number][] = [[176, 300], [171, 262], [163, 226], [150, 200], [126, 186], [92, 184], [54, 192], [18, 204],
+    [6, 190], [8, 150], [48, 140], [92, 136], [134, 122], [168, 104], [204, 94], [242, 98], [278, 112], [318, 128], [358, 138], [396, 140], [399, 166],
+    [397, 194], [354, 186], [316, 172], [282, 170], [258, 180], [246, 204], [240, 240], [238, 272], [236, 300]];
+  const smooth = (q: [number, number][]): [number, number][] => q.map((pt, i) => {
+    const a0 = q[(i - 1 + q.length) % q.length], a1 = q[(i + 1) % q.length];
+    return [(a0[0] + 2 * pt[0] + a1[0]) / 4, (a0[1] + 2 * pt[1] + a1[1]) / 4];
+  });
+  return {
+    outline: closedPoly(smooth(pts).map(T), 10),
+    sensorAt: T([320, 150]),
+    flow: [P.line(...T([200, 290]), ...T([200, 190]), 10), P.line(...T([190, 150]), ...T([60, 160]), 10), P.line(...T([215, 150]), ...T([360, 160]), 10)],
+  };
+};
+
+/**
+ * An implanted wireless pulmonary-artery pressure sensor, about the size of a paper clip: a flat
+ * capsule (centre cx, cy, length len, at angle `rot`) with a wire loop at each end that anchors
+ * it in the vessel, and the pressure-sensing window on its face.
+ */
+export const paSensor = (cx: number, cy: number, len: number, rot = 0) => {
+  const R = (pts: Pts): Pts => pts.map(([px, py]) => [cx + (px - cx) * Math.cos(rot) - (py - cy) * Math.sin(rot), cy + (px - cx) * Math.sin(rot) + (py - cy) * Math.cos(rot)] as Pt);
+  const bw = len * 0.5, bh = len * 0.16;
+  return {
+    body: R(P.rect(cx - bw / 2, cy - bh / 2, bw, bh, bh * 0.45)),
+    window: R(P.rect(cx - bw * 0.22, cy - bh * 0.25, bw * 0.44, bh * 0.5, bh * 0.2)),
+    loops: [R(P.ellipse(cx - bw / 2 - len * 0.12, cy, len * 0.13, len * 0.2, 0, Math.PI * 2, 30)), R(P.ellipse(cx + bw / 2 + len * 0.12, cy, len * 0.13, len * 0.2, 0, Math.PI * 2, 30))],
+  };
+};
+
+/** A tablet, landscape (x, y, w, h): body, screen, front camera. `screenBox` for content. */
+export const tablet = (x: number, y: number, w: number, h: number) => ({
+  body: P.rect(x, y, w, h, h * 0.08),
+  screen: P.rect(x + w * 0.06, y + h * 0.08, w * 0.88, h * 0.84, h * 0.03),
+  camera: P.ellipse(x + w * 0.03, y + h / 2, h * 0.018, h * 0.018, 0, Math.PI * 2, 10),
+  screenBox: [x + w * 0.06, y + h * 0.08, w * 0.88, h * 0.84] as [number, number, number, number],
+});
+
+/**
+ * A virtual (computational) heart for the digital-twin beat: the `heart` outline at (x, y) × s with
+ * a wire mesh over it (`mesh`: curved lines across and down the ventricles, clipped to the outline)
+ * and a scar patch (`scar`, closed) on the lower left ventricle.
+ */
+export const meshHeart = (x: number, y: number, s = 1) => {
+  const h = heart(x, y, s);
+  const xs = h.body.map((p) => p[0]), ys = h.body.map((p) => p[1]);
+  const span = (yy: number): [number, number] | null => {
+    const near = h.body.filter((p) => Math.abs(p[1] - yy) < 7 * s);
+    if (near.length < 2) return null;
+    const nx = near.map((p) => p[0]);
+    return [Math.min(...nx) + 6 * s, Math.max(...nx) - 6 * s];
+  };
+  const mesh: Pts[] = [];
+  const y0 = Math.min(...ys), y1 = Math.max(...ys);
+  for (let k = 1; k <= 6; k++) {
+    const yy = y0 + ((y1 - y0) * k) / 7.2, sp = span(yy);
+    if (sp) mesh.push(P.quad(sp[0], yy, (sp[0] + sp[1]) / 2, yy + 14 * s, sp[1], yy, 20));
+  }
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  for (let k = 1; k <= 5; k++) {
+    const xx = x0 + ((x1 - x0) * k) / 6;
+    const near = h.body.filter((p) => Math.abs(p[0] - xx) < 7 * s).map((p) => p[1]);
+    if (near.length < 2) continue;
+    const top = Math.min(...near) + 8 * s, bot = Math.max(...near) - 8 * s;
+    mesh.push(P.quad(xx, top, xx - 10 * s, (top + bot) / 2, xx, bot, 20));
+  }
+  return { ...h, mesh, scar: P.blob(x + 78 * s, y + 168 * s, 26 * s, 18 * s, "scar", 0.25, 30) };
+};

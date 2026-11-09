@@ -413,6 +413,14 @@ if (root.includes("kit-objects-21") && !root.includes("kit-objects-22")) {
   else say(`Register page 22 by hand: <Composition id="kit-objects-22" component={ObjectsDemo22} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
 
+// Page 23 (E23, Nov 2026: smartwatch front and back (green LEDs, photodiodes), PPG pulse wave regular/irregular with interval ticks, ECG patch, bathroom scale, upper-arm BP monitor with cuff, house, remote-monitoring dashboard with flagged rows, pulmonary-artery Y with an implanted pressure sensor, tablet, meshed virtual heart with scar).
+if (root.includes("kit-objects-22") && !root.includes("kit-objects-23")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-22" [^\n]*\n)/, `$1$2<Composition id="kit-objects-23" component={ObjectsDemo23} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo21, ObjectsDemo22 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo21, ObjectsDemo22, ObjectsDemo23 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-23") && root.includes("ObjectsDemo23 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-23 (drawing library, page 23) in Root.tsx"); }
+  else say(`Register page 23 by hand: <Composition id="kit-objects-23" component={ObjectsDemo23} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");

@@ -5,6 +5,7 @@
  */
 import { AbsoluteFill } from "remotion";
 import { DuctArt, ParaffinBlockArt, DnaHelixArt, ExprHeatmapArt, Her2TileArt, KnowledgeGraphArt } from "./art";
+import { BpMonitorArt, DashboardArt, EcgPatchArt, HouseArt, MeshHeartArt, PaSensorArt, PpgArt, ScaleArt, SmartwatchArt, TabletArt, WatchBackArt } from "./art";
 import { Ki67TileArt, LymphNodeArt, NodeMetTileArt, NodeSlideArt, TilePyramidArt, WsiScannerArt } from "./art";
 
 import { Paper } from "./Chrome";
@@ -890,6 +891,40 @@ export const ObjectsDemo22: React.FC = () => (
         <Label text="duct: luminal inside, basal outside" x={1720} y={830} at={0} size={26} italic={false} />
         <ParaffinBlockArt x={1340} y={800} w={240} h={150} at={0} id="ffpe" />
         <Label text="FFPE block" x={1460} y={990} at={0} size={26} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+/** E23 page: smartwatch (front, back), pulse waves regular/irregular, ECG patch, scale, BP monitor, house, dashboard, PA sensor, tablet, virtual heart. */
+export const ObjectsDemo23: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <SmartwatchArt x={30} y={90} w={110} h={130} at={0} id="sw" screen={<PpgArt x1={45} x2={125} y={170} amp={34} beats={3} at={0} id="swp" width={3} />} />
+        <Label text="smartwatch" x={85} y={340} at={0} size={22} italic={false} />
+        <WatchBackArt cx={240} cy={155} r={70} at={0} id="wb" litAt={0} />
+        <Label text="watch back" x={240} y={260} at={0} size={22} italic={false} />
+        <PpgArt x1={330} x2={600} y={110} amp={50} beats={5} at={0} id="pr" ticks />
+        <Label text="pulse wave, regular" x={465} y={175} at={0} size={22} italic={false} />
+        <PpgArt x1={330} x2={600} y={250} amp={50} beats={6} irregular at={0} id="pi" ticks color="#C8423B" />
+        <Label text="irregular (AF)" x={465} y={315} at={0} size={22} italic={false} />
+        <EcgPatchArt x={630} y={60} w={200} h={66} at={0} id="ep" />
+        <Label text="ECG patch" x={730} y={160} at={0} size={22} italic={false} />
+        <ScaleArt x={860} y={30} w={150} h={170} at={0} id="sc" reading="72.4" />
+        <Label text="scale" x={935} y={230} at={0} size={22} italic={false} />
+        <BpMonitorArt x={760} y={220} w={100} h={130} at={0} id="bp" sys="128" dia="78" />
+        <Label text="BP monitor, cuff" x={740} y={380} at={0} size={22} italic={false} />
+        <TabletArt x={890} y={260} w={170} h={110} at={0} id="tb" />
+        <Label text="tablet" x={975} y={400} at={0} size={22} italic={false} />
+        <HouseArt x={20} y={420} w={220} h={220} at={0} id="hs" />
+        <Label text="home" x={130} y={680} at={0} size={22} italic={false} />
+        <DashboardArt x={270} y={410} w={400} h={250} rows={5} at={0} id="db" red={[2]} flagAt={0} />
+        <Label text="dashboard" x={470} y={690} at={0} size={22} italic={false} />
+        <PaSensorArt x={690} y={430} s={0.55} at={0} id="pa" />
+        <Label text="PA sensor in artery" x={800} y={630} at={0} size={22} italic={false} />
+        <MeshHeartArt x={890} y={430} s={0.95} at={0} id="mh" scarAt={0} ablateAt={0} />
+        <Label text="virtual heart" x={990} y={690} at={0} size={22} italic={false} />
       </Picture>
     </Paper>
   </AbsoluteFill>
