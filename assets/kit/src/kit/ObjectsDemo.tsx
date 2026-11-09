@@ -4,6 +4,7 @@
  * objects.tsx:  npx remotion still kit-objects out/objects.png --frame=59
  */
 import { AbsoluteFill } from "remotion";
+import { DuctArt, ParaffinBlockArt, DnaHelixArt, ExprHeatmapArt, Her2TileArt, KnowledgeGraphArt } from "./art";
 import { Ki67TileArt, LymphNodeArt, NodeMetTileArt, NodeSlideArt, TilePyramidArt, WsiScannerArt } from "./art";
 
 import { Paper } from "./Chrome";
@@ -857,6 +858,38 @@ export const ObjectsDemo21: React.FC = () => (
         <Label text="lab C" x={1140} y={1020} at={0} size={28} italic={false} />
         <Ki67TileArt x={1400} y={560} w={420} h={420} index={0.3} at={0} id="k1" />
         <Label text="Ki-67, about 30%" x={1610} y={1020} at={0} size={28} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+/** E22 page: HER2 IHC (3+ and 1+), ER nuclear IHC (Ki-67 tile at a high index), gene-expression heat map, knowledge graph, Bayesian network, DNA helix. */
+export const ObjectsDemo22: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <Her2TileArt x={30} y={40} w={400} h={400} score={3} at={0} id="h3" />
+        <Label text="HER2 3+: complete, intense membrane" x={230} y={480} at={0} size={26} italic={false} />
+        <Her2TileArt x={460} y={40} w={400} h={400} score={1} at={0} id="h1" />
+        <Label text="HER2 1+: faint, incomplete" x={660} y={480} at={0} size={26} italic={false} />
+        <Ki67TileArt x={890} y={40} w={400} h={400} index={0.9} at={0} id="er" />
+        <Label text="ER: nuclear, about 90%" x={1090} y={480} at={0} size={26} italic={false} />
+        <ExprHeatmapArt x={1330} y={40} w={560} h={420} at={0} id="ex" />
+        <Label text="expression heat map, three families" x={1610} y={500} at={0} size={26} italic={false} />
+        <KnowledgeGraphArt at={0} id="kg" r={44} nodes={[
+          { id: "g", kind: "gene", at: [120, 640] }, { id: "p", kind: "protein", at: [340, 640] }, { id: "d", kind: "drug", at: [560, 640] }, { id: "x", kind: "disease", at: [340, 870] }, { id: "g2", kind: "gene", at: [120, 870] }, { id: "d2", kind: "drug", at: [560, 870] },
+        ]} edges={[["g", "p"], ["d", "p"], ["x", "d"], ["g2", "x"], ["d2", "x"]]} hot={[4]} />
+        <Label text="knowledge graph: gene, protein, drug, disease" x={340} y={1010} at={0} size={26} italic={false} />
+        <KnowledgeGraphArt at={0} id="bn" r={38} directed nodes={[
+          { id: "a", kind: "protein", at: [820, 620] }, { id: "b", kind: "protein", at: [1000, 720] }, { id: "c", kind: "protein", at: [820, 860] }, { id: "d", kind: "protein", at: [1180, 860] },
+        ]} edges={[["a", "b"], ["a", "c"], ["b", "d"], ["c", "d"]]} />
+        <Label text="Bayesian network (directed)" x={1000} y={1010} at={0} size={26} italic={false} />
+        <DnaHelixArt x={1330} y={600} w={300} h={100} at={0} id="dna" />
+        <Label text="DNA double helix" x={1480} y={740} at={0} size={26} italic={false} />
+        <DuctArt cx={1760} cy={660} r={130} at={0} id="duct" />
+        <Label text="duct: luminal inside, basal outside" x={1720} y={830} at={0} size={26} italic={false} />
+        <ParaffinBlockArt x={1340} y={800} w={240} h={150} at={0} id="ffpe" />
+        <Label text="FFPE block" x={1460} y={990} at={0} size={26} italic={false} />
       </Picture>
     </Paper>
   </AbsoluteFill>

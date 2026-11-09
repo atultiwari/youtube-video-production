@@ -405,6 +405,14 @@ if (root.includes("kit-objects-20") && !root.includes("kit-objects-21")) {
   else say(`Register page 21 by hand: <Composition id="kit-objects-21" component={ObjectsDemo21} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
 
+// Page 22 (E22, Nov 2026: HER2 membrane IHC tile 0–3+, gene-expression heat map with dendrogram, knowledge graph with gene/protein/drug/disease nodes and directed edges for Bayesian networks, DNA helix, breast duct with luminal and basal layers, FFPE block in its cassette).
+if (root.includes("kit-objects-21") && !root.includes("kit-objects-22")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-21" [^\n]*\n)/, `$1$2<Composition id="kit-objects-22" component={ObjectsDemo22} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo20, ObjectsDemo21 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo20, ObjectsDemo21, ObjectsDemo22 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-22") && root.includes("ObjectsDemo22 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-22 (drawing library, page 22) in Root.tsx"); }
+  else say(`Register page 22 by hand: <Composition id="kit-objects-22" component={ObjectsDemo22} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");

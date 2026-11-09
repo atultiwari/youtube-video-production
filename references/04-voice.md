@@ -341,3 +341,4 @@ language goes first.
 - **"every … report carries X" is a claim** (E21): re-read the narration for universal words
   ("every", "all", "always") before voicing; "every breast cancer report carries Ki-67" had to be
   retaken as "many".
+- **Years 2001–2009, IHC scores and units** (E22): "twenty oh one" scored 94.6% on correct audio because Whisper writes "2001" ("two thousand one"); check-takes now maps "twenty oh X" and "two thousand and X" to the same words, "3+" to "three plus", and cm/mm to their spelled units. "two hundred and eighty eight" came back "208" twice in a Short (reworded away); "no nodes involved" was heard "notes" again in a Short's opening line ("no spread to the armpit" passed). Write HER2 as "HER two" with `"HER": "her"` in the respell map; Whisper writes "HER2", which check-takes reads as "her two".

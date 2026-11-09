@@ -3208,3 +3208,239 @@ export const nodeSlide = (x: number, y: number, w: number, h: number) => {
     labelAt: [fx + fw / 2, fy + fh / 2] as Pt,
   };
 };
+
+/* -------------------------------------------------------------------------------------------
+ * Added for E22 (Nov 2026, precision medicine): HER2 membrane IHC tile, gene-expression heat
+ * map with dendrogram, a knowledge graph (gene, protein, drug, disease nodes), a DNA helix.
+ * Checked on the `kit-objects-22` still.
+ * ------------------------------------------------------------------------------------------- */
+
+/** HER2 immunohistochemistry colours: DAB brown membranes, haematoxylin-blue nuclei, pale cytoplasm. */
+export const HER2C = { bg: "#F7F3EE", stroma: "#EFE6E4", cyto: "#F1E9E7", nucleus: "#7D8FC6", nucleusRim: "#4D5F9E", fibre: "#DCCFCF", dab: ["#C99A6A", "#A8692F", "#6E3A12"] } as const;
+
+/**
+ * A HER2-stained breast-carcinoma tile at medium power (top-left x, y, w × h): cohesive nests
+ * (`nests`) of polygonal tumour cells in pale stroma. Each cell has an outline (`cells`, closed,
+ * shared walls drawn as rings) and a blue nucleus (`nuclei`). The stain is on the cell membrane
+ * only: `score` 3 = complete, thick, dark rings ("chicken-wire"); 2 = complete, thin, moderate;
+ * 1 = faint and incomplete (`membranes` are arcs); 0 = none. `membranes` are the strokes to ink
+ * in `HER2C.dab[score-1]` at width `membraneW`.
+ */
+export const her2Tile = (x: number, y: number, w: number, h: number, score: 0 | 1 | 2 | 3 = 3, key = "her2") => {
+  const r = stream(key);
+  const S = Math.min(w, h);
+  const d = S * 0.085; // cell spacing
+  const nests: Pts[] = [], cells: Pts[] = [], nuclei: Pts[] = [], membranes: Pts[] = [];
+  const occupied: [number, number, number][] = [];
+  const fibres: Pts[] = Array.from({ length: 6 }, (_, i) => P.wave(x + 6, x + w - 6, y + h * (0.1 + i * 0.16), S * 0.012, 2 + (i % 3), 50, i * 1.3));
+  let tries = 0;
+  while (nests.length < 5 && tries++ < 600) {
+    const rx = S * (0.17 + r() * 0.08), ry = S * (0.13 + r() * 0.06);
+    const cx = x + rx + 8 + r() * (w - 2 * rx - 16), cy = y + ry + 8 + r() * (h - 2 * ry - 16);
+    if (occupied.some(([ox, oy, orr]) => Math.hypot(cx - ox, cy - oy) < orr + Math.max(rx, ry) + S * 0.03)) continue;
+    occupied.push([cx, cy, Math.max(rx, ry)]);
+    const nest = P.blob(cx, cy, rx, ry, `${key}n${nests.length}`, 0.12, 40);
+    nests.push(nest);
+    for (let row = -6; row <= 6; row++) for (let col = -6; col <= 6; col++) {
+      const px = cx + (col + (row % 2 ? 0.5 : 0)) * d + (r() - 0.5) * d * 0.25, py = cy + row * d * 0.87 + (r() - 0.5) * d * 0.25;
+      if (((px - cx) / (rx * 0.9)) ** 2 + ((py - cy) / (ry * 0.9)) ** 2 > 1) continue;
+      const cr = d * 0.55;
+      const cell = P.blob(px, py, cr, cr * 0.92, `${key}c${cells.length}`, 0.16, 7);
+      cells.push(cell);
+      const nr = d * (0.2 + r() * 0.06);
+      nuclei.push(P.blob(px + (r() - 0.5) * d * 0.15, py + (r() - 0.5) * d * 0.15, nr, nr * 0.85, `${key}k${cells.length}`, 0.15, 12));
+      if (score >= 2) membranes.push(cell);
+      else if (score === 1 && r() < 0.6) {
+        const a0 = r() * Math.PI * 2;
+        membranes.push(P.ellipse(px, py, cr * 0.95, cr * 0.88, a0, a0 + Math.PI * (0.5 + r() * 0.6), 10));
+      }
+    }
+  }
+  const stromaNuclei = Array.from({ length: 10 }, (_, i) => {
+    let px = 0, py = 0, g = 0;
+    do { px = x + w * (0.06 + r() * 0.88); py = y + h * (0.06 + r() * 0.88); } while (occupied.some(([ox, oy, orr]) => Math.hypot(px - ox, py - oy) < orr + 6) && g++ < 40);
+    return P.ellipse(0, 0, S * 0.024, S * 0.005, 0, Math.PI * 2, 10).map(([qx, qy]) => [px + qx * Math.cos(i * 1.3) - qy * Math.sin(i * 1.3), py + qx * Math.sin(i * 1.3) + qy * Math.cos(i * 1.3)] as Pt);
+  });
+  const membraneW = score === 3 ? Math.max(2.4, S * 0.009) : score === 2 ? Math.max(1.4, S * 0.005) : Math.max(1, S * 0.0035);
+  return { field: P.rect(x, y, w, h, 4), nests, cells, nuclei, membranes, membraneW, fibres, stromaNuclei, nestAt: [occupied[0][0], occupied[0][1]] as Pt };
+};
+
+/**
+ * A gene-expression heat map as in the first breast-cancer "molecular portraits": `cols` tumours
+ * (columns) by `rows` genes, red = high, green = low, pale = average, with a dendrogram above the
+ * columns. Columns come in `groups` (sizes, left to right, e.g. luminal / HER2-enriched / basal):
+ * each group has its own block of up-regulated genes, so the families read at a glance.
+ * Parts: cells ({ shape, v } with v in -1..1), tree (dendrogram strokes), bars (one rect per group
+ * under the columns), groupAt (centre x of each group, y under the bars), top/bottom.
+ */
+export const exprHeatmap = (x: number, y: number, w: number, h: number, groups: number[] = [7, 4, 5], rows = 14, key = "expr") => {
+  const r = stream(key);
+  const cols = groups.reduce((a, b) => a + b, 0);
+  const treeH = h * 0.2, barH = h * 0.05;
+  const gx = x, gy = y + treeH, gw = w, gh = h - treeH - barH - 6;
+  const cw = gw / cols, ch = gh / rows;
+  const groupOf: number[] = [];
+  groups.forEach((n, g) => { for (let i = 0; i < n; i++) groupOf.push(g); });
+  const block = (row: number) => Math.min(groups.length - 1, Math.floor((row / rows) * groups.length));
+  const cells: { shape: Pts; v: number }[] = [];
+  for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+    const on = block(j) === groupOf[i];
+    const v = Math.max(-1, Math.min(1, (on ? 0.75 : -0.45) + (r() - 0.5) * 0.7));
+    cells.push({ shape: P.rect(gx + i * cw + 0.5, gy + j * ch + 0.5, cw - 1, ch - 1, 0), v });
+  }
+  // dendrogram: leaves joined in pairs within a group, then groups joined
+  const tree: Pts[] = [];
+  const leafX = (i: number) => gx + (i + 0.5) * cw;
+  const bottom = gy - 2;
+  const groupTops: [number, number][] = [];
+  let start = 0;
+  groups.forEach((n) => {
+    let level: [number, number][] = Array.from({ length: n }, (_, k) => [leafX(start + k), bottom] as [number, number]);
+    let lh = bottom;
+    while (level.length > 1) {
+      lh -= treeH * 0.16;
+      const next: [number, number][] = [];
+      for (let k = 0; k < level.length; k += 2) {
+        if (k + 1 >= level.length) { tree.push(P.line(level[k][0], level[k][1], level[k][0], lh, 4)); next.push([level[k][0], lh]); continue; }
+        const [ax, ay] = level[k], [bx, by] = level[k + 1];
+        tree.push(P.polyline([[ax, ay], [ax, lh], [bx, lh], [bx, by]] as Pt[], 8));
+        next.push([(ax + bx) / 2, lh]);
+      }
+      level = next;
+    }
+    groupTops.push([level[0][0], lh]);
+    start += n;
+  });
+  const top = y + 4;
+  let acc = groupTops[0];
+  groupTops.slice(1).forEach((g, k) => {
+    const yy = top + (groupTops.length - 2 - k) * treeH * 0.12;
+    tree.push(P.polyline([[acc[0], acc[1]], [acc[0], yy], [g[0], yy], [g[0], g[1]]] as Pt[], 8));
+    acc = [(acc[0] + g[0]) / 2, yy];
+  });
+  const bars: Pts[] = [];
+  const groupAt: Pt[] = [];
+  start = 0;
+  groups.forEach((n) => {
+    bars.push(P.rect(gx + start * cw + 1, gy + gh + 4, n * cw - 2, barH, 2));
+    groupAt.push([gx + (start + n / 2) * cw, gy + gh + barH + 8]);
+    start += n;
+  });
+  return { cells, tree, bars, groupAt, grid: P.rect(gx, gy, gw, gh, 0), top: y, bottom: gy + gh + barH + 4 };
+};
+
+export type KgKind = "gene" | "protein" | "drug" | "disease";
+export type KgNode = { id: string; kind: KgKind; at: Pt };
+/** Fill colours for knowledge-graph node kinds (gene blue, protein violet, drug amber, disease red). */
+export const KG = { gene: "#A9C8EA", protein: "#CDB8E6", drug: "#F2CF8A", disease: "#F2B0A8", edge: "#6F675E" } as const;
+
+/**
+ * A knowledge graph: typed nodes joined by relationship edges. Node shapes by kind: gene = circle
+ * with a small double-helix glyph; protein = a folded, lumpy globule; drug = a two-tone capsule;
+ * disease = a rounded square with a cross. `r` is the node radius. Edges run border to border;
+ * `directed` adds an arrowhead at the target (for Bayesian networks). Parts: per node { shape,
+ * glyph (strokes), half (capsule half for a second colour), centre, labelAt (below) }, edges
+ * (per input edge: { stroke, head, mid }).
+ */
+export const knowledgeGraph = (nodes: KgNode[], edges: [string, string][], r = 46, directed = false) => {
+  const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  const parts = nodes.map((n) => {
+    const [cx, cy] = n.at;
+    let shape: Pts, glyph: Pts[] = [], half: Pts | null = null;
+    if (n.kind === "gene") {
+      shape = P.ellipse(cx, cy, r, r, -Math.PI / 2, Math.PI * 1.5, 40);
+      const a = P.wave(cx - r * 0.55, cx + r * 0.55, cy, r * 0.28, 1.5, 30, 0), b = P.wave(cx - r * 0.55, cx + r * 0.55, cy, r * 0.28, 1.5, 30, Math.PI);
+      const rungs = [0.17, 0.5, 0.83].map((u) => { const px = cx - r * 0.55 + u * r * 1.1, dy = Math.sin(u * 1.5 * Math.PI * 2) * r * 0.28; return P.line(px, cy - dy, px, cy + dy, 3); });
+      glyph = [a, b, ...rungs];
+    } else if (n.kind === "protein") {
+      shape = P.blob(cx, cy, r * 1.05, r * 0.9, `kgp${n.id}`, 0.22, 40);
+      glyph = [P.quad(cx - r * 0.5, cy + r * 0.1, cx - r * 0.1, cy - r * 0.6, cx + r * 0.2, cy, 12), P.quad(cx + r * 0.2, cy, cx + r * 0.5, cy + r * 0.5, cx + r * 0.55, cy - r * 0.2, 12)];
+    } else if (n.kind === "drug") {
+      const L = r * 1.25, R = r * 0.55, ang = -0.5;
+      const rot = (p: Pt): Pt => [cx + p[0] * Math.cos(ang) - p[1] * Math.sin(ang), cy + p[0] * Math.sin(ang) + p[1] * Math.cos(ang)];
+      shape = P.rect(-L, -R, 2 * L, 2 * R, R).map(([px, py]) => rot([px, py]));
+      half = P.rect(-L, -R, L, 2 * R, R).map(([px, py]) => rot([px, py]));
+      glyph = [P.line(0, -R, 0, R, 4).map(([px, py]) => rot([px, py]))];
+    } else {
+      shape = P.rect(cx - r, cy - r * 0.85, 2 * r, r * 1.7, r * 0.35);
+      glyph = [P.line(cx, cy - r * 0.45, cx, cy + r * 0.45, 4), P.line(cx - r * 0.45, cy, cx + r * 0.45, cy, 4)];
+    }
+    return { id: n.id, kind: n.kind, shape, glyph, half, centre: n.at, labelAt: [cx, cy + r + 30] as Pt };
+  });
+  const edgeParts = edges.map(([a, b]) => {
+    const A = byId[a].at, B = byId[b].at;
+    const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+    const pad = r * 1.12;
+    const s: Pt = [A[0] + ux * pad, A[1] + uy * pad], e: Pt = [B[0] - ux * (pad + (directed ? 4 : 0)), B[1] - uy * (pad + (directed ? 4 : 0))];
+    const hl = r * 0.36;
+    const head = directed ? P.polyline([[e[0] - ux * hl - uy * hl * 0.6, e[1] - uy * hl + ux * hl * 0.6], e, [e[0] - ux * hl + uy * hl * 0.6, e[1] - uy * hl - ux * hl * 0.6]] as Pt[], 6) : null;
+    return { from: a, to: b, stroke: P.line(s[0], s[1], e[0], e[1], 12), head, mid: [(s[0] + e[0]) / 2, (s[1] + e[1]) / 2] as Pt, s, e };
+  });
+  return { nodes: parts, edges: edgeParts, r };
+};
+
+/**
+ * A DNA double helix, horizontal (top-left x, y, w × h): two backbones (sine strands, one in
+ * front) and base-pair rungs between them. Parts: strandA, strandB, rungs, midAt.
+ */
+export const dnaHelix = (x: number, y: number, w: number, h: number, turns = 2.5) => {
+  const amp = h / 2, cy = y + h / 2;
+  const strandA = P.wave(x, x + w, cy, amp, turns, 120, 0), strandB = P.wave(x, x + w, cy, amp, turns, 120, Math.PI);
+  const n = Math.round(turns * 8);
+  const rungs = Array.from({ length: n }, (_, i) => {
+    const u = (i + 0.5) / n, px = x + u * w, dy = Math.sin(u * turns * Math.PI * 2) * amp;
+    return P.line(px, cy - dy * 0.92, px, cy + dy * 0.92, 3);
+  }).filter((_, i) => Math.abs(Math.sin(((i + 0.5) / n) * turns * Math.PI * 2)) > 0.25);
+  return { strandA, strandB, rungs, midAt: [x + w / 2, cy] as Pt };
+};
+
+/**
+ * A breast duct in cross-section, as on H&E (centre cx, cy, outer radius r): the lumen (`lumen`,
+ * wash white), an inner ring of cuboidal-to-columnar luminal epithelial cells (`luminal`, closed,
+ * with round `luminalNuclei` toward the base), an outer ring of flattened myoepithelial (basal)
+ * cells (`basal`, thin spindles, with elongated `basalNuclei`), the basement membrane
+ * (`membrane`) and periductal stroma fibres (`stroma`). `luminalAt` / `basalAt` label anchors.
+ */
+export const ductSection = (cx: number, cy: number, r: number, key = "duct") => {
+  const rnd = stream(key);
+  const rL = r * 0.38, rIn = r * 0.72, rB = r * 0.84;
+  const nL = 18, nB = 26;
+  const lumen = P.blob(cx, cy, rL, rL * 0.92, `${key}l`, 0.08, 40);
+  const luminal: Pts[] = [], luminalNuclei: Pts[] = [], basal: Pts[] = [], basalNuclei: Pts[] = [];
+  for (let i = 0; i < nL; i++) {
+    const a0 = (i / nL) * Math.PI * 2, a1 = ((i + 1) / nL) * Math.PI * 2, j = (rnd() - 0.5) * 0.04;
+    const pt = (rr: number, a: number): Pt => [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * 0.92];
+    luminal.push([pt(rL, a0 + j), pt(rIn, a0 + j), pt(rIn, (a0 + a1) / 2), pt(rIn, a1 + j), pt(rL, a1 + j), pt(rL, (a0 + a1) / 2), pt(rL, a0 + j)] as Pts);
+    const am = (a0 + a1) / 2, nr = (rIn - rL) * 0.2;
+    const [nx, ny] = pt(rL + (rIn - rL) * 0.62, am);
+    luminalNuclei.push(P.ellipse(nx, ny, nr, nr * 0.85, 0, Math.PI * 2, 14));
+  }
+  for (let i = 0; i < nB; i++) {
+    const a = (i / nB) * Math.PI * 2 + rnd() * 0.05, rr = (rIn + rB) / 2;
+    const px = cx + Math.cos(a) * rr, py = cy + Math.sin(a) * rr * 0.92;
+    const len = (Math.PI * 2 * rr) / nB * 0.5, th = (rB - rIn) * 0.42;
+    const t = a + Math.PI / 2;
+    const spindle = P.ellipse(0, 0, len, th, 0, Math.PI * 2, 16).map(([qx, qy]) => [px + qx * Math.cos(t) - qy * Math.sin(t), py + qx * Math.sin(t) + qy * Math.cos(t)] as Pt);
+    basal.push(spindle);
+    basalNuclei.push(P.ellipse(0, 0, len * 0.55, th * 0.5, 0, Math.PI * 2, 12).map(([qx, qy]) => [px + qx * Math.cos(t) - qy * Math.sin(t), py + qx * Math.sin(t) + qy * Math.cos(t)] as Pt));
+  }
+  const membrane = P.ellipse(cx, cy, rB + 2, (rB + 2) * 0.92, 0, Math.PI * 2, 64);
+  const stroma = Array.from({ length: 5 }, (_, i) => P.ellipse(cx, cy, r * (0.92 + i * 0.05), r * (0.92 + i * 0.05) * 0.92, i * 0.9, i * 0.9 + Math.PI * (0.6 + rnd() * 0.5), 24));
+  return { lumen, luminal, luminalNuclei, basal, basalNuclei, membrane, stroma, luminalAt: [cx, cy - (rL + rIn) / 2 * 0.92] as Pt, basalAt: [cx + rB * 0.7, cy + rB * 0.7] as Pt };
+};
+
+/**
+ * A formalin-fixed, paraffin-embedded (FFPE) tissue block in its plastic cassette, seen from
+ * above at a slight angle (top-left x, y, w × h): the cassette frame with the writing face on
+ * the left (`label`, angled) and slots, the wax block (`wax`, wash cream) and the embedded
+ * tissue piece (`tissue`, wash pale pink-grey). `labelAt` is where an accession bar can go.
+ */
+export const paraffinBlock = (x: number, y: number, w: number, h: number) => {
+  const frame = P.rect(x, y, w, h, Math.min(w, h) * 0.06);
+  const label = P.polyline([[x, y + h * 0.08], [x + w * 0.2, y], [x + w * 0.2, y + h], [x, y + h * 0.92], [x, y + h * 0.08]] as Pt[], 10);
+  const slots = Array.from({ length: 6 }, (_, i) => P.rect(x + w * 0.25 + i * w * 0.12, y + h * 0.05, w * 0.05, h * 0.08, 2));
+  const wax = P.rect(x + w * 0.26, y + h * 0.18, w * 0.68, h * 0.74, Math.min(w, h) * 0.04);
+  const tissue = P.blob(x + w * 0.6, y + h * 0.55, w * 0.22, h * 0.22, "ffpeT", 0.18, 40);
+  const bars = [0.35, 0.5, 0.65].map((t, i) => P.rect(x + w * 0.04, y + h * t, w * (0.12 - i * 0.02), h * 0.05, 1));
+  return { frame, label, slots, wax, tissue, bars, labelAt: [x + w * 0.1, y + h * 0.5] as Pt, tissueAt: [x + w * 0.6, y + h * 0.55] as Pt };
+};

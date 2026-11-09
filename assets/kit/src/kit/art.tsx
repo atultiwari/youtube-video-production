@@ -9,6 +9,7 @@ import { enclosure, pawPrint, toneScale, zooGate, zooMap } from "./objects";
 import { endoView, mammogram, seeSaw } from "./objects";
 import { papSmear, PAP, passport, scales, worldMap } from "./objects";
 import { chestXray, headCT, skinProbe, uNet } from "./objects";
+import { ductSection, paraffinBlock, dnaHelix, exprHeatmap, HER2C, her2Tile, KG, knowledgeGraph, type KgNode } from "./objects";
 import { HE_LAB, type HeLab, isoBox, KI67, ki67Tile, LN, lymphNode, nodeMetTile, nodeSlide, tilePyramid, wsiScanner } from "./objects";
 import { breastTile, coreSlide, filmToken, HEAT, heatSpot, modelCard, shapWaterfall, snowBank, superpixels } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
@@ -761,5 +762,117 @@ export const NodeSlideArt: React.FC<{ x: number; y: number; w: number; h: number
     <Fills shapes={k.matrix} color="#1F2328" at={at + dur * 0.3} alpha={1} />
     <Fills shapes={k.lines} color="#2B2F36" at={at + dur * 0.38} alpha={0.9} />
     {k.nodes.map(([ncx, ncy, nrx, nry], i) => <LymphNodeArt key={i} cx={ncx} cy={ncy} rx={nrx} ry={nry} at={at + dur * 0.45 + i * 3} id={`${id}n${i}`} dur={dur * 0.5} mini met={met && i === 1} metAt={at + dur} />)}
+  </>;
+};
+
+/* E22 (precision medicine) ----------------------------------------------------------------- */
+
+/** A HER2 IHC tile: pale stroma, tumour nests, blue nuclei, then the brown membranes (`score` 0–3; `memAt` delays them). */
+export const Her2TileArt: React.FC<{ x: number; y: number; w: number; h: number; score?: 0 | 1 | 2 | 3; at: number; id: string; dur?: number; outline?: boolean; memAt?: number }> = ({ x, y, w, h, score = 3, at, id, dur = 24, outline = true, memAt }) => {
+  const t = her2Tile(x, y, w, h, score, id);
+  const st = dur / 4;
+  const mAt = memAt ?? at + st * 2.4;
+  return <>
+    <Wash shape={t.field} color={HER2C.bg} at={at} id={`${id}f`} alpha={1} amount={1} highlight />
+    <Ink strokes={t.fibres} from={at + st * 0.3} durationInFrames={st} id={`${id}fb`} color={HER2C.fibre} width={2} double={false} pen={false} jitterAmount={0.5} />
+    {t.nests.map((g, i) => <Wash key={i} shape={g} color={HER2C.cyto} at={at + st * 0.8} id={`${id}g${i}`} alpha={1} amount={1} highlight />)}
+    <Fills shapes={t.stromaNuclei} color={HER2C.nucleus} at={at + st * 1.2} alpha={0.8} />
+    <Ink strokes={t.cells} from={at + st * 1.2} durationInFrames={st} id={`${id}cw`} color="#D8CCCB" width={1} double={false} pen={false} jitterAmount={0.2} />
+    <Fills shapes={t.nuclei} color={HER2C.nucleus} at={at + st * 1.8} alpha={0.95} stroke={HER2C.nucleusRim} />
+    {score > 0 ? <Ink strokes={t.membranes} from={mAt} durationInFrames={st * 1.4} id={`${id}m`} color={HER2C.dab[score - 1]} width={t.membraneW} double={false} pen={false} jitterAmount={0.3} /> : null}
+    {outline ? <Ink strokes={[t.field]} from={at} durationInFrames={st} id={`${id}o`} width={3} double={false} pen={false} /> : null}
+  </>;
+};
+
+const exprColor = (v: number) => v > 0.25 ? (v > 0.6 ? "#C7362E" : "#E58A73") : v < -0.25 ? (v < -0.6 ? "#2F8A45" : "#86C08C") : "#EFE8DC";
+
+/** The gene-expression heat map: cells fill column by column from `at`, then the dendrogram, then the family bars (`colors`). */
+export const ExprHeatmapArt: React.FC<{ x: number; y: number; w: number; h: number; groups?: number[]; rows?: number; at: number; id: string; dur?: number; colors?: string[]; treeAt?: number; barsAt?: number }> = ({ x, y, w, h, groups = [7, 4, 5], rows = 14, at, id, dur = 30, colors = ["#2F5E8E", "#C9A227", "#B33A3A"], treeAt, barsAt }) => {
+  const m = exprHeatmap(x, y, w, h, groups, rows, id);
+  const cols = groups.reduce((a, b) => a + b, 0);
+  return <>
+    {Array.from({ length: cols }, (_, i) => {
+      const colCells = m.cells.slice(i * rows, (i + 1) * rows);
+      const f = at + (i / cols) * dur * 0.6;
+      return <React.Fragment key={i}>{["#C7362E", "#E58A73", "#EFE8DC", "#86C08C", "#2F8A45"].map((c) => {
+        const sh = colCells.filter((k) => exprColor(k.v) === c).map((k) => k.shape);
+        return sh.length ? <Fills key={c} shapes={sh} color={c} at={f} alpha={1} /> : null;
+      })}</React.Fragment>;
+    })}
+    <Ink strokes={[m.grid]} from={at} durationInFrames={dur * 0.3} id={`${id}gr`} width={2.5} double={false} pen={false} />
+    <Ink strokes={m.tree} from={treeAt ?? at + dur * 0.6} durationInFrames={dur * 0.4} id={`${id}t`} width={2.5} double={false} pen={false} color="#3A332C" />
+    {m.bars.map((b, i) => <Wash key={i} shape={b} color={colors[i % colors.length]} at={(barsAt ?? at + dur) + i * 3} id={`${id}b${i}`} alpha={1} amount={1} highlight />)}
+  </>;
+};
+
+/**
+ * A knowledge graph: nodes appear at `nodeAt[id]` (default: in order from `at`, `step` apart),
+ * edges at `edgeAt[i]` (default: after both ends exist). `edgeColor` per edge optional; `hot`
+ * edges are inked red and thick (a predicted link or a path). `directed` draws arrowheads.
+ */
+export const KnowledgeGraphArt: React.FC<{ nodes: KgNode[]; edges: [string, string][]; r?: number; at: number; id: string; step?: number; nodeAt?: Record<string, number>; edgeAt?: number[]; hot?: number[]; directed?: boolean; dashed?: number[] }> = ({ nodes, edges, r = 46, at, id, step = 6, nodeAt = {}, edgeAt = [], hot = [], directed = false, dashed = [] }) => {
+  const g = knowledgeGraph(nodes, edges, r, directed);
+  const nAt = (nid: string) => nodeAt[nid] ?? at + nodes.findIndex((n) => n.id === nid) * step;
+  return <>
+    {g.edges.map((e, i) => {
+      const f = edgeAt[i] ?? Math.max(nAt(e.from), nAt(e.to)) + 6;
+      const isHot = hot.includes(i);
+      const stroke = dashed.includes(i) ? e.stroke.filter((_, k) => Math.floor(k / 2) % 2 === 0) : e.stroke;
+      return <React.Fragment key={i}>
+        <Ink strokes={[stroke]} from={f} durationInFrames={8} id={`${id}e${i}`} width={isHot ? 6 : 3.5} double={false} pen={false} color={isHot ? "#C8423B" : KG.edge} />
+        {e.head ? <Ink strokes={[e.head]} from={f + 6} durationInFrames={4} id={`${id}h${i}`} width={isHot ? 6 : 3.5} double={false} pen={false} color={isHot ? "#C8423B" : KG.edge} /> : null}
+      </React.Fragment>;
+    })}
+    {g.nodes.map((n) => {
+      const f = nAt(n.id);
+      return <React.Fragment key={n.id}>
+        <Wash shape={n.shape} color={KG[n.kind]} at={f} id={`${id}w${n.id}`} alpha={1} amount={1} highlight />
+        {n.half ? <Wash shape={n.half} color="#E9795F" at={f + 2} id={`${id}hf${n.id}`} alpha={1} amount={1} highlight /> : null}
+        <Ink strokes={[n.shape]} from={f} durationInFrames={8} id={`${id}o${n.id}`} width={4} double={false} />
+        <Ink strokes={n.glyph} from={f + 4} durationInFrames={6} id={`${id}gl${n.id}`} width={2.5} double={false} pen={false} color="#3A332C" />
+      </React.Fragment>;
+    })}
+  </>;
+};
+
+/** A DNA helix: back strand, rungs, front strand (`colors` [front, back, rungs]). */
+export const DnaHelixArt: React.FC<{ x: number; y: number; w: number; h: number; turns?: number; at: number; id: string; dur?: number; colors?: [string, string, string] }> = ({ x, y, w, h, turns = 2.5, at, id, dur = 20, colors = ["#2F5E8E", "#8FB3D9", "#C9A227"] }) => {
+  const d = dnaHelix(x, y, w, h, turns);
+  return <>
+    <Ink strokes={[d.strandB]} from={at} durationInFrames={dur * 0.5} id={`${id}b`} width={5} double={false} pen={false} color={colors[1]} />
+    <Ink strokes={d.rungs} from={at + dur * 0.3} durationInFrames={dur * 0.4} id={`${id}r`} width={3} double={false} pen={false} color={colors[2]} />
+    <Ink strokes={[d.strandA]} from={at + dur * 0.4} durationInFrames={dur * 0.6} id={`${id}a`} width={6} double={false} color={colors[0]} />
+  </>;
+};
+
+/** A breast duct cross-section: stroma, basement membrane, outer basal (myoepithelial) cells, inner luminal cells, lumen. `luminalTint` / `basalTint` highlight either layer. */
+export const DuctArt: React.FC<{ cx: number; cy: number; r: number; at: number; id: string; dur?: number; luminalTint?: number; basalTint?: number }> = ({ cx, cy, r, at, id, dur = 24, luminalTint, basalTint }) => {
+  const d = ductSection(cx, cy, r, id);
+  const st = dur / 4;
+  return <>
+    <Ink strokes={d.stroma} from={at} durationInFrames={st} id={`${id}s`} color="#D7A9BE" width={2} double={false} pen={false} />
+    <Wash shape={P.ellipse(cx, cy, r * 0.86, r * 0.86 * 0.92, 0, Math.PI * 2, 48)} color="#F3D3E0" at={at + st * 0.5} id={`${id}bg`} alpha={1} amount={1} highlight />
+    <Fills shapes={d.basal} color={basalTint !== undefined ? "#7FA7CF" : "#E7B9CD"} at={basalTint ?? at + st} alpha={1} />
+    <Fills shapes={d.basalNuclei} color="#4B3F8F" at={at + st * 1.2} alpha={0.95} />
+    <Fills shapes={d.luminal} color={luminalTint !== undefined ? "#F2CF8A" : "#EBA9C6"} at={luminalTint ?? at + st * 1.6} alpha={1} stroke="#B8618C" />
+    <Fills shapes={d.luminalNuclei} color="#5B4BA0" at={at + st * 2.2} alpha={0.95} />
+    <Wash shape={d.lumen} color="#FFFFFF" at={at + st * 2.4} id={`${id}lu`} alpha={1} amount={1} highlight />
+    <Ink strokes={[d.membrane]} from={at + st * 2.6} durationInFrames={st} id={`${id}m`} color="#9C4F78" width={2} double={false} pen={false} />
+  </>;
+};
+
+/** An FFPE block in its cassette: frame, writing face with bars, slots, wax, tissue. */
+export const ParaffinBlockArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; cassette?: string }> = ({ x, y, w, h, at, id, dur = 20, cassette = "#9FC3E6" }) => {
+  const b = paraffinBlock(x, y, w, h);
+  const st = dur / 4;
+  return <>
+    <Wash shape={b.frame} color={cassette} at={at} id={`${id}f`} alpha={1} amount={1} highlight />
+    <Ink strokes={[b.frame, b.label]} from={at} durationInFrames={st} id={`${id}o`} width={3} double={false} />
+    <Fills shapes={b.slots} color="#5E7FA3" at={at + st} alpha={1} />
+    <Fills shapes={b.bars} color="#2B2F36" at={at + st} alpha={0.85} />
+    <Wash shape={b.wax} color="#FFF4D8" at={at + st * 1.5} id={`${id}w`} alpha={1} amount={1} highlight />
+    <Ink strokes={[b.wax]} from={at + st * 1.5} durationInFrames={st} id={`${id}wo`} width={2} double={false} pen={false} color="#B9A77A" />
+    <Wash shape={b.tissue} color="#E3C3C8" at={at + st * 2.5} id={`${id}t`} alpha={1} amount={1} highlight />
+    <Ink strokes={[b.tissue]} from={at + st * 2.5} durationInFrames={st} id={`${id}to`} width={2} double={false} pen={false} color="#A57A82" />
   </>;
 };

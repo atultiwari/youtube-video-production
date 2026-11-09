@@ -62,6 +62,8 @@ def say_digits(tok: str) -> list[str]:
     """A Whisper token with digits, as spoken words. Besides plain numbers, accepts the forms
     Whisper writes for spelled-out script words (E07, Nov 2026, correct takes that failed 95%):
     "2x2" / "2×2" → "two by two", and letter-digit mixes "f1" → "f one", "covid19" → "covid nineteen"."""
+    if re.fullmatch(r"\d\+", tok):  # IHC scores: Whisper writes "three plus" as "3+" (E22)
+        return [ONES[int(tok[0])], "plus"]
     m = re.fullmatch(r"(\d+)[x×](\d+)", tok)
     if m:
         return [*say_int(int(m.group(1))).split(), "by", *say_int(int(m.group(2))).split()]
@@ -84,7 +86,22 @@ def norm_words(text: str) -> list[str]:
             out.append("by")  # "2 × 2" written with spaces (E07)
         elif tok:
             out.append(re.sub(r"[^a-z0-9éè]", "", tok.replace("é", "e").replace("è", "e")))
-    return [w for w in out if w]
+    out = [w for w in out if w]
+    # Years 2001-2009 as spoken: "twenty oh five" and "two thousand and five" both mean what Whisper
+    # writes as "2005" (E22: two correct takes scored 94.6% on "In twenty oh one").
+    fixed: list[str] = []
+    i = 0
+    while i < len(out):
+        if out[i:i + 2] == ["twenty", "oh"] and i + 2 < len(out) and out[i + 2] in ONES[1:10]:
+            fixed += ["two", "thousand", out[i + 2]]
+            i += 3
+        elif out[i:i + 3] == ["two", "thousand", "and"] and i + 3 < len(out) and out[i + 3] in ONES[1:10]:
+            fixed += ["two", "thousand"]
+            i += 3
+        else:
+            fixed.append(out[i])
+            i += 1
+    return fixed
 
 
 #: British → American spellings Whisper writes (it hears Indian/British English but spells US).
@@ -96,7 +113,10 @@ UK_WORDS = {"centre": "center", "centres": "centers", "metre": "meter", "litre":
             "analysed": "analyzed", "analysing": "analyzing", "catalogue": "catalog", "dialogue": "dialog",
             # Homophones Whisper cannot tell apart; both sides map to one form (E19: "medical council"
             # was written "counsel" in four takes of two different lines).
-            "counsel": "council"}
+            "counsel": "council",
+            # Units Whisper abbreviates on correct audio (E22: "two centimetres" → "2 cm", 90% on a short line).
+            "centimetre": "cm", "centimetres": "cm", "centimeter": "cm", "centimeters": "cm",
+            "millimetre": "mm", "millimetres": "mm", "millimeter": "mm", "millimeters": "mm"}
 UK_RULES = [
     (re.compile(r"^(un)?(label|model|travel|cancel|signal|level|channel|fuel|total|counsel)l(ed|ing|er|ers)$"), r"\1\2\3"),
     (re.compile(r"^(an)?haem"), r"\1hem"),
