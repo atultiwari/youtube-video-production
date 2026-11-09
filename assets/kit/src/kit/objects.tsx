@@ -3676,3 +3676,171 @@ export const meshHeart = (x: number, y: number, s = 1) => {
   }
   return { ...h, mesh, scar: P.blob(x + 78 * s, y + 168 * s, 26 * s, 18 * s, "scar", 0.25, 30) };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E24 (Nov 2026): the hype-cycle curve, a robotic-surgery patient cart and surgeon
+ * console, a dilution-refrigerator quantum computer (the gold "chandelier"), a Bloch-sphere qubit,
+ * and an ant (for swarm intelligence).
+ * ------------------------------------------------------------------------------------------- */
+
+/** Dashed segments along a straight line (n dashes). */
+export const dashes = (x1: number, y1: number, x2: number, y2: number, n = 10): Pts[] =>
+  Array.from({ length: n }, (_, i) => {
+    const a = i / n, b = (i + 0.55) / n;
+    return P.line(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a, x1 + (x2 - x1) * b, y1 + (y2 - y1) * b, 3);
+  });
+
+/**
+ * Gartner's hype cycle (a model, not data) in a box (x, y, w, h): `axes` (expectations up, time
+ * right) with `heads`, the `curve` (trigger → peak → trough → slope → plateau), `dividers` (dashed
+ * phase boundaries), `phaseAt[i]` (label anchor under each phase, `PHASES` order) and `pointAt(u)`,
+ * the curve point at time fraction u (0 … 1), for placing a technology's dot.
+ */
+export const HYPE_PHASES = ["trigger", "peak", "trough", "slope", "plateau"] as const;
+export const hypeCycle = (x: number, y: number, w: number, h: number) => {
+  const e = (u: number) => 0.92 * Math.exp(-(((u - 0.2) / 0.085) ** 2)) + 0.46 / (1 + Math.exp(-(u - 0.6) / 0.07)) + 0.08;
+  const X = (u: number) => x + w * 0.07 + u * w * 0.91;
+  const Y = (u: number) => y + h * 0.88 - e(u) * h * 0.8;
+  const pointAt = (u: number): Pt => [X(u), Y(u)];
+  const bounds = [0, 0.12, 0.29, 0.47, 0.76, 1];
+  const ox = x + w * 0.04, oy = y + h * 0.9;
+  return {
+    curve: Array.from({ length: 141 }, (_, i) => pointAt(i / 140)) as Pts,
+    axes: [P.line(ox, oy, ox, y, 16), P.line(ox, oy, x + w, oy, 24)],
+    heads: [P.polyline([[ox - 12, y + 18], [ox, y], [ox + 12, y + 18]], 6), P.polyline([[x + w - 18, oy - 12], [x + w, oy], [x + w - 18, oy + 12]], 6)],
+    dividers: bounds.slice(1, -1).flatMap((u) => dashes(X(u), y + h * 0.04, X(u), oy, 12)),
+    phaseAt: HYPE_PHASES.map((_, i) => [X((bounds[i] + bounds[i + 1]) / 2), oy + h * 0.075] as Pt),
+    pointAt,
+    origin: [ox, oy] as Pt,
+  };
+};
+
+/** A thick rounded link from a to b (width wd), as a closed outline: a robot arm segment. */
+const link = (a: Pt, b: Pt, wd: number): Pts => {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), nx = (-dy / L) * wd / 2, ny = (dx / L) * wd / 2;
+  const capA = Array.from({ length: 9 }, (_, i) => { const t = Math.atan2(ny, nx) + (i / 8) * Math.PI; return [a[0] + Math.cos(t) * wd / 2, a[1] + Math.sin(t) * wd / 2] as Pt; });
+  const capB = Array.from({ length: 9 }, (_, i) => { const t = Math.atan2(-ny, -nx) + (i / 8) * Math.PI; return [b[0] + Math.cos(t) * wd / 2, b[1] + Math.sin(t) * wd / 2] as Pt; });
+  return closedPoly([...capA, ...capB], 10);
+};
+
+/**
+ * A robotic-surgery patient cart beside an operating table, side view. Local box 470 × 400 at
+ * (x, y) × s. The draped patient lies on the table (head left); the cart stands on the right with
+ * its column and an overhead boom, and three jointed arms hang from the boom, each holding a long
+ * thin instrument through a port in the abdomen. Parts: `table` (closed, top + pedestal + base),
+ * `patient` (closed drape), `head`, `cartBase`, `column`, `boom`, `links` (closed), `joints`,
+ * `shafts` (instrument lines), `wheels`, `ports` (where the shafts enter).
+ */
+export const robotCart = (x: number, y: number, s = 1) => {
+  const T = (px: number, py: number): Pt => [x + px * s, y + py * s];
+  const R = (x0: number, y0: number, x1: number, y1: number, r: number) => rectL(x, y, s, x0, y0, x1, y1, r);
+  const arms: [number, number, number, number][] = [[230, 150, 150, 186], [300, 225, 214, 194], [365, 300, 280, 196]];
+  const links: Pts[] = [], joints: Pts[] = [], shafts: Pts[] = [], ports: Pt[] = [];
+  for (const [ax, jx, px, py] of arms) {
+    const top = T(ax, 72), knee = T(jx, 128), wrist = T(px + 18, py - 36), port = T(px, py + 30);
+    links.push(link(top, knee, 22 * s), link(knee, wrist, 18 * s));
+    joints.push(...[top, knee, wrist].map(([cx, cy]) => P.ellipse(cx, cy, 11 * s, 11 * s, 0, Math.PI * 2, 18)));
+    shafts.push(P.line(wrist[0], wrist[1], port[0], port[1], 8));
+    ports.push(port);
+  }
+  return {
+    table: [R(30, 250, 400, 268, 6), R(195, 268, 235, 360, 4), R(140, 360, 290, 376, 6)],
+    patient: closedPoly(cubic(T(70, 252), T(70, 205), T(200, 200), T(260, 214)).concat(cubic(T(260, 214), T(330, 222), T(390, 226), T(392, 252)).slice(1)), 10),
+    head: P.ellipse(...T(56, 232), 20 * s, 18 * s, 0, Math.PI * 2, 28),
+    cartBase: R(380, 352, 470, 380, 8),
+    column: R(410, 64, 440, 352, 8),
+    boom: R(212, 52, 446, 76, 10),
+    links, joints, shafts, ports,
+    wheels: [395, 455].map((wx) => P.ellipse(...T(wx, 388), 10 * s, 10 * s, 0, Math.PI * 2, 16)),
+  };
+};
+
+/**
+ * A surgeon console, side view, the surgeon seated on the left looking into the 3-D viewer. Local
+ * box 330 × 340 at (x, y) × s. Parts: `base`, `body` (closed tower), `hood` (closed, the viewer
+ * that juts toward the surgeon), `eyepiece` (closed, dark), `armrest`, `grips` (hand controllers
+ * under the hood: lines + `knobs`), `pedals`. The surgeon: `seatedPerson(x + 40s, y + 330s, 1.05s, -1)`
+ * leans in with `lean` (head to the eyepiece) — the art draws that pose.
+ */
+export const surgeonConsole = (x: number, y: number, s = 1) => {
+  const T = (px: number, py: number): Pt => [x + px * s, y + py * s];
+  const R = (x0: number, y0: number, x1: number, y1: number, r: number) => rectL(x, y, s, x0, y0, x1, y1, r);
+  return {
+    base: R(170, 312, 330, 336, 8),
+    body: closedPoly([T(190, 312), T(178, 170), T(214, 96), T(318, 92), T(326, 312)], 12),
+    hood: closedPoly([T(214, 96), T(138, 92), T(126, 108), T(132, 140), T(184, 150)], 10),
+    eyepiece: R(122, 104, 140, 132, 4),
+    armrest: R(112, 196, 196, 210, 6),
+    grips: [P.line(...T(176, 156), ...T(150, 178), 6), P.line(...T(186, 160), ...T(164, 184), 6)],
+    knobs: [P.ellipse(...T(148, 180), 7 * s, 7 * s, 0, Math.PI * 2, 14), P.ellipse(...T(162, 186), 7 * s, 7 * s, 0, Math.PI * 2, 14)],
+    pedals: [R(150, 318, 182, 332, 3), R(122, 320, 148, 332, 3)],
+  };
+};
+
+/**
+ * A superconducting quantum computer with its casing off: the dilution refrigerator's gold
+ * "chandelier" — five stacked plates narrowing downward (`plates`, closed), rods between them
+ * (`rods`), coiled coax cables (`coils`), and the shielded `chip` holder at the bottom with the
+ * processor `chip`. Local 300 × 440 centred on cx, top at y, scale s.
+ */
+export const quantumChandelier = (cx: number, y: number, s = 1) => {
+  const ys = [20, 104, 180, 250, 314], hw = [146, 124, 104, 84, 64], th = 16;
+  const plates = ys.map((py, i) => P.rect(cx - hw[i] * s, y + py * s, 2 * hw[i] * s, th * s, 6 * s));
+  const rods: Pts[] = [], coils: Pts[] = [];
+  for (let i = 0; i < ys.length - 1; i++) {
+    const y0 = y + (ys[i] + th) * s, y1 = y + ys[i + 1] * s;
+    for (const f of [-0.82, 0, 0.82]) rods.push(P.line(cx + f * hw[i + 1] * s, y0, cx + f * hw[i + 1] * s, y1, 6));
+    for (const f of [-0.45, 0.45]) {
+      const bx = cx + f * hw[i + 1] * s, pts: Pt[] = [];
+      for (let k = 0; k <= 40; k++) { const u = k / 40; pts.push([bx + Math.sin(u * Math.PI * 6) * 9 * s, y0 + (y1 - y0) * u]); }
+      coils.push(pts as Pts);
+    }
+  }
+  const yb = y + (ys[4] + th) * s;
+  return {
+    plates, rods, coils,
+    stem: P.rect(cx - 16 * s, yb, 32 * s, 46 * s, 4 * s),
+    can: P.rect(cx - 40 * s, yb + 46 * s, 80 * s, 70 * s, 10 * s),
+    chip: P.rect(cx - 22 * s, yb + 66 * s, 44 * s, 30 * s, 3 * s),
+    top: P.rect(cx - 160 * s, y, 320 * s, 20 * s, 4 * s),
+  };
+};
+
+/**
+ * A qubit drawn as a Bloch sphere: `sphere` (circle), `equator` (ellipse), `axis` (dashed,
+ * top "0" to bottom "1": label at `zeroAt`, `oneAt`), the state `vector` from the centre at polar
+ * angle theta and azimuth phi, with an arrow `head`. (cx, cy) centre, radius r.
+ */
+export const blochSphere = (cx: number, cy: number, r: number, theta = 0.9, phi = 0.6) => {
+  const px = cx + r * Math.sin(theta) * Math.cos(phi), py = cy - r * Math.cos(theta) + r * 0.32 * Math.sin(theta) * Math.sin(phi);
+  const a = Math.atan2(py - cy, px - cx), hl = r * 0.16;
+  return {
+    sphere: P.ellipse(cx, cy, r, r, 0, Math.PI * 2, 72),
+    equator: P.ellipse(cx, cy, r, r * 0.32, 0, Math.PI * 2, 60),
+    axis: dashes(cx, cy - r * 1.05, cx, cy + r * 1.05, 9),
+    vector: P.line(cx, cy, px, py, 10),
+    head: closedPoly([[px, py], [px - hl * Math.cos(a - 0.4), py - hl * Math.sin(a - 0.4)], [px - hl * Math.cos(a + 0.4), py - hl * Math.sin(a + 0.4)]], 6),
+    tip: [px, py] as Pt,
+    zeroAt: [cx, cy - r * 1.2] as Pt,
+    oneAt: [cx, cy + r * 1.36] as Pt,
+  };
+};
+
+/**
+ * An ant from above, facing angle `ang` (radians, 0 = right): `body` (closed: abdomen, petiole,
+ * thorax, head), six jointed `legs` from the thorax, two elbowed `antennae`. (cx, cy) is the
+ * thorax; the ant is about 90 × 50 × s.
+ */
+export const ant = (cx: number, cy: number, s = 1, ang = 0) => {
+  const c = Math.cos(ang), sn = Math.sin(ang);
+  const T = ([px, py]: [number, number]): Pt => [cx + (px * c - py * sn) * s, cy + (px * sn + py * c) * s];
+  const E = (ex: number, ey: number, rx: number, ry: number) => Array.from({ length: 25 }, (_, i) => { const t = (i / 24) * Math.PI * 2; return T([ex + Math.cos(t) * rx, ey + Math.sin(t) * ry]); }) as Pts;
+  const legs: Pts[] = [];
+  for (const [lx, kx, fx] of [[-5, -16, -30], [0, 2, 4], [5, 16, 30]] as [number, number, number][])
+    for (const sgn of [-1, 1]) legs.push(P.polyline([T([lx, 0]), T([kx, sgn * 13]), T([fx, sgn * 24])], 4));
+  return {
+    body: [E(-27, 0, 15, 10), E(-12, 0, 4, 3), E(0, 0, 10, 5.5), E(17, 0, 7.5, 7)],
+    legs,
+    antennae: [-1, 1].map((sgn) => P.polyline([T([22, sgn * 4]), T([30, sgn * 13]), T([42, sgn * 12])], 4)),
+  };
+};

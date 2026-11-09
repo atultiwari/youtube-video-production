@@ -421,6 +421,14 @@ if (root.includes("kit-objects-22") && !root.includes("kit-objects-23")) {
   else say(`Register page 23 by hand: <Composition id="kit-objects-23" component={ObjectsDemo23} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
 
+// Page 24 (E24, Nov 2026: Gartner hype-cycle curve with phase dividers and pointAt(u) for placing dots, robotic-surgery patient cart (table, draped patient, column, boom, three jointed arms with instruments), surgeon console with seated surgeon, dilution-refrigerator quantum computer ("chandelier"), Bloch-sphere qubit, ant).
+if (root.includes("kit-objects-23") && !root.includes("kit-objects-24")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-23" [^\n]*\n)/, `$1$2<Composition id="kit-objects-24" component={ObjectsDemo24} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo22, ObjectsDemo23 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo22, ObjectsDemo23, ObjectsDemo24 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-24") && root.includes("ObjectsDemo24 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-24 (drawing library, page 24) in Root.tsx"); }
+  else say(`Register page 24 by hand: <Composition id="kit-objects-24" component={ObjectsDemo24} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");

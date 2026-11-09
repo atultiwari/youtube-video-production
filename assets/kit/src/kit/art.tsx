@@ -14,6 +14,7 @@ import { ductSection, paraffinBlock, dnaHelix, exprHeatmap, HER2C, her2Tile, KG,
 import { HE_LAB, type HeLab, isoBox, KI67, ki67Tile, LN, lymphNode, nodeMetTile, nodeSlide, tilePyramid, wsiScanner } from "./objects";
 import { breastTile, coreSlide, filmToken, HEAT, heatSpot, modelCard, shapWaterfall, snowBank, superpixels } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
+import { ant, blochSphere, hypeCycle, HYPE_PHASES, quantumChandelier, robotCart, surgeonConsole } from "./objects";
 import { Dots, Fills, Ink, Label, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
 import { P, type Pts } from "./shapes";
@@ -1041,5 +1042,119 @@ export const MeshHeartArt: React.FC<{ x: number; y: number; s?: number; at: numb
     <Ink strokes={k.mesh} from={at + st} durationInFrames={st * 2} id={`${id}m`} width={2} double={false} pen={false} color="#2F5E8E" />
     {scarAt !== undefined ? <Wash shape={k.scar} color="#6B5B73" at={scarAt} id={`${id}sc`} alpha={1} amount={1} highlight /> : null}
     {ablateAt !== undefined ? <Fills shapes={[P.ellipse(x + 98 * s, y + 160 * s, 10 * s, 10 * s, 0, Math.PI * 2, 16)]} color="#E9B949" at={ablateAt} alpha={1} stroke="#3A332C" /> : null}
+  </>;
+};
+
+/* E24 (Nov 2026): hype cycle, robotic surgery (cart and console), the quantum chandelier, a qubit, ants. */
+
+const W24 = { gold: "#D9A441", goldDk: "#8A6420", steel: "#C9CDD2", steelDk: "#5B6168", drape: "#7FB3A8", skin: "#F1C9A5", table: "#AEB4BB", cart: "#E9ECEF", arm: "#F4F6F8", coil: "#B5654A" };
+
+/**
+ * The hype cycle: axes, the curve drawn left to right (linear, a pen drawing), dashed phase
+ * dividers, and the five short phase names under the axis (size `phaseSize`, from `phasesAt`).
+ */
+export const HypeCycleArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; phasesAt?: number; phaseSize?: number; axisLabels?: boolean }> = ({ x, y, w, h, at, id, dur = 40, phasesAt, phaseSize = 36, axisLabels = true }) => {
+  const k = hypeCycle(x, y, w, h);
+  return <>
+    <Ink strokes={[...k.axes, ...k.heads]} from={at} durationInFrames={8} id={`${id}ax`} width={4} double={false} pen={false} />
+    {axisLabels ? <>
+      <Label text="expectations" x={k.origin[0] + 18} y={y + 30} at={at + 4} size={38} italic weight={600} anchor="start" />
+      <Label text="time" x={x + w - 10} y={k.origin[1] - 16} at={at + 6} size={38} italic weight={600} anchor="end" />
+    </> : null}
+    <Ink strokes={[k.curve]} from={at + 8} durationInFrames={dur} id={`${id}cv`} width={7} double={false} color="#2F5E8E" />
+    {phasesAt !== undefined ? <>
+      <Ink strokes={k.dividers} from={phasesAt} durationInFrames={10} id={`${id}dv`} width={2} double={false} pen={false} color="#8E857A" />
+      {HYPE_PHASES.map((n, i) => <Label key={n} text={n} x={k.phaseAt[i][0]} y={k.phaseAt[i][1] + (i % 2) * phaseSize * 1.15} at={phasesAt + 2 + i * 2} size={phaseSize} italic={false} weight={700} color="#3A332C" />)}
+    </> : null}
+  </>;
+};
+
+/** Robotic surgery, the patient side: table, draped patient, cart with column, boom and three arms with instruments. */
+export const RobotCartArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number }> = ({ x, y, s = 1, at, id, dur = 24 }) => {
+  const k = robotCart(x, y, s);
+  const st = dur / 4;
+  return <>
+    {k.table.map((r, i) => <Wash key={i} shape={r} color={W24.table} at={at} id={`${id}t${i}`} alpha={1} amount={1} highlight />)}
+    <Ink strokes={k.table} from={at} durationInFrames={st} id={`${id}to`} width={3} double={false} pen={false} />
+    <Wash shape={k.patient} color={W24.drape} at={at + st * 0.6} id={`${id}p`} alpha={1} amount={1} highlight />
+    <Wash shape={k.head} color={W24.skin} at={at + st * 0.6} id={`${id}h`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.patient, k.head]} from={at + st * 0.6} durationInFrames={st} id={`${id}po`} width={3} double={false} />
+    <Wash shape={k.cartBase} color={W24.cart} at={at + st} id={`${id}cb`} alpha={1} amount={1} highlight />
+    <Wash shape={k.column} color={W24.cart} at={at + st} id={`${id}cl`} alpha={1} amount={1} highlight />
+    <Wash shape={k.boom} color={W24.cart} at={at + st * 1.5} id={`${id}bm`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.cartBase, k.column, k.boom]} from={at + st} durationInFrames={st} id={`${id}co`} width={3} double={false} pen={false} />
+    <Fills shapes={k.wheels} color="#3A3F47" at={at + st} alpha={1} />
+    {k.links.map((l, i) => <Wash key={i} shape={l} color={W24.arm} at={at + st * 2 + i} id={`${id}l${i}`} alpha={1} amount={1} highlight />)}
+    <Ink strokes={k.links} from={at + st * 2} durationInFrames={st} id={`${id}lo`} width={3} double={false} pen={false} />
+    <Fills shapes={k.joints} color="#7FA7CF" at={at + st * 2.5} alpha={1} stroke="#2B2F36" />
+    <Ink strokes={k.shafts} from={at + st * 3} durationInFrames={st} id={`${id}sh`} width={5} double={false} pen={false} color="#3A3F47" />
+  </>;
+};
+
+/** Robotic surgery, the surgeon side: console with 3-D viewer, armrest, hand controllers, pedals, and the seated surgeon looking in. */
+export const SurgeonConsoleArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number; gown?: string }> = ({ x, y, s = 1, at, id, dur = 22, gown = "#6FA3C7" }) => {
+  const k = surgeonConsole(x, y, s);
+  const T = (px: number, py: number): [number, number] => [x + px * s, y + py * s];
+  const L = (pts: [number, number][]) => P.polyline(pts.map(([a, b]) => T(a, b)) as Pts, 6);
+  const st = dur / 4;
+  const torso = P.polyline([T(86, 138), T(110, 146), T(104, 252), T(62, 256), T(66, 150), T(86, 138)] as Pts, 8);
+  return <>
+    <Wash shape={k.body} color="#E9ECEF" at={at} id={`${id}b`} alpha={1} amount={1} highlight />
+    <Wash shape={k.hood} color="#D3D8DE" at={at} id={`${id}hd`} alpha={1} amount={1} highlight />
+    <Wash shape={k.base} color="#AEB4BB" at={at} id={`${id}bs`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.body, k.hood, k.base]} from={at} durationInFrames={st} id={`${id}o`} width={3} double={false} pen={false} />
+    <Fills shapes={[k.eyepiece]} color="#1F2328" at={at + st} alpha={1} />
+    <Fills shapes={[k.armrest, ...k.pedals]} color="#5B6168" at={at + st} alpha={1} />
+    <Ink strokes={k.grips} from={at + st} durationInFrames={st / 2} id={`${id}g`} width={4} double={false} pen={false} color="#3A3F47" />
+    <Fills shapes={k.knobs} color="#7FA7CF" at={at + st * 1.5} alpha={1} stroke="#2B2F36" />
+    <Wash shape={torso} color={gown} at={at + st * 2} id={`${id}gw`} alpha={1} amount={1} highlight />
+    <Wash shape={P.ellipse(...T(98, 118), 22 * s, 24 * s, 0, Math.PI * 2, 28)} color={W24.skin} at={at + st * 2} id={`${id}hh`} alpha={1} amount={1} highlight />
+    <Wash shape={P.ellipse(...T(94, 102), 22 * s, 12 * s, Math.PI, Math.PI * 2, 20)} color="#3F7F6F" at={at + st * 2.2} id={`${id}cap`} alpha={1} amount={1} highlight />
+    <Ink strokes={[torso, P.ellipse(...T(98, 118), 22 * s, 24 * s, 0, Math.PI * 2, 28),
+      L([[100, 160], [128, 196], [150, 180]]),
+      L([[84, 252], [146, 258], [150, 318], [176, 322]]),
+      L([[30, 262], [100, 262]]), L([[40, 264], [32, 336]]), L([[90, 264], [98, 336]])]} from={at + st * 2} durationInFrames={st * 2} id={`${id}sg`} width={4} double={false} />
+  </>;
+};
+
+/** The quantum computer's gold chandelier: top plate, five plates, rods, copper coils, the chip can. */
+export const QuantumArt: React.FC<{ cx: number; y: number; s?: number; at: number; id: string; dur?: number; chipAt?: number }> = ({ cx, y, s = 1, at, id, dur = 24, chipAt }) => {
+  const k = quantumChandelier(cx, y, s);
+  const st = dur / 4;
+  return <>
+    <Wash shape={k.top} color="#8E949B" at={at} id={`${id}tp`} alpha={1} amount={1} highlight />
+    {k.plates.map((p, i) => <Wash key={i} shape={p} color={W24.gold} at={at + (i * st) / 3} id={`${id}p${i}`} alpha={1} amount={1} highlight />)}
+    <Ink strokes={[k.top, ...k.plates]} from={at} durationInFrames={st * 1.5} id={`${id}po`} width={3} double={false} pen={false} color={W24.goldDk} />
+    <Ink strokes={k.rods} from={at + st * 1.5} durationInFrames={st} id={`${id}r`} width={4} double={false} pen={false} color={W24.goldDk} />
+    <Ink strokes={k.coils} from={at + st * 2} durationInFrames={st * 1.5} id={`${id}c`} width={3} double={false} pen={false} color={W24.coil} />
+    <Wash shape={k.stem} color={W24.gold} at={at + st * 3} id={`${id}st`} alpha={1} amount={1} highlight />
+    <Wash shape={k.can} color="#C9CDD2" at={at + st * 3} id={`${id}cn`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.stem, k.can]} from={at + st * 3} durationInFrames={st} id={`${id}co`} width={3} double={false} pen={false} />
+    <Fills shapes={[k.chip]} color="#2F5E8E" at={chipAt ?? at + dur} alpha={1} stroke="#1F2328" />
+  </>;
+};
+
+/** A qubit (Bloch sphere): sphere, equator, dashed axis with 0 and 1, the state arrow. */
+export const BlochArt: React.FC<{ cx: number; cy: number; r: number; at: number; id: string; dur?: number; theta?: number; phi?: number; vectorAt?: number }> = ({ cx, cy, r, at, id, dur = 18, theta, phi, vectorAt }) => {
+  const k = blochSphere(cx, cy, r, theta, phi);
+  const st = dur / 3, v = vectorAt ?? at + st * 2;
+  return <>
+    <Wash shape={k.sphere} color="#DDE8F2" at={at} id={`${id}s`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.sphere]} from={at} durationInFrames={st} id={`${id}so`} width={4} double={false} />
+    <Ink strokes={[k.equator]} from={at + st} durationInFrames={st} id={`${id}eq`} width={3} double={false} pen={false} color="#5B6168" />
+    <Ink strokes={k.axis} from={at + st} durationInFrames={st / 2} id={`${id}ax`} width={2} double={false} pen={false} color="#5B6168" />
+    <Label text="0" x={k.zeroAt[0]} y={k.zeroAt[1]} at={at + st} size={Math.max(36, Math.round(r * 0.3))} italic={false} weight={800} />
+    <Label text="1" x={k.oneAt[0]} y={k.oneAt[1]} at={at + st} size={Math.max(36, Math.round(r * 0.3))} italic={false} weight={800} />
+    <Ink strokes={[k.vector]} from={v} durationInFrames={st / 2} id={`${id}v`} width={6} double={false} pen={false} color="#C8423B" />
+    <Fills shapes={[k.head]} color="#C8423B" at={v + st / 2} alpha={1} />
+  </>;
+};
+
+/** One ant (dark brown): body parts filled, legs and antennae inked. */
+export const AntArt: React.FC<{ cx: number; cy: number; s?: number; ang?: number; at: number; id: string; color?: string }> = ({ cx, cy, s = 1, ang = 0, at, id, color = "#4A2E1E" }) => {
+  const k = ant(cx, cy, s, ang);
+  return <>
+    <Ink strokes={[...k.legs, ...k.antennae]} from={at} durationInFrames={4} id={`${id}l`} width={Math.max(2, 2.2 * s)} double={false} pen={false} color={color} />
+    <Fills shapes={k.body} color={color} at={at + 2} alpha={1} />
   </>;
 };

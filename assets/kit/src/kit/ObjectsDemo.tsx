@@ -8,6 +8,7 @@ import { DuctArt, ParaffinBlockArt, DnaHelixArt, ExprHeatmapArt, Her2TileArt, Kn
 import { BpMonitorArt, DashboardArt, EcgPatchArt, HouseArt, MeshHeartArt, PaSensorArt, PpgArt, ScaleArt, SmartwatchArt, TabletArt, WatchBackArt } from "./art";
 import { Ki67TileArt, LymphNodeArt, NodeMetTileArt, NodeSlideArt, TilePyramidArt, WsiScannerArt } from "./art";
 
+import { AntArt, BlochArt, HypeCycleArt, QuantumArt, RobotCartArt, SurgeonConsoleArt } from "./art";
 import { Paper } from "./Chrome";
 import { Cell, Rbc } from "./cells";
 import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
@@ -925,6 +926,26 @@ export const ObjectsDemo23: React.FC = () => (
         <Label text="PA sensor in artery" x={800} y={630} at={0} size={22} italic={false} />
         <MeshHeartArt x={890} y={430} s={0.95} at={0} id="mh" scarAt={0} ablateAt={0} />
         <Label text="virtual heart" x={990} y={690} at={0} size={22} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+export const ObjectsDemo24: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <HypeCycleArt x={20} y={40} w={520} h={330} at={0} id="hc" phasesAt={0} phaseSize={26} />
+        <RobotCartArt x={560} y={10} s={1.05} at={0} id="rc" />
+        <Label text="robotic surgery cart" x={800} y={450} at={0} size={22} italic={false} />
+        <SurgeonConsoleArt x={20} y={450} s={1.0} at={0} id="sc" />
+        <Label text="surgeon console" x={180} y={820} at={0} size={22} italic={false} />
+        <QuantumArt cx={520} y={430} s={0.82} at={0} id="qc" chipAt={0} />
+        <Label text="quantum computer" x={520} y={820} at={0} size={22} italic={false} />
+        <BlochArt cx={790} cy={600} r={95} at={0} id="bl" vectorAt={0} />
+        <Label text="qubit" x={790} y={790} at={0} size={22} italic={false} />
+        {[0, 1, 2, 3, 4].map((i) => <AntArt key={i} cx={940 + (i % 2) * 40} cy={500 + i * 60} s={0.9} ang={1.4 + (i % 2) * 0.3} at={0} id={`an${i}`} />)}
+        <Label text="ants" x={960} y={820} at={0} size={22} italic={false} />
       </Picture>
     </Paper>
   </AbsoluteFill>
