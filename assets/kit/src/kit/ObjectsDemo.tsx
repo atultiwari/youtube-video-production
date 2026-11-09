@@ -26,6 +26,8 @@ import { clipboard, researchArticle, retinalCamera } from "./objects";
 import { AppleArt, CarArt, ColonTileArt, DetectiveArt, DogArt, ForgerArt, FundusArt, HeSlideArt, KidneyArt, MicroscopeArt, NetworkArt, NeuronArt, SquamousTileArt, ThyroidTileArt } from "./art";
 import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objects";
 import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
+import { PapSmearArt, PassportArt, ScalesArt, WorldMapArt } from "./art";
+import { passport, worldMap } from "./objects";
 import { chapter, CHAPTERS, INK, TISSUE } from "./style";
 
 const C = chapter(Object.keys(CHAPTERS)[0]);
@@ -776,6 +778,30 @@ export const ObjectsDemo18: React.FC = () => (
         <SnowArt x={30} y={780} w={560} h={280} at={0} id="sn" />
         <DogArt x={160} y={800} s={0.9} at={0} id="dg" />
         <Label text="wolf or husky? (snow)" x={310} y={760} at={0} size={28} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+const WM = worldMap(30, 40, 1180, 455);
+const PP = passport(1560, 560, 230, 330);
+export const ObjectsDemo19: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <WorldMapArt x={30} y={40} w={1180} h={455} at={0} id="wm" />
+        {([[WM.usAt, "FDA"], [WM.euAt, "EU"], [WM.indiaAt, "CDSCO"]] as const).map(([p, t], i) => <React.Fragment key={i}><Fills shapes={[P.ellipse(p[0], p[1], 10, 10, 0, Math.PI * 2, 20)]} color="#C8423B" at={0} alpha={1} /><Label text={t} x={p[0]} y={p[1] - 22} at={0} size={30} italic={false} weight={800} /></React.Fragment>)}
+        <Label text="world map (FDA, EU, CDSCO pins)" x={620} y={530} at={0} size={28} italic={false} />
+        <PapSmearArt x={1250} y={40} w={640} h={455} at={0} id="ps" />
+        <Label text="Pap smear: squamous cells + 2 HSIL-like cells" x={1570} y={530} at={0} size={28} italic={false} />
+        <PapSmearArt x={30} y={600} w={420} h={300} at={0} id="ps2" abnormal={0} />
+        <Label text="normal Pap field" x={240} y={940} at={0} size={28} italic={false} />
+        <ScalesArt cx={700} y={590} s={1} tilt={0} at={0} id="sc" />
+        <ScalesArt cx={1150} y={590} s={0.9} tilt={0.18} at={0} id="sc2" />
+        <Label text="scales of justice (level, tipped)" x={920} y={1000} at={0} size={28} italic={false} />
+        <PassportArt x={1560} y={560} w={230} h={330} at={0} id="pp" />
+        <Label text="PASSPORT" x={PP.titleAt[0]} y={PP.titleAt[1] + 10} at={0} size={26} italic={false} weight={800} color="#E8C766" />
+        <Label text="passport" x={1675} y={930} at={0} size={28} italic={false} />
       </Picture>
     </Paper>
   </AbsoluteFill>

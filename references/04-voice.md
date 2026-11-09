@@ -319,3 +319,13 @@ language goes first.
   on two takes; "Every chest X-ray from your department carries a small metal marker" passed. A
   sentence opening with a bare noun phrase ("Age seventy eight adds three") lost the noun ("h");
   "An age of seventy eight adds three" passed.
+
+- **Spelled letters in the script cost word-match points; write the acronym and respell it** (E19):
+  "C D S C O" written out in the script scored as five missed words whenever Whisper wrote "CDSCO".
+  Write `CDSCO`, `FDA`, `ICMR`, `EU`, `IIT` in the script and keep the letters in `docs/respell.json`:
+  the voice reads the same text, and check-takes matches the name. (Two-letter pairs like CE still
+  trip check-script; leave those spelled.)
+- **Some words fail every take; reword after two** (E19): "Central Drugs Standard Control
+  Organisation" came back "Central Trucks/Centre Drug" in three takes (the name moved on screen
+  only); "the FDA's list" was heard "FDs"/"ftas" (possessive of a respelled acronym: avoid it);
+  "Pap smears you" ran together as "paps mears". check-takes now treats council/counsel as one word.

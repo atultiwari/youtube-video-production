@@ -2606,3 +2606,121 @@ export const snowBank = (x: number, y: number, w: number, h: number, key = "snow
     flakes: Array.from({ length: 26 }, () => [x + r() * w, y + r() * h * 0.5] as Pt),
   };
 };
+
+/* ---- E19 (Nov 2026): world map, Pap smear field, scales of justice, passport ---- */
+
+/** Continent outlines as [longitude, latitude] rings (coarse coastlines, about 1:100 M). */
+const LANDS: [number, number][][] = [
+  // North America (Alaska → Arctic → Labrador → east coast → Gulf → Central America → west coast)
+  [[-168, 66], [-162, 70], [-150, 71], [-140, 70], [-128, 70], [-115, 68], [-100, 68], [-95, 72], [-85, 70], [-80, 64], [-90, 57], [-82, 53], [-78, 60], [-72, 60], [-65, 58], [-60, 54], [-56, 51], [-60, 47], [-66, 45], [-70, 42], [-74, 40], [-76, 37], [-76, 35], [-81, 31], [-80, 26], [-82, 28], [-84, 30], [-90, 30], [-94, 29], [-97, 26], [-97, 21], [-94, 18], [-90, 21], [-87, 21], [-88, 16], [-84, 15], [-83, 10], [-79, 9], [-77, 8], [-80, 7], [-83, 8], [-86, 12], [-92, 14], [-96, 16], [-105, 20], [-106, 23], [-112, 29], [-114, 31], [-110, 23], [-117, 32], [-120, 34], [-124, 40], [-124, 46], [-123, 49], [-128, 51], [-132, 55], [-138, 59], [-147, 61], [-153, 59], [-158, 57], [-163, 55], [-158, 59], [-162, 60], [-165, 62], [-168, 66]],
+  // Greenland
+  [[-55, 60], [-45, 60], [-40, 65], [-22, 70], [-20, 77], [-30, 82], [-55, 82], [-70, 78], [-60, 75], [-55, 70], [-52, 65], [-55, 60]],
+  // South America
+  [[-77, 8], [-72, 12], [-63, 11], [-60, 8], [-52, 5], [-50, 0], [-44, -2], [-35, -5], [-35, -9], [-39, -15], [-40, -22], [-48, -26], [-53, -34], [-58, -38], [-62, -40], [-65, -45], [-68, -50], [-69, -55], [-72, -53], [-75, -48], [-74, -40], [-73, -30], [-71, -18], [-76, -14], [-81, -5], [-80, 0], [-78, 2], [-77, 8]],
+  // Eurasia (Iberia → Baltic → Scandinavia → Arctic → Pacific → South-East Asia → India → Arabia → Red Sea → Mediterranean)
+  [[-6, 36], [-9, 37], [-9, 43], [-2, 43.5], [-1, 46], [-4, 48], [2, 51], [5, 53], [8, 54], [8, 57], [10, 57], [11, 55], [13, 55], [14, 54], [20, 55], [21, 57], [24, 59], [22, 61], [25, 65], [22, 66], [18, 63], [17, 61], [19, 60], [16, 57], [12, 56], [11, 59], [6, 58], [5, 62], [12, 66], [15, 69], [22, 70], [28, 71], [33, 69], [40, 67], [44, 68], [50, 68], [60, 69], [68, 72], [73, 72], [80, 73], [90, 76], [100, 77], [110, 74], [120, 73], [130, 71], [140, 72], [150, 71], [160, 70], [170, 70], [180, 68], [180, 65], [175, 63], [165, 60], [162, 57], [156, 51], [156, 57], [160, 61], [154, 59], [143, 59], [137, 54], [141, 52], [140, 48], [135, 43], [130, 42], [129, 36], [126, 35], [126, 38], [125, 40], [121, 39], [122, 37], [119, 35], [121, 32], [122, 30], [120, 26], [116, 23], [110, 21], [108, 22], [106, 19], [108, 15], [109, 12], [105, 9], [103, 10], [100, 13], [100, 8], [103, 4], [104, 1.5], [101, 3], [98, 8], [98, 16], [94, 17], [94, 20], [92, 22], [90, 22], [87, 21], [85, 20], [82, 17], [80, 15], [80, 10], [78, 8], [76, 9], [74, 14], [73, 17], [73, 20], [70, 21], [68, 23], [66, 25], [62, 25], [57, 25], [57, 27], [54, 27], [51, 26], [50, 30], [48, 30], [50, 26], [52, 24], [56, 24], [56, 26], [59, 23], [56, 18], [52, 16], [45, 13], [43, 14], [39, 21], [35, 28], [34, 29.5], [33, 31], [35, 33], [36, 36], [30, 36], [27, 37], [26, 40], [23, 40.5], [24, 38], [22, 36.5], [20, 40], [19, 42], [16, 43.5], [13.5, 45.5], [12, 44], [16, 41], [18, 40], [16, 38], [15.5, 40], [12, 42], [10, 44], [8, 44], [6, 43], [3, 43], [3, 42], [0, 40], [-1, 37], [-6, 36]],
+  // Africa
+  [[-6, 35.8], [10, 37], [11, 34], [20, 31], [25, 32], [32, 31], [34, 28], [36, 24], [38, 18], [43, 12], [51, 12], [48, 6], [42, -1], [40, -10], [40, -15], [35, -24], [32, -29], [27, -34], [20, -35], [18, -32], [15, -27], [12, -17], [13, -12], [9, -1], [10, 4], [5, 6], [-2, 5], [-8, 4], [-13, 8], [-17, 14], [-17, 21], [-13, 28], [-10, 30], [-6, 35.8]],
+  // Madagascar, Britain, Ireland, Sri Lanka, Japan (Honshu, Hokkaido), Sumatra, Borneo, New Guinea, Australia, New Zealand
+  [[44, -25], [47, -25], [50, -15], [49, -12], [44, -17], [44, -25]],
+  [[-5, 50], [1, 51], [1.7, 52.7], [0, 54], [-2, 56], [-2, 58], [-5, 58.5], [-6, 56], [-5, 55], [-3, 54], [-4, 53], [-5, 52], [-5, 50]],
+  [[-10, 52], [-6, 52], [-6, 55], [-8, 55], [-10, 54], [-10, 52]],
+  [[80, 6], [82, 7.5], [80, 9.8], [79.7, 8], [80, 6]],
+  [[130, 31], [135, 34], [140, 35], [141, 41], [140, 38], [136, 36], [132, 34], [130, 31]],
+  [[140, 42], [145, 43], [142, 46], [140, 42]],
+  [[95, 5.5], [106, -6], [104, -6], [95, 3], [95, 5.5]],
+  [[109, 1], [117, 7], [119, 1], [116, -4], [110, -3], [109, 1]],
+  [[131, -1], [141, -3], [150, -10], [141, -9], [137, -5], [131, -1]],
+  [[114, -22], [122, -18], [130, -12], [137, -12], [136, -15], [141, -17], [142, -11], [146, -19], [153, -25], [151, -34], [146, -39], [140, -38], [135, -35], [131, -31], [115, -34], [114, -22]],
+  [[172, -34], [178, -38], [174, -42], [167, -46], [172, -41], [172, -34]],
+];
+
+/**
+ * A world map (equirectangular, longitude −170° to 190°, latitude 82° N to 56° S) in the box
+ * w × h (w ≈ 2.6 h looks right). `lands` are closed outlines to wash and ink; `at(lon, lat)`
+ * projects any place; `usAt`, `euAt` (Brussels) and `indiaAt` (New Delhi) are pin points.
+ */
+export const worldMap = (x: number, y: number, w: number, h: number) => {
+  const at = (lon: number, lat: number): Pt => [x + ((lon + 170) / 360) * w, y + ((82 - lat) / 138) * h];
+  return {
+    frame: P.rect(x, y, w, h, 10),
+    lands: LANDS.map((ring) => ring.map(([lo, la]) => at(lo, la)) as Pts),
+    at,
+    usAt: at(-77, 39), euAt: at(4.4, 50.8), indiaAt: at(77.2, 28.6),
+  };
+};
+
+/** Papanicolaou stain colours: superficial cells pink-orange, intermediate cells blue-green, nuclei. */
+export const PAP = { bg: "#F4EFE6", pink: "#F3B6C4", cyan: "#A8D4DA", rim: "#8C6F86", nucleus: "#3E3466", hsil: "#2A1F57", hsilCyto: "#9FC6CF" } as const;
+
+/**
+ * A Pap smear field: large flat polygonal squamous cells (pink superficial and blue-green
+ * intermediate, small round nuclei), overlapping, plus `abnormal` small cells with a large dark
+ * irregular nucleus (high nuclear-to-cytoplasmic ratio, as in HSIL). Wash `field` PAP.bg, each
+ * cell's `cyto` in its `color`, fill `nucleus`; `abnormalAt` lists the abnormal cells' centres.
+ */
+export const papSmear = (x: number, y: number, w: number, h: number, key = "pap", abnormal = 2) => {
+  const r = stream(key);
+  const R = Math.min(w, h);
+  const cells: { cyto: Pts; nucleus: Pts; color: string }[] = [];
+  const cols = 4, rows = 3;
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const cw = w / cols, ch = h / rows;
+    const rr = Math.min(cw / 1.85, ch / 1.4) * (0.85 + r() * 0.2);
+    const cx = x + (i + 0.5) * cw + (r() - 0.5) * cw * 0.2, cy = y + (j + 0.5) * ch + (r() - 0.5) * ch * 0.2;
+    const n = 5 + Math.floor(r() * 3), a0 = r() * Math.PI;
+    const ring: Pt[] = [];
+    for (let k = 0; k <= n; k++) {
+      const a = a0 + (k % n) * (Math.PI * 2) / n + (r() - 0.5) * 0.5, d = rr * (0.78 + r() * 0.24);
+      ring.push([Math.min(x + w - 5, Math.max(x + 5, cx + Math.cos(a) * d * 1.12)), Math.min(y + h - 5, Math.max(y + 5, cy + Math.sin(a) * d * 0.84))]);
+    }
+    const cyto = P.polyline(ring.map((p, k) => (k === n ? ring[0] : p)), 10);
+    cells.push({ cyto, nucleus: P.blob(cx + (r() - 0.5) * rr * 0.3, cy + (r() - 0.5) * rr * 0.3, R * 0.022, R * 0.02, `${key}n${i}${j}`, 0.1, 16), color: r() < 0.55 ? PAP.pink : PAP.cyan });
+  }
+  const abnormalAt: Pt[] = [];
+  const spots: [number, number][] = [[0.38, 0.55], [0.7, 0.3], [0.2, 0.25]];
+  for (let k = 0; k < abnormal; k++) {
+    const [u, v] = spots[k % spots.length];
+    const cx = x + w * u, cy = y + h * v;
+    abnormalAt.push([cx, cy]);
+    cells.push({
+      cyto: P.blob(cx, cy, R * 0.085, R * 0.075, `${key}ac${k}`, 0.16, 32),
+      nucleus: P.blob(cx + R * 0.008, cy, R * 0.055, R * 0.048, `${key}an${k}`, 0.28, 28),
+      color: PAP.hsilCyto,
+    });
+  }
+  return { field: P.rect(x, y, w, h, 6), cells, abnormalAt, nNormal: rows * cols };
+};
+
+/** Scales of justice: a post on a base, a beam tilted by `tilt` (radians), two hanging pans on chains. */
+export const scales = (cx: number, y: number, s = 1, tilt = 0) => {
+  const W = 300 * s, H = 300 * s, half = W / 2;
+  const top: Pt = [cx, y + 30 * s];
+  const L: Pt = [cx - half * Math.cos(tilt), top[1] - half * Math.sin(tilt)], Rt: Pt = [cx + half * Math.cos(tilt), top[1] + half * Math.sin(tilt)];
+  const pan = (p: Pt) => {
+    const py = p[1] + 120 * s;
+    return { chains: [P.line(p[0], p[1], p[0] - 50 * s, py, 8), P.line(p[0], p[1], p[0] + 50 * s, py, 8)], dish: P.polyline([...Array.from({ length: 13 }, (_, k) => [p[0] - 60 * s + (k / 12) * 120 * s, py + Math.sin((k / 12) * Math.PI) * 28 * s] as Pt), [p[0] - 60 * s, py]], 8) };
+  };
+  const pl = pan(L), pr = pan(Rt);
+  return {
+    post: P.line(cx, y, cx, y + H, 10),
+    base: P.polyline([[cx - 90 * s, y + H + 24 * s], [cx + 90 * s, y + H + 24 * s], [cx + 40 * s, y + H], [cx - 40 * s, y + H], [cx - 90 * s, y + H + 24 * s]], 10),
+    knob: P.ellipse(cx, y, 14 * s, 14 * s, 0, Math.PI * 2, 20),
+    beam: P.line(L[0], L[1], Rt[0], Rt[1], 10),
+    chains: [...pl.chains, ...pr.chains], pans: [pl.dish, pr.dish],
+    leftAt: [L[0], L[1] + 150 * s] as Pt, rightAt: [Rt[0], Rt[1] + 150 * s] as Pt,
+  };
+};
+
+/** A passport booklet: cover with rounded spine edge, an emblem (circle with a wheel of 12 spokes), a title band and a chip mark. Box w × h (portrait, w ≈ 0.7 h). */
+export const passport = (x: number, y: number, w: number, h: number) => {
+  const ec: Pt = [x + w / 2, y + h * 0.46], er = w * 0.2;
+  return {
+    cover: P.rect(x, y, w, h, w * 0.06),
+    spine: P.line(x + w * 0.06, y + 4, x + w * 0.06, y + h - 4, 10),
+    emblem: [P.ellipse(ec[0], ec[1], er, er, 0, Math.PI * 2, 40), ...Array.from({ length: 12 }, (_, k) => P.line(ec[0], ec[1], ec[0] + Math.cos((k * Math.PI) / 6) * er * 0.85, ec[1] + Math.sin((k * Math.PI) / 6) * er * 0.85, 4))],
+    titleLine: P.line(x + w * 0.2, y + h * 0.21, x + w * 0.8, y + h * 0.21, 8),
+    chip: P.rect(x + w * 0.42, y + h * 0.82, w * 0.16, h * 0.07, 4),
+    titleAt: [x + w / 2, y + h * 0.12] as Pt, nameAt: [x + w / 2, y + h * 0.74] as Pt,
+  };
+};

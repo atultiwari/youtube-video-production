@@ -323,3 +323,15 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   dashes), `superpixels` (LIME patches), `filmToken` (lead side marker), `modelCard`, `snowBank`.
   Art: CoreSlideArt, BreastTileArt, HeatSpotArt, WaterfallArt, SuperpixelArt, FilmTokenArt,
   ModelCardArt, SnowArt. A heat spot over H&E reads best at alpha 0.45–0.6.
+- **Drawing library page 19 (E19):** `worldMap` (equirectangular coastlines, 16 rings; `at(lon, lat)`
+  projects any place, `usAt`/`euAt`/`indiaAt` are pin points; keep w ≈ 2.6 h), `papSmear` + `PAP`
+  (pink and blue-green polygonal squamous cells clamped inside the field, plus `abnormal` HSIL-like
+  cells with large dark nuclei; `abnormalAt` for rings), `scales` (scales of justice, `tilt`),
+  `passport`. Art: WorldMapArt, PapSmearArt, ScalesArt, PassportArt.
+- **A Mark/flag label on a timeline must not sit where another marker's leader line runs** (E19
+  beat 08): put labels for later dates below the line and earlier ones above, staggered, and check
+  the end still.
+- **Static on list-heavy regulation beats (E19: 27% on first measure):** every long spoken clause
+  (a date, a law's name, "unless that is obvious") needs its own HL label; a Box's `sub` line drawn
+  with the box is not a second event. Splitting subs into separate HL steps on later words took it
+  under the limit.

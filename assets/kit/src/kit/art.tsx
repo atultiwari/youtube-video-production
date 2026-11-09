@@ -7,6 +7,7 @@ import React from "react";
 
 import { enclosure, pawPrint, toneScale, zooGate, zooMap } from "./objects";
 import { endoView, mammogram, seeSaw } from "./objects";
+import { papSmear, PAP, passport, scales, worldMap } from "./objects";
 import { breastTile, coreSlide, filmToken, HEAT, heatSpot, modelCard, shapWaterfall, snowBank, superpixels } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
 import { Dots, Fills, Ink, Wash } from "./Picture";
@@ -494,5 +495,51 @@ export const SnowArt: React.FC<{ x: number; y: number; w: number; h: number; at:
     <Wash shape={s.mound} color="#FFFFFF" at={at} id={`${id}m`} alpha={1} highlight />
     <Ink strokes={[s.mound]} from={at} durationInFrames={8} id={`${id}o`} width={2} double={false} pen={false} color="#A9B8C6" />
     <Dots points={s.flakes} r={5} color="#C9D6E2" at={at + 4} every={0} />
+  </>;
+};
+
+/** World map: sea frame, land washed pale, coastlines inked continent by continent. */
+export const WorldMapArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; land?: string; sea?: string }> = ({ x, y, w, h, at, id, dur = 24, land = "#E9DFC6", sea = "#DCEAF2" }) => {
+  const m = worldMap(x, y, w, h);
+  return <>
+    <Wash shape={m.frame} color={sea} at={at} id={`${id}s`} alpha={0.9} amount={2} />
+    {m.lands.map((l, i) => <Wash key={i} shape={l} color={land} at={at + dur * 0.4} id={`${id}w${i}`} alpha={1} amount={2} />)}
+    <Ink strokes={m.lands} from={at} durationInFrames={dur * 0.7} id={`${id}o`} width={2.4} double={false} pen={false} color="#7C6F58" />
+    <Ink strokes={[m.frame]} from={at} durationInFrames={dur * 0.3} id={`${id}f`} width={3} double={false} pen={false} />
+  </>;
+};
+
+/** Pap smear field: pale background, pink and blue-green squamous cells, small nuclei, then the abnormal cells' dark nuclei. */
+export const PapSmearArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; abnormal?: number }> = ({ x, y, w, h, at, id, dur = 24, abnormal = 2 }) => {
+  const s = papSmear(x, y, w, h, id, abnormal);
+  return <>
+    <Wash shape={s.field} color={PAP.bg} at={at} id={`${id}f`} alpha={1} amount={2} />
+    {s.cells.map((c, i) => <Wash key={i} shape={c.cyto} color={c.color} at={at + dur * 0.2 + (i % 4)} id={`${id}c${i}`} alpha={0.82} amount={2} />)}
+    <Ink strokes={s.cells.map((c) => c.cyto)} from={at + dur * 0.3} durationInFrames={dur * 0.3} id={`${id}r`} width={1.6} double={false} pen={false} color={PAP.rim} jitterAmount={0.4} />
+    <Fills shapes={s.cells.slice(0, s.nNormal).map((c) => c.nucleus)} color={PAP.nucleus} at={at + dur * 0.6} alpha={0.95} />
+    <Fills shapes={s.cells.slice(s.nNormal).map((c) => c.nucleus)} color={PAP.hsil} at={at + dur * 0.75} alpha={0.95} />
+    <Ink strokes={[s.field]} from={at} durationInFrames={dur * 0.3} id={`${id}o`} width={3} double={false} pen={false} />
+  </>;
+};
+
+/** Scales of justice: post and base, beam, chains, pans (brass). */
+export const ScalesArt: React.FC<{ cx: number; y: number; s?: number; tilt?: number; at: number; id: string; dur?: number }> = ({ cx, y, s = 1, tilt = 0, at, id, dur = 18 }) => {
+  const k = scales(cx, y, s, tilt);
+  return <>
+    <Wash shape={k.base} color="#D9B45A" at={at + dur * 0.2} id={`${id}b`} alpha={1} highlight />
+    {k.pans.map((p, i) => <Wash key={i} shape={p} color="#E2C06A" at={at + dur * 0.7} id={`${id}p${i}`} alpha={1} highlight />)}
+    <Ink strokes={[k.post, k.base, k.knob]} from={at} durationInFrames={dur * 0.35} id={`${id}o`} width={5} double={false} color="#6B5320" />
+    <Ink strokes={[k.beam]} from={at + dur * 0.35} durationInFrames={dur * 0.2} id={`${id}m`} width={6} double={false} color="#6B5320" />
+    <Ink strokes={[...k.chains, ...k.pans]} from={at + dur * 0.55} durationInFrames={dur * 0.45} id={`${id}c`} width={3} double={false} pen={false} color="#6B5320" />
+  </>;
+};
+
+/** Passport: coloured cover, spine, gold emblem, title line, chip mark. */
+export const PassportArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; color?: string; dur?: number }> = ({ x, y, w, h, at, id, color = "#2F4E7A", dur = 16 }) => {
+  const p = passport(x, y, w, h);
+  return <>
+    <Wash shape={p.cover} color={color} at={at} id={`${id}c`} alpha={1} highlight />
+    <Ink strokes={[p.cover, p.spine]} from={at} durationInFrames={dur * 0.4} id={`${id}o`} width={3} double={false} />
+    <Ink strokes={[...p.emblem, p.titleLine, p.chip]} from={at + dur * 0.4} durationInFrames={dur * 0.6} id={`${id}e`} width={3} double={false} pen={false} color="#E8C766" />
   </>;
 };

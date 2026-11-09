@@ -93,7 +93,10 @@ def norm_words(text: str) -> list[str]:
 UK_WORDS = {"centre": "center", "centres": "centers", "metre": "meter", "litre": "liter", "fibre": "fiber",
             "theatre": "theater", "programme": "program", "programmes": "programs", "grey": "gray",
             "practise": "practice", "licence": "license", "defence": "defense", "analyse": "analyze",
-            "analysed": "analyzed", "analysing": "analyzing", "catalogue": "catalog", "dialogue": "dialog"}
+            "analysed": "analyzed", "analysing": "analyzing", "catalogue": "catalog", "dialogue": "dialog",
+            # Homophones Whisper cannot tell apart; both sides map to one form (E19: "medical council"
+            # was written "counsel" in four takes of two different lines).
+            "counsel": "council"}
 UK_RULES = [
     (re.compile(r"^(un)?(label|model|travel|cancel|signal|level|channel|fuel|total|counsel)l(ed|ing|er|ers)$"), r"\1\2\3"),
     (re.compile(r"^(an)?haem"), r"\1hem"),
