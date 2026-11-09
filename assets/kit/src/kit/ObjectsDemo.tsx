@@ -28,6 +28,8 @@ import { dial, lesion, padlock, questionPaper, ruler, skinMarker } from "./objec
 import { blackboard, chestFilm, clock, database, doctor, ecgStrip, finger, foot, fundus, glassSlide, goBoard, headScan, heart, hospital, ivBag, monitor, monofilament, oximeter, phone, sheet, STAIN, syringe, testTube } from "./objects";
 import { PapSmearArt, PassportArt, ScalesArt, WorldMapArt } from "./art";
 import { passport, worldMap } from "./objects";
+import { ChestXrayArt, HeadCTArt, SkinProbeArt, UNetArt } from "./art";
+import { uNet } from "./objects";
 import { chapter, CHAPTERS, INK, TISSUE } from "./style";
 
 const C = chapter(Object.keys(CHAPTERS)[0]);
@@ -802,6 +804,32 @@ export const ObjectsDemo19: React.FC = () => (
         <PassportArt x={1560} y={560} w={230} h={330} at={0} id="pp" />
         <Label text="PASSPORT" x={PP.titleAt[0]} y={PP.titleAt[1] + 10} at={0} size={26} italic={false} weight={800} color="#E8C766" />
         <Label text="passport" x={1675} y={930} at={0} size={28} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+const UN = uNet(1010, 560, 880, 470);
+export const ObjectsDemo20: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <ChestXrayArt x={30} y={30} w={330} h={400} at={0} id="cx1" />
+        <Label text="chest X-ray, nodule" x={195} y={470} at={0} size={28} italic={false} />
+        <ChestXrayArt x={400} y={30} w={330} h={400} at={0} id="cx2" boxAt={0} />
+        <Label text="detection box" x={565} y={470} at={0} size={28} italic={false} />
+        <ChestXrayArt x={770} y={30} w={330} h={400} at={0} id="cx3" segAt={0} />
+        <Label text="segmentation" x={935} y={470} at={0} size={28} italic={false} />
+        <HeadCTArt cx={1330} cy={230} r={190} at={0} id="ct1" boxAt={0} />
+        <Label text="axial head CT, right-sided bleed" x={1330} y={470} at={0} size={28} italic={false} />
+        <HeadCTArt cx={1730} cy={230} r={150} at={0} id="ct2" bleed={false} />
+        <Label text="normal" x={1730} y={430} at={0} size={28} italic={false} />
+        <SkinProbeArt x={60} y={560} s={1.1} at={0} id="sp" lightAt={0} />
+        <Label text="handheld skin probe (spectroscopy)" x={340} y={1000} at={0} size={28} italic={false} />
+        <UNetArt x={1010} y={560} w={880} h={470} at={0} id="un" />
+        <Label text="contracting: what" x={UN.whatAt[0]} y={UN.whatAt[1]} at={0} size={26} italic={false} />
+        <Label text="expanding: where" x={UN.whereAt[0]} y={UN.whereAt[1]} at={0} size={26} italic={false} />
+        <Label text="U-Net (bridges = skip connections)" x={1450} y={1030} at={0} size={28} italic={false} />
       </Picture>
     </Paper>
   </AbsoluteFill>

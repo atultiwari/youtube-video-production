@@ -328,6 +328,19 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   (pink and blue-green polygonal squamous cells clamped inside the field, plus `abnormal` HSIL-like
   cells with large dark nuclei; `abnormalAt` for rings), `scales` (scales of justice, `tilt`),
   `passport`. Art: WorldMapArt, PapSmearArt, ScalesArt, PassportArt.
+- **Drawing library page 20 (E20):** `chestXray` (frontal radiograph: black film, grey torso,
+  dark lungs with hilar markings, white mediastinum and spine, eight ribs a side, clavicles, an
+  optional right mid-zone nodule; `nodBox`/`boxCorners` for a detection box, `nodule` doubles as the
+  segmentation outline), `headCT` (axial slice, radiological convention: skull, grey brain, sulci,
+  falx, frontal horns, optional hyperdense bleed with an oedema rim and `boxCorners`), `uNet` (the U:
+  contracting blocks, bottom, expanding blocks, down/up arrows, bridges; `whatAt`/`whereAt`/
+  `bridgeAt` label points), `skinProbe` (handheld spectroscopy pen over a lesion, `raysIn`/
+  `raysOut`). Art: ChestXrayArt (`boxAt`, `segAt`), HeadCTArt (`boxAt`), UNetArt (`upAt`,
+  `bridgeAt` stage the arms), SkinProbeArt (`lightAt`). Medical images look real only on a dark
+  film: wash the film first, then soft tissue, then air (lungs) darker, then bone lighter.
+- **Never clear a picture with a paper-coloured cover `Wash` (E20):** a `highlight` wash is
+  multiplied and translucent, so the old picture shows through. Give the earlier items
+  `until: "<id of the new step>"` (any step id works, not only notes).
 - **A Mark/flag label on a timeline must not sit where another marker's leader line runs** (E19
   beat 08): put labels for later dates below the line and earlier ones above, staggered, and check
   the end still.

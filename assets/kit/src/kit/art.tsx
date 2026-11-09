@@ -8,10 +8,12 @@ import React from "react";
 import { enclosure, pawPrint, toneScale, zooGate, zooMap } from "./objects";
 import { endoView, mammogram, seeSaw } from "./objects";
 import { papSmear, PAP, passport, scales, worldMap } from "./objects";
+import { chestXray, headCT, skinProbe, uNet } from "./objects";
 import { breastTile, coreSlide, filmToken, HEAT, heatSpot, modelCard, shapWaterfall, snowBank, superpixels } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
 import { Dots, Fills, Ink, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
+import { P } from "./shapes";
 
 /** The H&E colon tile: stroma wash, crypt cytoplasm, mucin, lumens, nuclei, then the outlines. */
 export const ColonTileArt: React.FC<{ x: number; y: number; w: number; h: number; kind?: "normal" | "tumour"; at: number; id: string; dur?: number; outline?: boolean }> = ({
@@ -541,5 +543,86 @@ export const PassportArt: React.FC<{ x: number; y: number; w: number; h: number;
     <Wash shape={p.cover} color={color} at={at} id={`${id}c`} alpha={1} highlight />
     <Ink strokes={[p.cover, p.spine]} from={at} durationInFrames={dur * 0.4} id={`${id}o`} width={3} double={false} />
     <Ink strokes={[...p.emblem, p.titleLine, p.chip]} from={at + dur * 0.4} durationInFrames={dur * 0.6} id={`${id}e`} width={3} double={false} pen={false} color="#E8C766" />
+  </>;
+};
+
+/* ---- E20 (Nov 2026) ---- */
+
+/** Chest radiograph: black film, grey torso, dark lungs, white mediastinum and spine, ribs and clavicles, then the nodule. `box`/`seg` add the detection brackets (green) and the segmentation (orange outline and fill) from their frames. */
+export const ChestXrayArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; nodule?: boolean; boxAt?: number; segAt?: number }> = ({ x, y, w, h, at, id, dur = 20, nodule = true, boxAt, segAt }) => {
+  const c = chestXray(x, y, w, h, nodule);
+  return <>
+    <Wash shape={c.film} color="#15181C" at={at} id={`${id}f`} alpha={1} amount={2} highlight />
+    <Wash shape={c.body} color="#868C93" at={at + dur * 0.15} id={`${id}b`} alpha={1} amount={2} />
+    {c.lungs.map((l, i) => <Wash key={i} shape={l} color="#2C3137" at={at + dur * 0.3} id={`${id}l${i}`} alpha={1} amount={2} />)}
+    <Wash shape={c.spine} color="#8E949B" at={at + dur * 0.35} id={`${id}sp`} alpha={0.9} amount={2} />
+    <Wash shape={c.mediastinum} color="#C3C8CD" at={at + dur * 0.4} id={`${id}m`} alpha={1} amount={2} />
+    <Ink strokes={c.vessels} from={at + dur * 0.4} durationInFrames={dur * 0.2} id={`${id}vs`} width={2.5} double={false} pen={false} color="#5E656D" />
+    <Ink strokes={c.ribs} from={at + dur * 0.45} durationInFrames={dur * 0.35} id={`${id}r`} width={4} double={false} pen={false} color="#9CA2A8" />
+    <Ink strokes={c.clavicles} from={at + dur * 0.45} durationInFrames={dur * 0.2} id={`${id}c`} width={6} double={false} pen={false} color="#C9CED3" />
+    <Ink strokes={[c.film]} from={at} durationInFrames={dur * 0.2} id={`${id}o`} width={3} double={false} pen={false} />
+    {nodule ? <Wash shape={c.nodule} color="#D3D7DB" at={at + dur * 0.85} id={`${id}n`} alpha={0.95} amount={1} /> : null}
+    {boxAt !== undefined ? <Ink strokes={c.boxCorners} from={boxAt} durationInFrames={6} id={`${id}bx`} width={5} double={false} pen={false} color="#2FD16A" /> : null}
+    {segAt !== undefined ? <>
+      <Wash shape={c.nodule} color="#F08A24" at={segAt + 4} id={`${id}sg`} alpha={0.75} amount={1} highlight />
+      <Ink strokes={[c.nodule]} from={segAt} durationInFrames={8} id={`${id}so`} width={4} double={false} pen={false} color="#F08A24" />
+    </> : null}
+  </>;
+};
+
+/** Axial head CT: black square, grey brain, CSF sulci and ventricles, falx, white skull, then the bleed (white) with its dark oedema rim; `boxAt` adds green detection brackets. */
+export const HeadCTArt: React.FC<{ cx: number; cy: number; r: number; at: number; id: string; dur?: number; bleed?: boolean; boxAt?: number }> = ({ cx, cy, r, at, id, dur = 20, bleed = true, boxAt }) => {
+  const c = headCT(cx, cy, r, bleed);
+  return <>
+    <Wash shape={c.frame} color="#0F1114" at={at} id={`${id}f`} alpha={1} amount={2} highlight />
+    <Wash shape={c.skull} color="#EEF0F2" at={at + dur * 0.15} id={`${id}s`} alpha={1} amount={1} />
+    <Wash shape={c.brain} color="#7D838A" at={at + dur * 0.3} id={`${id}b`} alpha={1} amount={1} />
+    <Ink strokes={c.sulci} from={at + dur * 0.4} durationInFrames={dur * 0.2} id={`${id}su`} width={3} double={false} pen={false} color="#3E4349" />
+    <Ink strokes={[c.falx]} from={at + dur * 0.45} durationInFrames={dur * 0.15} id={`${id}fx`} width={3} double={false} pen={false} color="#B9BEC3" />
+    {c.ventricles.map((v, i) => <Wash key={i} shape={v} color="#2E3237" at={at + dur * 0.5} id={`${id}v${i}`} alpha={1} amount={1} />)}
+    <Ink strokes={[c.frame]} from={at} durationInFrames={dur * 0.2} id={`${id}o`} width={3} double={false} pen={false} />
+    {bleed ? <>
+      <Wash shape={c.oedema} color="#575D63" at={at + dur * 0.7} id={`${id}e`} alpha={1} amount={1} />
+      <Wash shape={c.bleed} color="#F1F3F4" at={at + dur * 0.8} id={`${id}h`} alpha={1} amount={1} />
+    </> : null}
+    {boxAt !== undefined ? <Ink strokes={c.boxCorners} from={boxAt} durationInFrames={6} id={`${id}bx`} width={5} double={false} pen={false} color="#2FD16A" /> : null}
+  </>;
+};
+
+/** U-Net: the left arm (blue blocks, red down-arrows), bottom, right arm (green, green up-arrows), then the grey bridges; input tile and output mask. Stages from `downAt`, `upAt`, `bridgeAt` (default: in order over `dur`). */
+export const UNetArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; upAt?: number; bridgeAt?: number }> = ({ x, y, w, h, at, id, dur = 30, upAt, bridgeAt }) => {
+  const u = uNet(x, y, w, h);
+  const ua = upAt ?? at + dur * 0.45, ba = bridgeAt ?? at + dur * 0.8;
+  return <>
+    <Wash shape={u.inTile} color="#6E747B" at={at} id={`${id}it`} alpha={1} amount={1} highlight />
+    {u.left.flat().map((b, i) => <Wash key={i} shape={b} color="#9EC1E3" at={at + (i >> 1) * dur * 0.08} id={`${id}l${i}`} alpha={1} amount={1} />)}
+    <Ink strokes={[u.inTile, ...u.left.flat()]} from={at} durationInFrames={dur * 0.35} id={`${id}lo`} width={2.5} double={false} pen={false} />
+    <Ink strokes={u.downs} from={at + dur * 0.1} durationInFrames={dur * 0.3} id={`${id}d`} width={4} double={false} pen={false} color="#C8423B" />
+    {u.bottom.map((b, i) => <Wash key={i} shape={b} color="#C9B2E3" at={at + dur * 0.38} id={`${id}bt${i}`} alpha={1} amount={1} />)}
+    <Ink strokes={u.bottom} from={at + dur * 0.38} durationInFrames={dur * 0.06} id={`${id}bo`} width={2.5} double={false} pen={false} />
+    {u.right.flat().map((b, i) => <Wash key={i} shape={b} color="#A9D9B0" at={ua + (3 - (i >> 1)) * dur * 0.06} id={`${id}r${i}`} alpha={1} amount={1} />)}
+    <Ink strokes={u.right.flat()} from={ua} durationInFrames={dur * 0.25} id={`${id}ro`} width={2.5} double={false} pen={false} />
+    <Ink strokes={u.ups} from={ua} durationInFrames={dur * 0.25} id={`${id}u`} width={4} double={false} pen={false} color="#2E8B57" />
+    <Wash shape={u.outTile} color="#F08A24" at={ua + dur * 0.3} id={`${id}ot`} alpha={0.9} amount={1} highlight />
+    <Ink strokes={[u.outTile]} from={ua + dur * 0.3} durationInFrames={dur * 0.06} id={`${id}oo`} width={2.5} double={false} pen={false} />
+    <Ink strokes={u.bridges} from={ba} durationInFrames={dur * 0.2} id={`${id}br`} width={3.5} double={false} pen={false} color="#6B7178" />
+  </>;
+};
+
+/** Handheld skin probe over a lesion: skin patch, lesion, probe body, nose, screen, grip, then light in (amber) and scattered light out (sky blue) from `lightAt`. */
+export const SkinProbeArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number; lightAt?: number; skin?: string }> = ({ x, y, s = 1, at, id, dur = 20, lightAt, skin = "#D9A77E" }) => {
+  const p = skinProbe(x, y, s);
+  return <>
+    <Wash shape={p.skin} color={skin} at={at} id={`${id}sk`} alpha={1} amount={2} />
+    <Fills shapes={[P.blob(p.lesionAt[0], p.lesionAt[1], 34 * s, 16 * s, `${id}les`, 0.18, 32)]} color="#5A3A24" at={at + dur * 0.2} alpha={1} />
+    <Wash shape={p.body} color="#F2F2EE" at={at + dur * 0.3} id={`${id}b`} alpha={1} amount={1} highlight />
+    <Wash shape={p.nose} color="#D9DCE0" at={at + dur * 0.3} id={`${id}n`} alpha={1} amount={1} />
+    <Wash shape={p.grip} color="#3E7CB1" at={at + dur * 0.5} id={`${id}g`} alpha={1} amount={1} />
+    <Wash shape={p.screen} color="#24323F" at={at + dur * 0.5} id={`${id}sc`} alpha={1} amount={1} />
+    <Ink strokes={[p.body, p.nose, p.grip, p.screen, p.window]} from={at + dur * 0.3} durationInFrames={dur * 0.5} id={`${id}o`} width={3} double={false} />
+    {lightAt !== undefined ? <>
+      <Ink strokes={p.raysIn} from={lightAt} durationInFrames={8} id={`${id}ri`} width={4} double={false} pen={false} color="#E8A93B" />
+      <Ink strokes={p.raysOut} from={lightAt + 8} durationInFrames={8} id={`${id}ro`} width={4} double={false} pen={false} color="#5BA7D9" />
+    </> : null}
   </>;
 };

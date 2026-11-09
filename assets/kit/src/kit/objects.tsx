@@ -2724,3 +2724,164 @@ export const passport = (x: number, y: number, w: number, h: number) => {
     titleAt: [x + w / 2, y + h * 0.12] as Pt, nameAt: [x + w / 2, y + h * 0.74] as Pt,
   };
 };
+
+/* ---- E20 (Nov 2026): chest radiograph, axial head CT, U-Net diagram, handheld skin probe ---- */
+
+/**
+ * A frontal (PA) chest radiograph as it looks on a light box: black film, mid-grey soft tissue of
+ * the torso and shoulders, two dark lung fields, the white mediastinum and heart (bulging to the
+ * patient's left, the viewer's right), the spine behind it, clavicles, eight posterior ribs on
+ * each side, the diaphragm domes, and an optional solitary nodule in the patient's right mid zone
+ * (viewer's left). Box w × h (portrait, w ≈ 0.85 h). Parts: `film`, `body`, `lungs` [R, L],
+ * `mediastinum`, `spine`, `ribs`, `clavicles`, `nodule` (closed, slightly lobulated: the
+ * segmentation outline), `nodAt`, `nodR`, `nodBox` [x, y, w, h] (the detection box),
+ * `boxCorners` (four corner brackets for that box), `markerAt` (the side marker "R").
+ */
+export const chestXray = (x: number, y: number, w: number, h: number, nodule = true) => {
+  const T = (u: number, v: number): Pt => [x + u * w, y + v * h];
+  const C = (pts: [number, number][], step = 10): Pts => P.polyline([...pts.map(([u, v]) => T(u, v)), T(pts[0][0], pts[0][1])], step);
+  const body = C([[0.44, 0.03], [0.56, 0.03], [0.58, 0.1], [0.78, 0.13], [0.92, 0.2], [0.96, 0.32], [0.93, 0.6], [0.9, 0.97], [0.1, 0.97], [0.07, 0.6], [0.04, 0.32], [0.08, 0.2], [0.22, 0.13], [0.42, 0.1]]);
+  const lungR = C([[0.4, 0.17], [0.32, 0.18], [0.22, 0.26], [0.16, 0.42], [0.14, 0.6], [0.15, 0.74], [0.18, 0.79], [0.27, 0.73], [0.38, 0.69], [0.44, 0.68], [0.44, 0.5], [0.43, 0.3]]);
+  const lungL = C([[0.6, 0.17], [0.68, 0.18], [0.78, 0.26], [0.84, 0.42], [0.86, 0.6], [0.85, 0.76], [0.82, 0.81], [0.76, 0.77], [0.7, 0.74], [0.66, 0.66], [0.6, 0.55], [0.57, 0.44], [0.57, 0.3]]);
+  const mediastinum = C([[0.45, 0.12], [0.55, 0.12], [0.57, 0.3], [0.6, 0.42], [0.7, 0.55], [0.73, 0.68], [0.68, 0.77], [0.5, 0.79], [0.4, 0.76], [0.38, 0.66], [0.43, 0.5], [0.43, 0.3]]);
+  const spine = C([[0.475, 0.04], [0.525, 0.04], [0.53, 0.96], [0.47, 0.96]]);
+  const ribs: Pts[] = [];
+  for (let k = 0; k < 8; k++) {
+    const v = 0.2 + k * 0.068;
+    ribs.push(cubic(T(0.46, v), T(0.3, v - 0.05), T(0.16, v + 0.0), T(0.15, v + 0.1 + k * 0.004), 16));
+    ribs.push(cubic(T(0.54, v), T(0.7, v - 0.05), T(0.84, v + 0.0), T(0.85, v + 0.1 + k * 0.004), 16));
+  }
+  const clavicles = [cubic(T(0.47, 0.17), T(0.38, 0.13), T(0.28, 0.16), T(0.18, 0.13), 14), cubic(T(0.53, 0.17), T(0.62, 0.13), T(0.72, 0.16), T(0.82, 0.13), 14)];
+  const vessels: Pts[] = [];
+  for (const sd of [-1, 1]) {
+    const hx = 0.5 + sd * 0.11, hy = 0.42;
+    for (let k = 0; k < 5; k++) {
+      const a = -0.9 + k * 0.45, len = 0.17 + (k % 2) * 0.05;
+      const ex = hx + sd * Math.cos(a) * len * 0.9, ey = hy + Math.sin(a) * len;
+      vessels.push(cubic(T(hx, hy), T(hx + sd * 0.05, hy + Math.sin(a) * 0.04), T((hx + ex) / 2, (hy + ey) / 2), T(ex, ey), 10));
+    }
+  }
+  const nodAt = T(0.3, 0.44), nodR = w * 0.042;
+  const b = nodR * 2.1, bx = nodAt[0] - b, by = nodAt[1] - b, bs = b * 2, k = bs * 0.28;
+  const corner = (x0: number, y0: number, dx: number, dy: number) => P.polyline([[x0 + dx * k, y0], [x0, y0], [x0, y0 + dy * k]], 6);
+  return {
+    film: P.rect(x, y, w, h, 8), body, lungs: [lungR, lungL], mediastinum, spine, ribs, clavicles, vessels,
+    nodule: nodule ? P.blob(nodAt[0], nodAt[1], nodR, nodR * 0.9, "cxrNodule", 0.12, 36) : ([] as unknown as Pts),
+    nodAt, nodR, nodBox: [bx, by, bs, bs] as [number, number, number, number],
+    boxCorners: [corner(bx, by, 1, 1), corner(bx + bs, by, -1, 1), corner(bx, by + bs, 1, -1), corner(bx + bs, by + bs, -1, -1)],
+    markerAt: T(0.1, 0.07),
+  };
+};
+
+/**
+ * An axial non-contrast head CT slice at the level of the lateral ventricles, radiological
+ * convention (patient's right on the viewer's left): black background square, the white skull
+ * (outer and inner table), grey brain, darker CSF in a few sulci, the falx in the midline, the
+ * two frontal horns of the lateral ventricles (dark, butterfly), and an optional hyperdense
+ * (white) intraparenchymal bleed in the patient's right basal ganglia with a dark rim of oedema.
+ * Centre (cx, cy), half-width r. Parts: `frame`, `skull` (outer), `inner`, `brain`, `sulci`,
+ * `falx`, `ventricles` [R, L], `bleed`, `oedema`, `bleedAt`, `bleedBox`, `boxCorners`.
+ */
+export const headCT = (cx: number, cy: number, r: number, bleed = true) => {
+  const rx = r * 0.78, ry = r * 0.92;
+  const vent = (s: number) => {
+    const A = (u: number, v: number): Pt => [cx + s * u * r, cy + v * r];
+    return [...cubic(A(0.03, -0.32), A(0.17, -0.34), A(0.2, -0.12), A(0.1, 0.0), 12), ...cubic(A(0.1, 0.0), A(0.07, 0.06), A(0.08, 0.14), A(0.04, 0.14), 8).slice(1),
+      ...cubic(A(0.04, 0.14), A(0.02, 0.04), A(0.02, -0.2), A(0.03, -0.32), 10).slice(1)] as Pts;
+  };
+  const sulci: Pts[] = [];
+  for (let k = 0; k < 14; k++) {
+    const a = (k / 14) * Math.PI * 2 + 0.2, a2 = a + 0.06;
+    const r0 = 0.86, r1 = 0.72 + 0.05 * (k % 3);
+    sulci.push(P.polyline([[cx + Math.cos(a) * rx * r0 * 0.95, cy + Math.sin(a) * ry * r0 * 0.95], [cx + Math.cos(a2) * rx * r1, cy + Math.sin(a2) * ry * r1]], 6));
+  }
+  const bAt: Pt = [cx - r * 0.32, cy + r * 0.02], br = r * 0.13;
+  const b = br * 1.9, bx = bAt[0] - b, by = bAt[1] - b, bs = b * 2, k = bs * 0.28;
+  const corner = (x0: number, y0: number, dx: number, dy: number) => P.polyline([[x0 + dx * k, y0], [x0, y0], [x0, y0 + dy * k]], 6);
+  return {
+    frame: P.rect(cx - r * 1.05, cy - r * 1.05, r * 2.1, r * 2.1, 6),
+    skull: P.blob(cx, cy, rx * 1.1, ry * 1.06, "ctSkull", 0.02, 72),
+    inner: P.blob(cx, cy, rx * 1.0, ry * 0.97, "ctInner", 0.02, 72),
+    brain: P.blob(cx, cy, rx * 0.98, ry * 0.95, "ctInner", 0.02, 72),
+    sulci, falx: P.line(cx, cy - ry * 0.95, cx, cy + ry * 0.95, 20),
+    ventricles: [vent(-1), vent(1)],
+    bleed: bleed ? P.blob(bAt[0], bAt[1], br * 1.1, br * 0.85, "ctBleed", 0.18, 32) : ([] as unknown as Pts),
+    oedema: bleed ? P.blob(bAt[0], bAt[1], br * 1.55, br * 1.25, "ctOed", 0.12, 32) : ([] as unknown as Pts),
+    bleedAt: bAt, bleedBox: [bx, by, bs, bs] as [number, number, number, number],
+    boxCorners: [corner(bx, by, 1, 1), corner(bx + bs, by, -1, 1), corner(bx, by + bs, 1, -1), corner(bx + bs, by + bs, -1, -1)],
+  };
+};
+
+/**
+ * The U-Net diagram (Ronneberger 2015, Fig. 1, simplified): feature-map blocks down the left arm
+ * (four levels, each lower and narrower: the contracting path), one block at the bottom, four up
+ * the right arm (the expanding path), red down-arrows between left levels, green up-arrows on the
+ * right, and grey "bridge" arrows across the U at each level (skip connections). A small input
+ * image tile at the far left and an output mask tile at the far right. Box w × h (w ≈ 1.6 h).
+ * Parts: `left`, `right` (block rects, top level first), `bottom`, `downs`, `ups`, `bridges`,
+ * `inTile`, `outTile`, `whatAt`, `whereAt`, `bridgeAt` (label points), `bridgeMid` (centres).
+ */
+export const uNet = (x: number, y: number, w: number, h: number) => {
+  const lv = 4, bw = w * 0.05, gap = w * 0.012;
+  const lvlY = (i: number) => y + h * 0.04 + i * h * 0.2;
+  const lvlH = (i: number) => h * (0.17 - i * 0.025);
+  const lx = (i: number) => x + w * 0.14 + i * w * 0.075;
+  const rx = (i: number) => x + w * 0.86 - i * w * 0.075 - 2 * bw - gap;
+  const pair = (x0: number, y0: number, hh: number) => [P.rect(x0, y0, bw, hh, 3), P.rect(x0 + bw + gap, y0, bw, hh, 3)];
+  const left = Array.from({ length: lv }, (_, i) => pair(lx(i), lvlY(i), lvlH(i)));
+  const right = Array.from({ length: lv }, (_, i) => pair(rx(i), lvlY(i), lvlH(i)));
+  const bx0 = x + w / 2 - bw - gap / 2, by0 = lvlY(lv), bh = lvlH(lv);
+  const bottom = pair(bx0, by0, bh);
+  const arrow = (a: Pt, b: Pt): Pts[] => {
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), hl = w * 0.016;
+    return [P.line(a[0], a[1], b[0], b[1], 10), P.polyline([[b[0] - Math.cos(ang - 0.5) * hl, b[1] - Math.sin(ang - 0.5) * hl], b, [b[0] - Math.cos(ang + 0.5) * hl, b[1] - Math.sin(ang + 0.5) * hl]], 4)];
+  };
+  const downs: Pts[] = [], ups: Pts[] = [], bridges: Pts[] = [], bridgeMid: Pt[] = [];
+  for (let i = 0; i < lv; i++) {
+    const nx = i + 1 < lv ? lx(i + 1) : bx0, ny = i + 1 < lv ? lvlY(i + 1) : by0;
+    downs.push(...arrow([lx(i) + bw, lvlY(i) + lvlH(i) + 4], [nx + bw * 0.6, ny - 6]));
+    const ux = i + 1 < lv ? rx(i + 1) + 2 * bw + gap : bx0 + 2 * bw + gap, uy = i + 1 < lv ? lvlY(i + 1) : by0;
+    ups.push(...arrow([ux - bw * 0.6, uy - 6], [rx(i) + bw, lvlY(i) + lvlH(i) + 4]));
+    const yy = lvlY(i) + lvlH(i) / 2;
+    bridges.push(...arrow([lx(i) + 2 * bw + gap + 8, yy], [rx(i) - 8, yy]));
+    bridgeMid.push([(lx(i) + 2 * bw + gap + rx(i)) / 2, yy]);
+  }
+  const ts = h * 0.17;
+  return {
+    left, right, bottom, downs, ups, bridges, bridgeMid,
+    inTile: P.rect(x, lvlY(0), ts * 0.95, ts, 4), outTile: P.rect(x + w - ts * 0.95, lvlY(0), ts * 0.95, ts, 4),
+    inBox: [x, lvlY(0), ts * 0.95, ts] as [number, number, number, number], outBox: [x + w - ts * 0.95, lvlY(0), ts * 0.95, ts] as [number, number, number, number],
+    whatAt: [lx(1) - w * 0.06, lvlY(3) + h * 0.06] as Pt, whereAt: [rx(1) + w * 0.12, lvlY(3) + h * 0.06] as Pt, bridgeAt: [x + w / 2, lvlY(0) - h * 0.02] as Pt,
+  };
+};
+
+/**
+ * A handheld skin probe (spectroscopy pen of the kind authorised for primary care in 2024): a
+ * long rounded body angled down to the left, a small screen, a grip band, a tapered nose with the
+ * optical window at the tip, held over a pigmented lesion on a patch of skin; three short light
+ * rays go down from the tip and three scatter back up. Local box 520 × 360 at (x, y) × s.
+ * Parts: `skin` (closed), `body`, `screen`, `grip`, `nose`, `window`, `raysIn`, `raysOut`,
+ * `lesionAt` (centre of the lesion; draw kit `lesion` there), `tipAt`.
+ */
+export const skinProbe = (x: number, y: number, s = 1) => {
+  const T = (u: number, v: number): Pt => [x + u * s, y + v * s];
+  const rot = (u: number, v: number): Pt => {
+    const a = -0.42, ox = 300, oy = 120; // body tilted, nose down-left
+    const du = u - ox, dv = v - oy;
+    return T(ox + du * Math.cos(a) - dv * Math.sin(a), oy + du * Math.sin(a) + dv * Math.cos(a));
+  };
+  const R = (pts: [number, number][]) => P.polyline([...pts.map(([u, v]) => rot(u, v)), rot(pts[0][0], pts[0][1])], 8);
+  const tip = rot(150, 120);
+  const lesionAt: Pt = [tip[0] - 4 * s, y + 318 * s];
+  return {
+    skin: P.polyline([T(0, 290), T(520, 290), T(520, 360), T(0, 360), T(0, 290)], 12),
+    body: R([[220, 92], [470, 92], [486, 104], [486, 136], [470, 148], [220, 148]]),
+    screen: R([[300, 102], [380, 102], [380, 124], [300, 124]]),
+    grip: R([[400, 92], [430, 92], [430, 148], [400, 148]]),
+    nose: R([[220, 92], [160, 110], [150, 120], [160, 130], [220, 148]]),
+    window: P.ellipse(tip[0], tip[1], 6 * s, 6 * s, 0, Math.PI * 2, 16),
+    raysIn: [-0.25, 0, 0.25].map((d) => P.line(tip[0] + d * 30 * s, tip[1] + 14 * s, lesionAt[0] + d * 60 * s, lesionAt[1] - 18 * s, 8)),
+    raysOut: [-0.6, 0.6, 1.0].map((d) => P.line(lesionAt[0] + d * 30 * s, lesionAt[1] - 22 * s, lesionAt[0] + d * 110 * s, lesionAt[1] - 110 * s, 8)),
+    lesionAt, tipAt: tip,
+  };
+};

@@ -329,3 +329,7 @@ language goes first.
   Organisation" came back "Central Trucks/Centre Drug" in three takes (the name moved on screen
   only); "the FDA's list" was heard "FDs"/"ftas" (possessive of a respelled acronym: avoid it);
   "Pap smears you" ran together as "paps mears". check-takes now treats council/counsel as one word.
+- **"marked routine" and "head CT" in a short opening line** (E20): "marked routine" fused into
+  "mark dutin"/"mark two t" in three takes, and "twenty head CT scans" came back "hit city"; in a
+  long beat the same words passed. "labelled routine" and "brain scans" passed first time. A
+  Short's first line has no context for Whisper, so keep its nouns plain.
