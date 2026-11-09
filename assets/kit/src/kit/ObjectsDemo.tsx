@@ -4,6 +4,7 @@
  * objects.tsx:  npx remotion still kit-objects out/objects.png --frame=59
  */
 import { AbsoluteFill } from "remotion";
+import { Ki67TileArt, LymphNodeArt, NodeMetTileArt, NodeSlideArt, TilePyramidArt, WsiScannerArt } from "./art";
 
 import { Paper } from "./Chrome";
 import { Cell, Rbc } from "./cells";
@@ -830,6 +831,32 @@ export const ObjectsDemo20: React.FC = () => (
         <Label text="contracting: what" x={UN.whatAt[0]} y={UN.whatAt[1]} at={0} size={26} italic={false} />
         <Label text="expanding: where" x={UN.whereAt[0]} y={UN.whereAt[1]} at={0} size={26} italic={false} />
         <Label text="U-Net (bridges = skip connections)" x={1450} y={1030} at={0} size={28} italic={false} />
+      </Picture>
+    </Paper>
+  </AbsoluteFill>
+);
+
+/** E21 page: slide scanner, tile pyramid, lymph node with subcapsular-sinus metastasis, the deposit at high power in three labs' stains, Ki-67, labelled node slide. */
+export const ObjectsDemo21: React.FC = () => (
+  <AbsoluteFill>
+    <Paper chapter={C}>
+      <Picture>
+        <WsiScannerArt x={170} y={40} s={0.95} at={0} id="sc" />
+        <Label text="slide scanner" x={200} y={420} at={0} size={28} italic={false} />
+        <TilePyramidArt x={560} y={250} S={260} at={0} id="tp" />
+        <Label text="tile pyramid" x={560} y={520} at={0} size={28} italic={false} />
+        <LymphNodeArt cx={1130} cy={230} rx={300} ry={195} at={0} id="ln" met />
+        <Label text="lymph node, metastasis in subcapsular sinus" x={1130} y={470} at={0} size={28} italic={false} />
+        <NodeSlideArt x={1480} y={110} w={420} h={150} at={0} id="ns" met />
+        <Label text="labelled node slide" x={1690} y={300} at={0} size={28} italic={false} />
+        <NodeMetTileArt x={30} y={560} w={420} h={420} at={0} id="m1" lab="A" />
+        <Label text="lab A (training)" x={240} y={1020} at={0} size={28} italic={false} />
+        <NodeMetTileArt x={480} y={560} w={420} h={420} at={0} id="m2" lab="B" />
+        <Label text="lab B" x={690} y={1020} at={0} size={28} italic={false} />
+        <NodeMetTileArt x={930} y={560} w={420} h={420} at={0} id="m3" lab="C" />
+        <Label text="lab C" x={1140} y={1020} at={0} size={28} italic={false} />
+        <Ki67TileArt x={1400} y={560} w={420} h={420} index={0.3} at={0} id="k1" />
+        <Label text="Ki-67, about 30%" x={1610} y={1020} at={0} size={28} italic={false} />
       </Picture>
     </Paper>
   </AbsoluteFill>

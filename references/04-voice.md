@@ -333,3 +333,11 @@ language goes first.
   "mark dutin"/"mark two t" in three takes, and "twenty head CT scans" came back "hit city"; in a
   long beat the same words passed. "labelled routine" and "brain scans" passed first time. A
   Short's first line has no context for Whisper, so keep its nouns plain.
+- **Pathology words in a Short's opening line** (E21): "sentinel node slides" came back "note"
+  twice; "H and E" was heard "he" (89%); a respelled "Ki" ("Kee") was transcribed "key", one miss
+  in a 14-word line = 93%. Say "lymph node slides" and "pink and purple stain", and give a line with
+  a respelled name enough other words (~20) that one mismatch stays above 95%. In a long beat
+  "Ki sixty seven" passed every time.
+- **"every … report carries X" is a claim** (E21): re-read the narration for universal words
+  ("every", "all", "always") before voicing; "every breast cancer report carries Ki-67" had to be
+  retaken as "many".

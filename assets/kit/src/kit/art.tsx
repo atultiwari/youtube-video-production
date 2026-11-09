@@ -9,6 +9,7 @@ import { enclosure, pawPrint, toneScale, zooGate, zooMap } from "./objects";
 import { endoView, mammogram, seeSaw } from "./objects";
 import { papSmear, PAP, passport, scales, worldMap } from "./objects";
 import { chestXray, headCT, skinProbe, uNet } from "./objects";
+import { HE_LAB, type HeLab, isoBox, KI67, ki67Tile, LN, lymphNode, nodeMetTile, nodeSlide, tilePyramid, wsiScanner } from "./objects";
 import { breastTile, coreSlide, filmToken, HEAT, heatSpot, modelCard, shapWaterfall, snowBank, superpixels } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
 import { Dots, Fills, Ink, Wash } from "./Picture";
@@ -624,5 +625,141 @@ export const SkinProbeArt: React.FC<{ x: number; y: number; s?: number; at: numb
       <Ink strokes={p.raysIn} from={lightAt} durationInFrames={8} id={`${id}ri`} width={4} double={false} pen={false} color="#E8A93B" />
       <Ink strokes={p.raysOut} from={lightAt + 8} durationInFrames={8} id={`${id}ro`} width={4} double={false} pen={false} color="#5BA7D9" />
     </> : null}
+  </>;
+};
+
+/* E21 (Nov 2026): pathology signature episode. Sketchbook look for the isometric objects: three tones, heavy silhouette ink, blue-grey shadow. */
+const SHADOW = "#9AA7B8";
+const IsoBoxArt: React.FC<{ b: ReturnType<typeof isoBox>; tones: [string, string, string]; at: number; id: string; dur: number; shadow?: boolean }> = ({ b, tones, at, id, dur, shadow = true }) => <>
+  {shadow ? <Wash shape={b.shadow} color={SHADOW} at={at} id={`${id}sh`} alpha={0.35} highlight /> : null}
+  <Wash shape={b.top} color={tones[0]} at={at} id={`${id}t`} alpha={1} amount={1.5} highlight />
+  <Wash shape={b.left} color={tones[1]} at={at + dur * 0.1} id={`${id}l`} alpha={1} amount={1.5} highlight />
+  <Wash shape={b.right} color={tones[2]} at={at + dur * 0.2} id={`${id}r`} alpha={1} amount={1.5} highlight />
+  <Ink strokes={[b.hull]} from={at} durationInFrames={dur * 0.5} id={`${id}h`} width={4} double={false} pen={false} />
+  <Ink strokes={b.edges} from={at + dur * 0.3} durationInFrames={dur * 0.3} id={`${id}e`} width={2} double={false} pen={false} />
+</>;
+
+/** The whole-slide scanner (isometric): cabinet, lid seam and vents, slot, tray with a slide, screen and lamp. `slideIn` (0..1, optional) is not animated here; the beat moves a slide itself. */
+export const WsiScannerArt: React.FC<{ x: number; y: number; s?: number; at: number; id: string; dur?: number; tray?: boolean }> = ({ x, y, s = 1, at, id, dur = 24, tray = true }) => {
+  const k = wsiScanner(x, y, s);
+  return <>
+    <IsoBoxArt b={k.body} tones={["#F4F1EA", "#DCD8CF", "#BDB8AE"]} at={at} id={`${id}b`} dur={dur} />
+    <Ink strokes={[k.lidSeam, ...k.vents]} from={at + dur * 0.35} durationInFrames={dur * 0.25} id={`${id}v`} width={2} double={false} pen={false} color="#6B6F75" />
+    <Wash shape={k.slot} color="#2B2F36" at={at + dur * 0.45} id={`${id}sl`} alpha={1} amount={1} highlight />
+    <Wash shape={k.screen} color="#2F5E8E" at={at + dur * 0.5} id={`${id}sc`} alpha={1} amount={1} highlight />
+    <Ink strokes={[k.screen]} from={at + dur * 0.5} durationInFrames={dur * 0.15} id={`${id}sco`} width={2} double={false} pen={false} />
+    <Ink strokes={k.screenLines} from={at + dur * 0.6} durationInFrames={dur * 0.15} id={`${id}scl`} width={3} double={false} pen={false} color="#DDE8F2" />
+    <Fills shapes={[k.lamp]} color="#3FA34D" at={at + dur * 0.65} alpha={1} stroke="#1F2328" />
+    {tray ? <>
+      <IsoBoxArt b={k.tray} tones={["#C9CDD2", "#A9AEB4", "#8E949B"]} at={at + dur * 0.6} id={`${id}tr`} dur={dur * 0.4} shadow={false} />
+      <Wash shape={k.slide.glass} color="#EEF4F6" at={at + dur * 0.8} id={`${id}g`} alpha={1} amount={1} highlight />
+      <Wash shape={k.slide.frost} color="#FBFBF8" at={at + dur * 0.82} id={`${id}f`} alpha={1} amount={1} highlight />
+      <Wash shape={k.slide.tissue} color={LN.cortex} at={at + dur * 0.86} id={`${id}ti`} alpha={0.9} amount={1} highlight />
+      <Ink strokes={[k.slide.glass, k.slide.frost]} from={at + dur * 0.8} durationInFrames={dur * 0.2} id={`${id}go`} width={2} double={false} pen={false} color="#5B6168" />
+    </> : null}
+  </>;
+};
+
+/** The tile pyramid (isometric): slabs bottom (full resolution) to top (thumbnail), each with its tile grid and a node-shaped tissue on top. `levelsAt` staggers the levels (bottom first by default). */
+export const TilePyramidArt: React.FC<{ x: number; y: number; S: number; levels?: number; gap?: number; at: number; id: string; dur?: number; order?: "up" | "down" }> = ({ x, y, S, levels = 4, gap = 70, at, id, dur = 40, order = "up" }) => {
+  const L = tilePyramid(x, y, S, levels, gap);
+  const step = dur / levels;
+  return <>{L.map((lv, j) => {
+    const t = at + (order === "up" ? j : levels - 1 - j) * step;
+    const tissue = Array.from({ length: 41 }, (_, i) => {
+      const a = (i / 40) * Math.PI * 2, d = Math.atan2(Math.sin(a - Math.PI), Math.cos(a - Math.PI));
+      const rr = 1 - 0.2 * Math.exp(-((d / 0.33) ** 2));
+      return lv.map(0.5 + Math.cos(a) * 0.36 * rr, 0.5 + Math.sin(a) * 0.26 * rr);
+    });
+    return <React.Fragment key={j}>
+      <IsoBoxArt b={lv.slab} tones={["#FBFAF6", "#E2DED6", "#C9C4BA"]} at={t} id={`${id}s${j}`} dur={step} shadow={j === 0} />
+      <Wash shape={tissue} color={LN.cortex} at={t + step * 0.4} id={`${id}ti${j}`} alpha={0.85} amount={1} highlight />
+      <Ink strokes={lv.grid} from={t + step * 0.5} durationInFrames={step * 0.5} id={`${id}g${j}`} width={1.5} double={false} pen={false} color="#5B6168" />
+    </React.Fragment>;
+  })}</>;
+};
+
+/** The lymph node at low power, optionally with the subcapsular-sinus metastasis (`met`, drawn last from `metAt`). `mini` drops follicles' germinal centres and cords for small sizes. */
+export const LymphNodeArt: React.FC<{ cx: number; cy: number; rx: number; ry: number; at: number; id: string; dur?: number; met?: boolean; metAngle?: number; metAt?: number; mini?: boolean }> = ({ cx, cy, rx, ry, at, id, dur = 30, met = false, metAngle, metAt, mini = false }) => {
+  const n = lymphNode(cx, cy, rx, ry, { met, metAngle, key: id });
+  const st = dur / 5;
+  const mAt = metAt ?? at + dur;
+  return <>
+    <Fills shapes={n.fat} color={LN.fat} at={at} alpha={1} stroke={LN.fatLine} />
+    <Wash shape={n.capsule} color={LN.capsule} at={at} id={`${id}c`} alpha={1} amount={1.5} highlight />
+    <Wash shape={n.sinus} color={LN.sinus} at={at + st * 0.4} id={`${id}s`} alpha={1} amount={1} highlight />
+    <Wash shape={n.cortex} color={LN.cortex} at={at + st * 0.8} id={`${id}co`} alpha={1} amount={1.5} highlight />
+    <Wash shape={n.paracortex} color={LN.paracortex} at={at + st * 1.2} id={`${id}pc`} alpha={0.9} amount={2} highlight />
+    <Wash shape={n.medulla} color={LN.medulla} at={at + st * 1.6} id={`${id}m`} alpha={1} amount={2} highlight />
+    {mini ? null : <Ink strokes={n.cords} from={at + st * 2} durationInFrames={st} id={`${id}cd`} width={Math.max(3, rx * 0.022)} double={false} pen={false} color={LN.cord} />}
+    <Fills shapes={n.follicles} color={LN.follicle} at={at + st * 2.4} alpha={1} />
+    {mini ? null : <Fills shapes={n.germinal} color={LN.germinal} at={at + st * 2.8} alpha={1} />}
+    <Fills shapes={n.vessels} color={LN.vessel} at={at + st * 3} alpha={1} stroke="#8E3A50" />
+    <Fills shapes={n.rbcs} color={LN.rbc} at={at + st * 3.2} alpha={0.9} />
+    {mini ? null : <Dots points={n.histiocytes} r={Math.max(1.5, rx * 0.006)} color="#B07AA0" at={at + st * 3.4} every={0} />}
+    <Ink strokes={[n.capsule]} from={at} durationInFrames={st * 1.5} id={`${id}o`} width={2.5} double={false} pen={false} color="#9C4F78" />
+    {met ? <>
+      <Wash shape={n.metShape} color={LN.met} at={mAt} id={`${id}mt`} alpha={1} amount={1} highlight />
+      <Dots points={n.metNuclei} r={Math.max(1.8, rx * 0.009)} color={LN.metNucleus} at={mAt + 4} every={0} />
+      <Ink strokes={[n.metShape]} from={mAt} durationInFrames={8} id={`${id}mo`} width={1.5} double={false} pen={false} color="#B8618C" />
+    </> : null}
+  </>;
+};
+
+/** The subcapsular-sinus metastasis at high power, in a lab's stain colours (`lab`: "A" training lab, "B" blue-heavy, "C" pale). */
+export const NodeMetTileArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; lab?: keyof typeof HE_LAB; outline?: boolean }> = ({ x, y, w, h, at, id, dur = 30, lab = "A", outline = true }) => {
+  const t = nodeMetTile(x, y, w, h, "nmt");
+  const c: HeLab = HE_LAB[lab];
+  const st = dur / 4;
+  return <>
+    <Wash shape={t.field} color={c.sinus} at={at} id={`${id}f`} alpha={1} amount={1} highlight />
+    <Wash shape={t.capsule} color={c.capsule} at={at + st * 0.2} id={`${id}c`} alpha={1} amount={1} highlight />
+    <Ink strokes={t.fibres} from={at + st * 0.4} durationInFrames={st} id={`${id}fb`} color={c.fibre} width={2} double={false} pen={false} jitterAmount={0.5} />
+    <Fills shapes={t.spindles} color={c.nucleus} at={at + st * 0.8} alpha={0.85} />
+    <Wash shape={t.cortex} color={c.cortex} at={at + st * 0.6} id={`${id}co`} alpha={1} amount={1} highlight />
+    <Fills shapes={t.lymphs} color={c.lymph} at={at + st * 1.2} alpha={0.95} />
+    <Fills shapes={t.histiocytes} color={c.histio} at={at + st * 1.4} alpha={1} />
+    <Fills shapes={t.histioNuclei} color={c.nucleusLight} at={at + st * 1.6} alpha={0.9} />
+    <Fills shapes={t.sinusLymphs} color={c.lymph} at={at + st * 1.6} alpha={0.9} />
+    <Wash shape={t.cluster} color={c.cyto} at={at + st * 2} id={`${id}cl`} alpha={1} amount={1} highlight />
+    <Fills shapes={[t.lumen]} color="#FFFFFF" at={at + st * 2.3} alpha={1} />
+    <Ink strokes={t.cellWalls} from={at + st * 2.4} durationInFrames={st * 0.6} id={`${id}cw`} color={c.fibre} width={1.2} double={false} pen={false} jitterAmount={0.3} />
+    <Fills shapes={t.nuclei} color={c.nucleusLight} at={at + st * 2.6} alpha={0.95} stroke={c.nucleus} />
+    <Dots points={t.nucleoli} r={Math.max(2, Math.min(w, h) * 0.006)} color={c.nucleus} at={at + st * 3} every={0} />
+    <Ink strokes={[t.cluster]} from={at + st * 2} durationInFrames={st} id={`${id}clo`} color={c.fibre} width={1.6} double={false} pen={false} />
+    {outline ? <Ink strokes={[t.field]} from={at} durationInFrames={st} id={`${id}o`} width={3} double={false} pen={false} /> : null}
+  </>;
+};
+
+/** A Ki-67 tile: pale stroma, unstained tumour nests, blue negative and brown positive nuclei (light to dark). `posAt` delays the brown nuclei (they appear as blue until then when `reveal`). */
+export const Ki67TileArt: React.FC<{ x: number; y: number; w: number; h: number; index?: number; at: number; id: string; dur?: number; outline?: boolean; posAt?: number }> = ({ x, y, w, h, index = 0.3, at, id, dur = 24, outline = true, posAt }) => {
+  const t = ki67Tile(x, y, w, h, index, id);
+  const st = dur / 4;
+  const pAt = posAt ?? at + st * 2.4;
+  return <>
+    <Wash shape={t.field} color={KI67.bg} at={at} id={`${id}f`} alpha={1} amount={1} highlight />
+    <Ink strokes={t.fibres} from={at + st * 0.3} durationInFrames={st} id={`${id}fb`} color={KI67.fibre} width={2} double={false} pen={false} jitterAmount={0.5} />
+    {t.groups.map((g, i) => <Wash key={i} shape={g} color={KI67.cyto} at={at + st * 0.8} id={`${id}g${i}`} alpha={1} amount={1} highlight />)}
+    <Ink strokes={t.groups} from={at + st * 0.9} durationInFrames={st} id={`${id}go`} color="#CBBFC0" width={1.3} double={false} pen={false} jitterAmount={0.4} />
+    <Fills shapes={t.stromaNuclei} color={KI67.neg} at={at + st * 1.4} alpha={0.8} />
+    <Fills shapes={t.lymphs} color={KI67.negRim} at={at + st * 1.4} alpha={0.85} />
+    <Fills shapes={t.neg} color={KI67.neg} at={at + st * 1.8} alpha={0.95} stroke={KI67.negRim} />
+    {posAt !== undefined ? t.pos.map((p, i) => <Fills key={`b${i}`} shapes={p} color={KI67.neg} at={at + st * 1.8} alpha={0.95} stroke={KI67.negRim} />) : null}
+    {t.pos.map((p, i) => <Fills key={i} shapes={p} color={KI67.pos[i]} at={pAt + i * 2} alpha={1} stroke={KI67.pos[2]} />)}
+    {outline ? <Ink strokes={[t.field]} from={at} durationInFrames={st} id={`${id}o`} width={3} double={false} pen={false} /> : null}
+  </>;
+};
+
+/** A labelled lymph-node slide: glass, printed label (2D code and text bars), coverslip, two node sections. */
+export const NodeSlideArt: React.FC<{ x: number; y: number; w: number; h: number; at: number; id: string; dur?: number; met?: boolean }> = ({ x, y, w, h, at, id, dur = 24, met = false }) => {
+  const k = nodeSlide(x, y, w, h);
+  return <>
+    <Wash shape={k.glass} color="#EEF4F6" at={at} id={`${id}g`} alpha={0.95} highlight />
+    <Ink strokes={[k.glass]} from={at} durationInFrames={dur * 0.2} id={`${id}go`} width={3} double={false} pen={false} />
+    <Wash shape={k.frost} color="#FBFBF8" at={at + dur * 0.15} id={`${id}f`} alpha={1} highlight />
+    <Ink strokes={[k.frost, k.cover]} from={at + dur * 0.15} durationInFrames={dur * 0.2} id={`${id}fo`} width={2} double={false} pen={false} color="#8A8F94" />
+    <Fills shapes={k.matrix} color="#1F2328" at={at + dur * 0.3} alpha={1} />
+    <Fills shapes={k.lines} color="#2B2F36" at={at + dur * 0.38} alpha={0.9} />
+    {k.nodes.map(([ncx, ncy, nrx, nry], i) => <LymphNodeArt key={i} cx={ncx} cy={ncy} rx={nrx} ry={nry} at={at + dur * 0.45 + i * 3} id={`${id}n${i}`} dur={dur * 0.5} mini met={met && i === 1} metAt={at + dur} />)}
   </>;
 };

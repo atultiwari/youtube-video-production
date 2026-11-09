@@ -348,3 +348,17 @@ like any finger". A medical audience reads primitive anatomy as careless. So:
   (a date, a law's name, "unless that is obvious") needs its own HL label; a Box's `sub` line drawn
   with the box is not a second event. Splitting subs into separate HL steps on later words took it
   under the limit.
+- **Drawing library page 21 (E21, pathology):** `isoPt`/`isoBox` (Pradarshan Sketchbook look in
+  Remotion: three tones, heavy silhouette ink, short blue-grey shadow), `wsiScanner`,
+  `tilePyramid`, `lymphNode` (LN colours: capsule, subcapsular sinus, cortex with secondary
+  follicles, medulla with cords, hilum; `met` puts a cohesive eosinophilic deposit in the
+  subcapsular sinus), `nodeMetTile` (the deposit at high power; `HE_LAB` A/B/C gives three labs'
+  stain colours for stain-shift scenes), `ki67Tile` (`KI67`: DAB brown in three intensities on
+  haematoxylin-blue negatives, nuclear only, `counts`), `nodeSlide` (printed label as a 2D code
+  and text bars, so no sub-36 px text lands on screen). Art: WsiScannerArt, TilePyramidArt,
+  LymphNodeArt (`mini` for small sizes), NodeMetTileArt (`lab`), Ki67TileArt (`posAt` shows all
+  nuclei blue, then the brown ones), NodeSlideArt.
+- **`b.word` splits hyphenated names** (E21): `b.word("Prov-GigaPath", 1)` threw "not spoken";
+  cue the first part (`b.word("Prov", 1)`).
+- **Heat-map tiles over a bean shape:** test cells against ~0.72 of the bounding ellipse, not
+  0.95, or tiles spill past the outline at the hilum and poles.

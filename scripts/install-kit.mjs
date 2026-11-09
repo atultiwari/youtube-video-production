@@ -397,6 +397,14 @@ if (root.includes("kit-objects-19") && !root.includes("kit-objects-20")) {
   else say(`Register page 20 by hand: <Composition id="kit-objects-20" component={ObjectsDemo20} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
 
+// Page 21 (E21, Nov 2026: isometric slide scanner and tile pyramid in the Sketchbook look; lymph node with a subcapsular-sinus metastasis; the deposit at high power in three labs' stains; Ki-67 tile; labelled node slide).
+if (root.includes("kit-objects-20") && !root.includes("kit-objects-21")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-20" [^\n]*\n)/, `$1$2<Composition id="kit-objects-21" component={ObjectsDemo21} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo19, ObjectsDemo20 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo19, ObjectsDemo20, ObjectsDemo21 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-21") && root.includes("ObjectsDemo21 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-21 (drawing library, page 21) in Root.tsx"); }
+  else say(`Register page 21 by hand: <Composition id="kit-objects-21" component={ObjectsDemo21} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");

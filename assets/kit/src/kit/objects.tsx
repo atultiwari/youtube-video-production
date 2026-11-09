@@ -2885,3 +2885,326 @@ export const skinProbe = (x: number, y: number, s = 1) => {
     lesionAt, tipAt: tip,
   };
 };
+
+/* ---------------------------------------------------------------------------------------------
+ * Added for E21 (Nov 2026), AI in pathology: an isometric slide scanner and tile pyramid (the
+ * Pradarshan "Sketchbook" look: three tones, heavy silhouette, short blue-grey shadow), a lymph
+ * node at low power with a metastatic deposit in the subcapsular sinus, the same deposit at high
+ * power (in three labs' stain colours), a Ki-67 tile, and a labelled lymph-node slide.
+ * ------------------------------------------------------------------------------------------- */
+
+/** Isometric projection: u runs right-and-back, v left-and-back, w up; origin (ox, oy), scale s. */
+export const isoPt = (ox: number, oy: number, s: number) => (u: number, v: number, w: number): Pt =>
+  [ox + (u - v) * 0.866 * s, oy + (u + v) * 0.5 * s - w * s];
+
+/**
+ * An isometric box [u0..u1] × [v0..v1] × [w0..w1]: the three visible faces (top lightest, left
+ * face `left` at v = v1 mid tone, right face `right` at u = u1 darkest), the silhouette `hull`,
+ * and a short cast `shadow` on the ground (to the right). Wash the faces, then ink `hull` heavy
+ * and `edges` fine.
+ */
+export const isoBox = (ox: number, oy: number, s: number, u0: number, v0: number, w0: number, u1: number, v1: number, w1: number) => {
+  const T = isoPt(ox, oy, s);
+  const poly = (pts: Pt[]) => P.polyline([...pts, pts[0]], 6);
+  const d = (w1 - w0) * 0.35;
+  return {
+    top: poly([T(u0, v0, w1), T(u1, v0, w1), T(u1, v1, w1), T(u0, v1, w1)]),
+    left: poly([T(u0, v1, w1), T(u1, v1, w1), T(u1, v1, w0), T(u0, v1, w0)]),
+    right: poly([T(u1, v0, w1), T(u1, v1, w1), T(u1, v1, w0), T(u1, v0, w0)]),
+    hull: poly([T(u0, v0, w1), T(u1, v0, w1), T(u1, v0, w0), T(u1, v1, w0), T(u0, v1, w0), T(u0, v1, w1)]),
+    edges: [P.polyline([T(u0, v1, w1), T(u1, v1, w1), T(u1, v0, w1)], 6), P.line(...T(u1, v1, w1), ...T(u1, v1, w0), 6)],
+    shadow: poly([T(u1, v0, w0), T(u1 + d, v0 + d * 0.2, w0), T(u1 + d, v1 + d * 0.6, w0), T(u0 + d * 0.3, v1 + d * 0.6, w0), T(u0, v1, w0), T(u1, v1, w0)]),
+  };
+};
+
+/**
+ * A whole-slide scanner in the Sketchbook isometric view: a desk-top cabinet (top lid seam and a
+ * vent grille), on its left-facing front a loading slot with a slide tray sticking out carrying
+ * one glass slide (frosted label end, pink tissue), a small status screen and a green status
+ * lamp. Local units: body 300 (u) × 230 (v) × 170 (w); origin (x, y) is the back-top corner's
+ * ground point, scale s. Parts: `body` (isoBox), `lidSeam`, `vents`, `slot`, `tray` (isoBox),
+ * `slide` {glass, frost, tissue}, `screen`, `screenLines`, `lamp`, `slotAt`, `trayAt`, `topAt`.
+ */
+export const wsiScanner = (x: number, y: number, s = 1) => {
+  const T = isoPt(x, y, s);
+  const U = 300, V = 230, W = 170;
+  const poly = (pts: Pt[]) => P.polyline([...pts, pts[0]], 6);
+  const onFront = (u0: number, w0: number, u1: number, w1: number) => poly([T(u0, V, w1), T(u1, V, w1), T(u1, V, w0), T(u0, V, w0)]);
+  const sl0 = 70, sl1 = 230, sw0 = 52, sw1 = 74;
+  const tray = isoBox(x, y, s, sl0 + 10, V, 56, sl1 - 10, V + 90, 62);
+  const g0 = sl0 + 22, g1 = sl1 - 22, gv0 = V + 28, gv1 = V + 62, gw = 62.5;
+  const glass = poly([T(g0, gv0, gw), T(g1, gv0, gw), T(g1, gv1, gw), T(g0, gv1, gw)]);
+  const frost = poly([T(g0, gv0, gw), T(g0 + 34, gv0, gw), T(g0 + 34, gv1, gw), T(g0, gv1, gw)]);
+  const tcu = (g0 + g1) / 2 + 18, tcv = (gv0 + gv1) / 2;
+  const tissue = P.polyline(Array.from({ length: 25 }, (_, i) => {
+    const a = (i / 24) * Math.PI * 2, rr = 1 + 0.12 * Math.sin(a * 3 + 1);
+    return T(tcu + Math.cos(a) * 34 * rr, tcv + Math.sin(a) * 11 * rr, gw);
+  }), 4);
+  return {
+    body: isoBox(x, y, s, 0, 0, 0, U, V, W),
+    lidSeam: P.polyline([T(0, V, W - 22), T(U, V, W - 22), T(U, 0, W - 22)], 6),
+    vents: Array.from({ length: 6 }, (_, i) => P.line(...T(60 + i * 30, 50, W), ...T(60 + i * 30, 140, W), 6)),
+    slot: onFront(sl0, sw0, sl1, sw1),
+    tray, slide: { glass, frost, tissue },
+    screen: onFront(20, 100, 120, 145),
+    screenLines: [P.line(...T(32, V, 132), ...T(100, V, 132), 6), P.line(...T(32, V, 116), ...T(84, V, 116), 6)],
+    lamp: P.ellipse(...T(150, V, 122), 8 * s, 8 * s),
+    slotAt: T((sl0 + sl1) / 2, V, sw1),
+    trayAt: T((g0 + g1) / 2, (gv0 + gv1) / 2, gw),
+    topAt: T(U / 2, V / 2, W),
+  };
+};
+
+/**
+ * The tile pyramid of a whole-slide image in isometric view: `levels` thin slabs stacked with
+ * gaps, the full-resolution level at the bottom (largest, cut into the finest grid of tiles) and
+ * the thumbnail at the top (one tile). Level j counts from the bottom: size S × (1 − 0.24 j),
+ * grid 2^(levels−1−j). Parts per level: `slab` (isoBox), `grid` (tile lines on the top face),
+ * `map(a, b)` (a point on the top face, a and b in 0..1, for drawing tissue on it), `rightAt`
+ * (the right corner, for a label). Origin (x, y) = the back corner of the bottom slab's top.
+ */
+export const tilePyramid = (x: number, y: number, S: number, levels = 4, gap = 70) =>
+  Array.from({ length: levels }, (_, j) => {
+    const size = S * (1 - 0.24 * j), o = (S - size) / 2, wTop = j * gap, th = 8;
+    const T = isoPt(x, y, 1);
+    const n = 2 ** (levels - 1 - j);
+    const map = (a: number, b: number): Pt => T(o + a * size, o + b * size, wTop);
+    const grid: Pts[] = [];
+    for (let k = 1; k < n; k++) {
+      grid.push(P.line(...map(k / n, 0), ...map(k / n, 1), 8));
+      grid.push(P.line(...map(0, k / n), ...map(1, k / n), 8));
+    }
+    return { slab: isoBox(x, y, 1, o, o, wTop - th, o + size, o + size, wTop), grid, map, n, rightAt: map(1, 0), frontAt: map(1, 1), topAt: map(0.5, 0.5) };
+  });
+
+/** Low-power H&E lymph-node colours (cortex deep blue-purple, medulla pinker, metastasis eosinophilic). */
+export const LN = {
+  capsule: "#D58BB0", sinus: "#F6E6EE", cortex: "#5B4BA0", follicle: "#3E3184", germinal: "#A898D2",
+  paracortex: "#6A5BAE", medulla: "#E8B2CC", cord: "#6F60B2", fat: "#FFFFFF", fatLine: "#E2B8CB",
+  vessel: "#D77A8E", rbc: "#C8423B", met: "#EE9DC2", metNucleus: "#5B3F98",
+} as const;
+
+/**
+ * A lymph node in H&E at low power (scanning objective), bean-shaped with the hilum notch on the
+ * left: the thin pink fibrous `capsule`, the pale `sinus` ring under it (subcapsular sinus, with
+ * a few `histiocytes`), the deep-purple `cortex` with secondary `follicles` (dark mantle) and
+ * pale `germinal` centres along the convex side, the slightly paler `paracortex`, the pink
+ * `medulla` near the hilum with purple medullary `cords` running toward the hilum, hilar
+ * `vessels` (with `rbcs`) and perinodal `fat` cells outside the notch.
+ * With `met`, a cohesive metastatic deposit fills and widens the subcapsular sinus at angle
+ * `metAngle` (radians, 0 = right, negative = up): a lens of eosinophilic tumour (`metShape`) with
+ * large `metNuclei`; `metAt` is its centre, `metBox` [x, y, w, h]. Wash in the order listed.
+ */
+export const lymphNode = (cx: number, cy: number, rx: number, ry: number, opts: { met?: boolean; metAngle?: number; key?: string } = {}) => {
+  const { met = false, metAngle = -0.85, key = "ln" } = opts;
+  const r = stream(key);
+  const N = 120;
+  const wob = Array.from({ length: 6 }, () => r() * Math.PI * 2);
+  const R = (a: number) => {
+    const d = Math.atan2(Math.sin(a - Math.PI), Math.cos(a - Math.PI));
+    return 1 - 0.16 * Math.exp(-((d / 0.5) ** 2)) + 0.018 * Math.sin(a * 3 + wob[0]) + 0.012 * Math.sin(a * 5 + wob[1]);
+  };
+  const at = (a: number, k: number): Pt => [cx + Math.cos(a) * rx * R(a) * k, cy + Math.sin(a) * ry * R(a) * k];
+  const ring = (k: number): Pts => Array.from({ length: N + 1 }, (_, i) => at((i / N) * Math.PI * 2, k));
+  const fol: Pts[] = [], germ: Pts[] = [];
+  for (let i = 0; i < 9; i++) {
+    const a = -2.15 + (i / 8) * 4.3 + (r() - 0.5) * 0.12;
+    const [fx, fy] = at(a, 0.78);
+    const fr = Math.min(rx, ry) * (0.1 + r() * 0.025);
+    fol.push(P.blob(fx, fy, fr, fr * 0.92, `${key}f${i}`, 0.08, 28));
+    germ.push(P.blob(fx + Math.cos(a) * fr * 0.15, fy + Math.sin(a) * fr * 0.15, fr * 0.6, fr * 0.55, `${key}g${i}`, 0.12, 24));
+  }
+  const hx = cx - rx * 0.8, hy = cy;
+  const medulla = P.blob(cx - rx * 0.38, cy, rx * 0.36, ry * 0.42, `${key}m`, 0.18, 48);
+  const cords: Pts[] = Array.from({ length: 7 }, (_, i) => {
+    const a = -0.9 + (i / 6) * 1.8;
+    const ex = cx - rx * 0.38 + Math.cos(a) * rx * 0.3, ey = cy + Math.sin(a) * ry * 0.38;
+    return P.quad(hx + rx * 0.06, hy + (i - 3) * ry * 0.02, (hx + ex) / 2 + (r() - 0.5) * rx * 0.08, (hy + ey) / 2 + (r() - 0.5) * ry * 0.1, ex, ey, 16);
+  });
+  const vessels = [P.ellipse(hx - rx * 0.02, hy - ry * 0.07, rx * 0.035, ry * 0.045, 0, Math.PI * 2, 20), P.ellipse(hx + rx * 0.01, hy + ry * 0.07, rx * 0.028, ry * 0.035, 0, Math.PI * 2, 20)];
+  const rbcs = vessels.map((_, i) => P.ellipse(hx + (i ? rx * 0.01 : -rx * 0.02), hy + (i ? ry * 0.07 : -ry * 0.07), rx * (i ? 0.018 : 0.022), ry * (i ? 0.022 : 0.028), 0, Math.PI * 2, 16));
+  const fat: Pts[] = [];
+  for (let i = 0; i < 9; i++) {
+    const fx = hx - rx * (0.12 + (i % 3) * 0.08) + (r() - 0.5) * rx * 0.03, fy = hy + (Math.floor(i / 3) - 1) * ry * 0.13;
+    fat.push(P.blob(fx, fy, rx * 0.045, ry * 0.06, `${key}fat${i}`, 0.12, 9));
+  }
+  const histiocytes: Pt[] = Array.from({ length: 26 }, (_, i) => at((i / 26) * Math.PI * 2 + 0.1, 0.955)).filter(([px]) => px > hx + rx * 0.12);
+  let metShape: Pts = [], metNuclei: Pt[] = [], metAt: Pt = [cx, cy], metBox: [number, number, number, number] = [cx, cy, 0, 0];
+  if (met) {
+    const span = 0.34, n = 30;
+    const outer: Pt[] = [], inner: Pt[] = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, a = metAngle - span + 2 * span * t;
+      outer.push(at(a, 0.972));
+      inner.push(at(a, 0.972 - 0.14 * Math.sin(Math.PI * t) ** 0.8 * (1 + (r() - 0.5) * 0.25)));
+    }
+    metShape = [...outer, ...inner.reverse(), outer[0]];
+    metAt = at(metAngle, 0.91);
+    const xs = metShape.map((p) => p[0]), ys = metShape.map((p) => p[1]);
+    metBox = [Math.min(...xs), Math.min(...ys), Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)];
+    for (let i = 0; i < 22; i++) {
+      const t = 0.12 + r() * 0.76, a = metAngle - span + 2 * span * t;
+      const depth = 0.972 - (0.02 + r() * 0.1) * Math.sin(Math.PI * t);
+      metNuclei.push(at(a, depth));
+    }
+  }
+  return {
+    capsule: ring(1), sinus: ring(0.972), cortex: ring(0.94), paracortex: P.blob(cx - rx * 0.12, cy, rx * 0.56, ry * 0.6, `${key}pc`, 0.1, 48),
+    medulla, cords, follicles: fol, germinal: germ, vessels, rbcs, fat, histiocytes,
+    metShape, metNuclei, metAt, metBox,
+    hilumAt: [hx, hy] as Pt, capsuleAt: at(-Math.PI / 2, 1), cortexAt: at(0.5, 0.8), medullaAt: [cx - rx * 0.4, cy] as Pt,
+  };
+};
+
+/** Three labs' H&E colours for the same tissue: `A` the training lab, `B` heavy haematoxylin (bluer), `C` pale eosin, faded. */
+export const HE_LAB = {
+  A: { capsule: "#D88AB0", sinus: "#F5E4EC", cyto: "#E48DB9", nucleus: "#4A3A8C", nucleusLight: "#7B68B8", lymph: "#3B2E78", cortex: "#C9B2D6", fibre: "#C76B9A", histio: "#F0C6D8" },
+  B: { capsule: "#A98BC6", sinus: "#DDD6EE", cyto: "#AE96D2", nucleus: "#241C5A", nucleusLight: "#3F3490", lymph: "#1B154A", cortex: "#8579BC", fibre: "#7F65A8", histio: "#C8BBE2" },
+  C: { capsule: "#F4ADB8", sinus: "#FCF1F3", cyto: "#F7BCCB", nucleus: "#9480C8", nucleusLight: "#BBABDD", lymph: "#8573BD", cortex: "#ECD9E9", fibre: "#EAA3B4", histio: "#FADDE4" },
+} as const;
+export type HeLab = { readonly [K in keyof (typeof HE_LAB)["A"]]: string };
+
+/**
+ * High power of a nodal metastasis in the subcapsular sinus (tile w × h, top-left x, y), top to
+ * bottom: the fibrous `capsule` band (wavy `fibres`, flat `spindles`), the pale `sinus` holding
+ * sinus `histiocytes` (pale cytoplasm, oval pale nuclei) and a few lymphocytes, and in it a
+ * cohesive `cluster` of carcinoma cells (eosinophilic cytoplasm, `cellWalls`, large vesicular
+ * `nuclei` with `nucleoli`, one small gland `lumen`); below, the cortex: `cortex` field packed
+ * with small dark round `lymphs`. Wash/fill with a palette from HE_LAB. `clusterAt` its centre.
+ */
+export const nodeMetTile = (x: number, y: number, w: number, h: number, key = "nm") => {
+  const r = stream(key);
+  const S = Math.min(w, h);
+  const capY = y + h * 0.13, sinY = y + h * 0.64;
+  const edge = (yy: number, amp: number, k: string): Pt[] => P.wave(x, x + w, yy, amp, 2.2, 40, stream(k)() * 6) as Pt[];
+  const capsule: Pts = [[x, y], [x + w, y], ...edge(capY, h * 0.012, `${key}c`).reverse(), [x, y]];
+  const lower = edge(sinY, h * 0.025, `${key}s`);
+  const cortex: Pts = [...lower, [x + w, y + h], [x, y + h], lower[0]];
+  const fibres = [0.035, 0.065, 0.095].map((k, i) => P.wave(x + 6, x + w - 6, y + h * k, h * 0.006, 3 + i, 50, i * 2));
+  const spindles = Array.from({ length: 7 }, (_, i) => {
+    const sx = x + w * (0.08 + i * 0.13 + r() * 0.04), sy = y + h * (0.04 + r() * 0.07);
+    return P.ellipse(sx, sy, S * 0.03, S * 0.006, 0, Math.PI * 2, 12);
+  });
+  const ccx = x + w * 0.54, ccy = y + h * 0.39, crx = w * 0.3, cry = h * 0.17;
+  const cluster = P.blob(ccx, ccy, crx, cry, `${key}cl`, 0.16, 56);
+  const inCluster = (px: number, py: number, k = 1) => ((px - ccx) / (crx * k)) ** 2 + ((py - ccy) / (cry * k)) ** 2 < 1;
+  const lumenC: Pt = [ccx + crx * 0.18, ccy - cry * 0.05];
+  const lumen = P.blob(lumenC[0], lumenC[1], crx * 0.11, cry * 0.16, `${key}lu`, 0.2, 20);
+  const nuclei: Pts[] = [], nucleoli: Pt[] = [], centres: Pt[] = [];
+  let guard = 0;
+  while (centres.length < 17 && guard++ < 900) {
+    const px = ccx + (r() - 0.5) * 2 * crx * 0.85, py = ccy + (r() - 0.5) * 2 * cry * 0.8;
+    if (!inCluster(px, py, 0.82)) continue;
+    if (Math.hypot(px - lumenC[0], (py - lumenC[1]) * 1.4) < crx * 0.2) continue;
+    if (centres.some(([qx, qy]) => Math.hypot(px - qx, py - qy) < S * 0.075)) continue;
+    centres.push([px, py]);
+    const nr = S * (0.027 + r() * 0.012);
+    nuclei.push(P.blob(px, py, nr, nr * (0.75 + r() * 0.25), `${key}n${centres.length}`, 0.2, 18));
+    nucleoli.push([px + (r() - 0.5) * nr * 0.4, py + (r() - 0.5) * nr * 0.4]);
+  }
+  const cellWalls: Pts[] = [];
+  centres.forEach(([px, py], i) => centres.forEach(([qx, qy], j) => {
+    if (j <= i) return;
+    const d = Math.hypot(px - qx, py - qy);
+    if (d > S * 0.13) return;
+    const mx = (px + qx) / 2, my = (py + qy) / 2, nx = -(qy - py) / d, ny = (qx - px) / d, L = d * 0.42;
+    if (inCluster(mx + nx * L, my + ny * L, 0.97) && inCluster(mx - nx * L, my - ny * L, 0.97)) cellWalls.push(P.line(mx - nx * L, my - ny * L, mx + nx * L, my + ny * L, 6));
+  }));
+  const histiocytes: Pts[] = [], histioNuclei: Pts[] = [];
+  guard = 0;
+  while (histiocytes.length < 7 && guard++ < 600) {
+    const px = x + w * (0.06 + r() * 0.88), py = capY + (sinY - capY) * (0.15 + r() * 0.7);
+    if (inCluster(px, py, 1.25)) continue;
+    if (histiocytes.some((hh) => Math.hypot(hh[0][0] - px, hh[0][1] - py) < S * 0.16)) continue;
+    const hr = S * 0.05;
+    const shape = P.blob(px, py, hr, hr * 0.8, `${key}h${histiocytes.length}`, 0.2, 20);
+    histiocytes.push(shape);
+    histioNuclei.push(P.ellipse(px + hr * 0.15, py, S * 0.017, S * 0.011, 0.4, 0.4 + Math.PI * 2, 14));
+  }
+  const sinusLymphs = granules(x + w / 2, (capY + sinY) / 2, w * 0.5, 14, `${key}sl`, (px, py) => py < capY + 8 || py > sinY - 8 || inCluster(px, py, 1.15) || px < x + 6 || px > x + w - 6)
+    .map(([px, py]) => P.ellipse(px, py, S * 0.012, S * 0.011, 0, Math.PI * 2, 10));
+  const lymphs = granules(x + w / 2, y + h * 0.82, Math.hypot(w, h) * 0.6, 230, `${key}ly`, (px, py) => py < sinY + 6 || py > y + h - 5 || px < x + 5 || px > x + w - 5)
+    .map(([px, py]) => P.ellipse(px, py, S * 0.012, S * 0.0115, 0, Math.PI * 2, 10));
+  return { field: P.rect(x, y, w, h, 4), capsule, cortex, fibres, spindles, cluster, lumen, nuclei, nucleoli, cellWalls, histiocytes, histioNuclei, sinusLymphs, lymphs, clusterAt: [ccx, ccy] as Pt, sinusAt: [x + w * 0.12, (capY + sinY) / 2] as Pt, capsuleAt: [x + w / 2, y + h * 0.065] as Pt, cortexAt: [x + w / 2, y + h * 0.82] as Pt };
+};
+
+/** Ki-67 immunohistochemistry colours: DAB brown (three intensities) on haematoxylin-blue negatives, near-white background. */
+export const KI67 = { bg: "#F6F2EC", stroma: "#EDE5E3", cyto: "#EEE6E6", neg: "#7487C2", negRim: "#4D5F9E", pos: ["#B9824A", "#8B5524", "#5A3110"], fibre: "#D9CCCC" } as const;
+
+/**
+ * A Ki-67 stained breast-carcinoma tile at medium power (top-left x, y, w × h): nests of tumour
+ * cells (`groups`, unstained cytoplasm) in pale stroma (`fibres`, a few flat `stromaNuclei`),
+ * small `lymphs`; every tumour nucleus is brown (`pos[0..2]`, light to dark DAB) or blue
+ * (`neg`), with the brown fraction ≈ `index` (0..1). The stain is nuclear only. `counts` gives
+ * { pos, neg } as drawn, so a label can quote the true index of the picture.
+ */
+export const ki67Tile = (x: number, y: number, w: number, h: number, index = 0.3, key = "ki") => {
+  const r = stream(key);
+  const S = Math.min(w, h);
+  const groups: Pts[] = [], neg: Pts[] = [], pos: Pts[][] = [[], [], []];
+  const occupied: [number, number, number][] = [];
+  const free = (px: number, py: number, pad: number) => px > x + pad && px < x + w - pad && py > y + pad && py < y + h - pad && occupied.every(([ox, oy, orr]) => Math.hypot(px - ox, py - oy) > orr + pad);
+  const fibres: Pts[] = Array.from({ length: 7 }, (_, i) => P.wave(x + 6, x + w - 6, y + h * (0.08 + i * 0.14), S * 0.01, 2 + (i % 3), 50, i * 1.7));
+  let tries = 0, all = 0, brown = 0;
+  while (groups.length < 12 && tries++ < 1200) {
+    const cx = x + w * (0.1 + r() * 0.8), cy = y + h * (0.1 + r() * 0.8);
+    const rx = S * (0.1 + r() * 0.06), ry = S * (0.07 + r() * 0.04);
+    if (!free(cx, cy, Math.max(rx, ry) * 0.8)) continue;
+    occupied.push([cx, cy, Math.max(rx, ry)]);
+    const ang = r() * Math.PI;
+    const rot = (p: Pt): Pt => [cx + (p[0] - cx) * Math.cos(ang) - (p[1] - cy) * Math.sin(ang), cy + (p[0] - cx) * Math.sin(ang) + (p[1] - cy) * Math.cos(ang)];
+    groups.push(P.blob(cx, cy, rx, ry, `${key}g${groups.length}`, 0.2, 36).map(rot));
+    const pts: Pt[] = [];
+    let g = 0;
+    while (pts.length < Math.round((rx * ry) / (S * S * 0.0011)) && g++ < 300) {
+      const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 0.8;
+      const p = rot([cx + Math.cos(a) * rx * d, cy + Math.sin(a) * ry * d]);
+      if (pts.some(([qx, qy]) => Math.hypot(p[0] - qx, p[1] - qy) < S * 0.036)) continue;
+      pts.push(p);
+    }
+    pts.forEach((p, k) => {
+      const nr = S * (0.016 + r() * 0.008);
+      const shape = P.blob(p[0], p[1], nr, nr * (0.78 + r() * 0.2), `${key}n${groups.length}_${k}`, 0.18, 14);
+      all++;
+      if ((brown + 0.5) / all < index || (brown / all < index && r() < 0.5)) {
+        brown++;
+        pos[r() < 0.3 ? 0 : r() < 0.6 ? 1 : 2].push(shape);
+      } else neg.push(shape);
+    });
+  }
+  const stromaNuclei = Array.from({ length: 14 }, (_, i) => {
+    let px = 0, py = 0, g = 0;
+    do { px = x + w * (0.05 + r() * 0.9); py = y + h * (0.05 + r() * 0.9); } while (!free(px, py, 4) && g++ < 40);
+    return P.ellipse(0, 0, S * 0.024, S * 0.005, 0, Math.PI * 2, 10).map(([qx, qy]) => [px + qx * Math.cos(i) - qy * Math.sin(i), py + qx * Math.sin(i) + qy * Math.cos(i)] as Pt);
+  });
+  const lymphs = granules(x + w / 2, y + h / 2, Math.hypot(w, h) / 2, 22, `${key}ly`, (px, py) => !free(px, py, 5))
+    .map(([px, py]) => P.ellipse(px, py, S * 0.009, S * 0.0085, 0, Math.PI * 2, 10));
+  return { field: P.rect(x, y, w, h, 4), groups, fibres, neg, pos, stromaNuclei, lymphs, counts: { pos: brown, neg: all - brown } };
+};
+
+/**
+ * A glass slide of two lymph-node sections, as a pathologist holds it, label end on the left:
+ * the glass, a frosted printed label (a 2D `matrix` code of small squares, three printed text
+ * `lines` as thin bars: accession number, block, stain), the coverslip, and two bean-shaped node
+ * sections (`nodes` [cx, cy, rx, ry]; draw the kit's lymph node at that size). `labelBox`,
+ * `labelAt`.
+ */
+export const nodeSlide = (x: number, y: number, w: number, h: number) => {
+  const r = stream("nodeSlide");
+  const fx = x + w * 0.025, fy = y + h * 0.08, fw = w * 0.22, fh = h * 0.84;
+  const ms = fw * 0.42, mx = fx + fw * 0.08, my = fy + fh * 0.08, k = 8, c = ms / k;
+  const matrix: Pts[] = [];
+  for (let i = 0; i < k; i++) for (let j = 0; j < k; j++) {
+    if (i === 0 || j === k - 1 || ((i + j) % 2 === 0 && j === 0) || (i !== 0 && j !== k - 1 && r() < 0.45)) matrix.push(P.rect(mx + j * c, my + i * c, c * 0.98, c * 0.98, 0));
+  }
+  const lines = [0.62, 0.74, 0.86].map((t, i) => P.rect(fx + fw * 0.1, fy + fh * t, fw * (0.78 - i * 0.18), fh * 0.05, 1));
+  return {
+    glass: P.rect(x, y, w, h, 4),
+    frost: P.rect(fx, fy, fw, fh, 3),
+    matrix, lines,
+    cover: P.rect(x + w * 0.27, y + h * 0.05, w * 0.7, h * 0.9, 2),
+    nodes: [[x + w * 0.46, y + h * 0.5, w * 0.12, h * 0.3], [x + w * 0.76, y + h * 0.52, w * 0.13, h * 0.33]] as [number, number, number, number][],
+    labelBox: [fx, fy, fw, fh] as [number, number, number, number],
+    labelAt: [fx + fw / 2, fy + fh / 2] as Pt,
+  };
+};
