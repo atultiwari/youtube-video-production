@@ -3844,3 +3844,169 @@ export const ant = (cx: number, cy: number, s = 1, ang = 0) => {
     antennae: [-1, 1].map((sgn) => P.polyline([T([22, sgn * 4]), T([30, sgn * 13]), T([42, sgn * 12])], 4)),
   };
 };
+
+/* -------------------------------------------------------------------------------------------
+ * Added for B2 (Nov 2026): the four charts of AI papers, drawn from real statistics so they are
+ * correct, not just chart-shaped: a Tukey box plot (type-7 quartiles, whiskers to the furthest
+ * point within 1.5 × IQR, outliers as dots), a strip of data dots, a violin (a mirrored Gaussian
+ * kernel density, trimmed to the data unless `trim` is false), an alluvial plot whose band widths
+ * are the counts (every column sums to the same total), and a word cloud (size ∝ count, spiral
+ * packing). All take a value → y mapper from `chartAxis` so several charts share one scale.
+ * ------------------------------------------------------------------------------------------- */
+
+/** Type-7 quantile (R's default, numpy's linear) of sorted values. */
+export const quantile = (sorted: readonly number[], p: number): number => {
+  const h = (sorted.length - 1) * p, lo = Math.floor(h);
+  return sorted[lo] + (h - lo) * ((sorted[Math.min(lo + 1, sorted.length - 1)]) - sorted[lo]);
+};
+
+/** Tukey box-plot statistics: q1, median, q3, whisker ends (lo, hi: furthest data within 1.5 IQR), outliers, n. */
+export const boxStats = (vals: readonly number[]) => {
+  const s = [...vals].sort((a, b) => a - b);
+  const q1 = quantile(s, 0.25), med = quantile(s, 0.5), q3 = quantile(s, 0.75), iqr = q3 - q1;
+  const inside = s.filter((v) => v >= q1 - 1.5 * iqr && v <= q3 + 1.5 * iqr);
+  return { q1, med, q3, iqr, lo: inside[0], hi: inside[inside.length - 1], out: s.filter((v) => v < inside[0] || v > inside[inside.length - 1]), n: s.length };
+};
+
+/** A vertical value axis at x from y (top) to y + h, for values vmin…vmax; `ticks` get marks; `Y(v)` maps a value. */
+export const chartAxis = (x: number, y: number, h: number, vmin: number, vmax: number, ticks: readonly number[], w = 0) => {
+  const Y = (v: number) => y + h - ((v - vmin) / (vmax - vmin)) * h;
+  return {
+    Y,
+    axis: P.line(x, y + h, x, y, 20),
+    base: w > 0 ? P.line(x, y + h, x + w, y + h, 24) : null,
+    tickMarks: ticks.map((t) => P.line(x - 12, Y(t), x, Y(t), 2)),
+    tickAt: ticks.map((t) => [x - 20, Y(t)] as Pt),
+    grid: w > 0 ? ticks.map((t) => P.line(x, Y(t), x + w, Y(t), 20)) : [],
+  };
+};
+
+/**
+ * A vertical Tukey box plot centred at cx, box width w, on value mapper Y. Parts: `box` (closed),
+ * `median`, `whiskers` (two vertical lines), `caps` (two short horizontals), `outliers` (small
+ * closed circles), and `stats` (boxStats) for labelling.
+ */
+export const boxPlot = (cx: number, w: number, Y: (v: number) => number, vals: readonly number[], r = 9) => {
+  const st = boxStats(vals);
+  return {
+    stats: st,
+    box: P.rect(cx - w / 2, Y(st.q3), w, Y(st.q1) - Y(st.q3), 4),
+    median: P.line(cx - w / 2, Y(st.med), cx + w / 2, Y(st.med), 8),
+    whiskers: [P.line(cx, Y(st.q3), cx, Y(st.hi), 8), P.line(cx, Y(st.q1), cx, Y(st.lo), 8)],
+    caps: [P.line(cx - w * 0.22, Y(st.hi), cx + w * 0.22, Y(st.hi), 4), P.line(cx - w * 0.22, Y(st.lo), cx + w * 0.22, Y(st.lo), 4)],
+    outliers: st.out.map((v) => P.ellipse(cx, Y(v), r, r, 0, Math.PI * 2, 16)),
+  };
+};
+
+/**
+ * Every value as a dot (a simple beeswarm): each dot, in value order, takes the first sideways slot
+ * (0, +1, -1, +2, -2 … dot widths) where it touches no dot already placed. Returns centres; draw
+ * with `Dots`.
+ */
+export const dotStrip = (cx: number, Y: (v: number) => number, vals: readonly number[], r = 9, _bin = 2): Pt[] => {
+  const out: Pt[] = [];
+  for (const v of [...vals].sort((a, b) => a - b)) {
+    const y = Y(v);
+    for (let k = 0; k < 40; k++) {
+      const off = Math.ceil(k / 2) * (k % 2 ? 1 : -1) * r * 2.05;
+      if (out.every(([px, py]) => Math.hypot(px - (cx + off), py - y) >= r * 2)) { out.push([cx + off, y]); break; }
+    }
+  }
+  return out;
+};
+
+/** Gaussian kernel density of vals at `n` points from lo to hi, bandwidth bw (value units). */
+export const kde = (vals: readonly number[], bw: number, lo: number, hi: number, n = 90) =>
+  Array.from({ length: n + 1 }, (_, i) => {
+    const v = lo + ((hi - lo) * i) / n;
+    const d = vals.reduce((acc, x) => acc + Math.exp(-0.5 * ((v - x) / bw) ** 2), 0) / (vals.length * bw * Math.sqrt(2 * Math.PI));
+    return { v, d };
+  });
+
+/** Silverman's rule-of-thumb bandwidth (R's bw.nrd0), the usual default. */
+export const bwNrd0 = (vals: readonly number[]): number => {
+  const s = [...vals].sort((a, b) => a - b), n = s.length;
+  const mean = s.reduce((a, b) => a + b, 0) / n;
+  const sd = Math.sqrt(s.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1));
+  const iqr = quantile(s, 0.75) - quantile(s, 0.25);
+  return 0.9 * Math.min(sd, iqr / 1.34) * n ** -0.2;
+};
+
+/**
+ * A violin: the kernel density of vals mirrored about cx, its widest point halfW. `trim` (default,
+ * as ggplot2) stops at the data range; untrimmed it runs 3 bandwidths past it, as a smooth curve
+ * would. Parts: `outline` (closed), `right`/`left` halves, `range` [vmin, vmax] drawn, `widthAt(v)`.
+ */
+export const violin = (cx: number, halfW: number, Y: (v: number) => number, vals: readonly number[], bw: number, trim = true, n = 90) => {
+  const lo = Math.min(...vals) - (trim ? 0 : 3 * bw), hi = Math.max(...vals) + (trim ? 0 : 3 * bw);
+  const k = kde(vals, bw, lo, hi, n);
+  const dmax = Math.max(...k.map((p) => p.d));
+  const right = k.map((p) => [cx + (p.d / dmax) * halfW, Y(p.v)] as Pt);
+  const left = k.map((p) => [cx - (p.d / dmax) * halfW, Y(p.v)] as Pt).reverse();
+  return {
+    outline: [...right, ...left, right[0]] as Pts,
+    right: right as Pts, left: left as Pts,
+    range: [lo, hi] as const,
+    widthAt: (v: number) => { const i = Math.round(((v - lo) / (hi - lo)) * n); return i < 0 || i > n ? 0 : (k[i].d / dmax) * halfW; },
+  };
+};
+
+/**
+ * An alluvial plot of `left` → `right` categories in a box (x, y, w, h): node columns of width
+ * nodeW, a gap between stacked nodes, and `flows[i][j]` = count from left i to right j. Every band's
+ * thickness is its count × scale, so flows out of a node fill it exactly and flows into the right
+ * column add up to its nodes (counts are conserved). Parts: `leftNodes`, `rightNodes` (closed rects),
+ * `bands` ({ shape (closed, two cubic edges), from, to, n, mid }), `scale` (px per count).
+ */
+export const alluvial = (x: number, y: number, w: number, h: number, left: readonly number[], right: readonly number[], flows: readonly (readonly number[])[], nodeW = 46, gap = 26) => {
+  const total = left.reduce((a, b) => a + b, 0);
+  const scale = (h - gap * (Math.max(left.length, right.length) - 1)) / total;
+  const stack = (col: readonly number[]) => { let yy = y; return col.map((c) => { const t = yy; yy += c * scale + gap; return t; }); };
+  const ly = stack(left), ry = stack(right);
+  const lOff = left.map(() => 0), rOff = right.map(() => 0);
+  const x0 = x + nodeW, x1 = x + w - nodeW, mx = (x0 + x1) / 2;
+  const bands: { shape: Pts; from: number; to: number; n: number; mid: Pt }[] = [];
+  left.forEach((_, i) => right.forEach((_, j) => {
+    const n = flows[i][j];
+    if (n <= 0) return;
+    const t = n * scale;
+    const a = ly[i] + lOff[i], b = ry[j] + rOff[j];
+    lOff[i] += t; rOff[j] += t;
+    const top = cubic([x0, a], [mx, a], [mx, b], [x1, b], 24);
+    const bot = cubic([x1, b + t], [mx, b + t], [mx, a + t], [x0, a + t], 24);
+    bands.push({ shape: [...top, ...bot, top[0]] as Pts, from: i, to: j, n, mid: [mx, (a + b + t) / 2] });
+  }));
+  return {
+    leftNodes: left.map((c, i) => P.rect(x, ly[i], nodeW, Math.max(4, c * scale), 4)),
+    rightNodes: right.map((c, j) => P.rect(x + w - nodeW, ry[j], nodeW, Math.max(4, c * scale), 4)),
+    leftMid: left.map((c, i) => [x, ly[i] + (c * scale) / 2] as Pt),
+    rightMid: right.map((c, j) => [x + w, ry[j] + (c * scale) / 2] as Pt),
+    bands, scale,
+  };
+};
+
+/**
+ * A word cloud centred on (cx, cy) within a box w × h: font size ∝ count between minSize and
+ * maxSize (largest word first), each placed at the first spot on an outward spiral where its
+ * estimated box (0.62 em per letter, bold serif; 0.56 overlapped in QA) overlaps nothing placed before. Deterministic. Returns
+ * `{ t, n, x, y, size }` (x, y = text centre baseline-ish) for typeset labels.
+ */
+export const wordCloud = (cx: number, cy: number, w: number, h: number, words: readonly { t: string; n: number }[], maxSize = 96, minSize = 38) => {
+  const sorted = [...words].sort((a, b) => b.n - a.n);
+  const nmax = sorted[0].n, nmin = sorted[sorted.length - 1].n;
+  const placed: { t: string; n: number; x: number; y: number; size: number; bx: [number, number, number, number] }[] = [];
+  for (const wd of sorted) {
+    const size = Math.round(minSize + ((wd.n - nmin) / Math.max(1, nmax - nmin)) * (maxSize - minSize));
+    const bw = wd.t.length * size * 0.62 + 24, bh = size * 1.05;
+    for (let s = 0; s < 4000; s++) {
+      const a = s * 0.35, r = 4 * Math.sqrt(s) * 3;
+      const px = cx + Math.cos(a) * r * (w / h), py = cy + Math.sin(a) * r;
+      const bx: [number, number, number, number] = [px - bw / 2, py - bh * 0.78, px + bw / 2, py + bh * 0.22];
+      if (bx[0] < cx - w / 2 || bx[2] > cx + w / 2 || bx[1] < cy - h / 2 || bx[3] > cy + h / 2) continue;
+      if (placed.some((p) => !(bx[2] < p.bx[0] || bx[0] > p.bx[2] || bx[3] < p.bx[1] || bx[1] > p.bx[3]))) continue;
+      placed.push({ ...wd, x: px, y: py, size, bx });
+      break;
+    }
+  }
+  return placed;
+};

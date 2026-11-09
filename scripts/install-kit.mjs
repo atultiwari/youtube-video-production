@@ -429,6 +429,14 @@ if (root.includes("kit-objects-23") && !root.includes("kit-objects-24")) {
   else say(`Register page 24 by hand: <Composition id="kit-objects-24" component={ObjectsDemo24} durationInFrames={60} fps={30} width={1920} height={1080} />`);
 }
 
+// Page 25 (B2, Nov 2026: the charts of AI papers, computed from real statistics: chartAxis, Tukey boxPlot with boxStats (type-7 quartiles, 1.5 IQR whiskers, outliers), dotStrip beeswarm, kde/bwNrd0 and violin (mirrored density, trim), alluvial (band widths = counts, conserved), wordCloud (size by count, spiral packing)).
+if (root.includes("kit-objects-24") && !root.includes("kit-objects-25")) {
+  root = root.replace(/(\n(\s*)<Composition id="kit-objects-24" [^\n]*\n)/, `$1$2<Composition id="kit-objects-25" component={ObjectsDemo25} durationInFrames={60} fps={30} width={1920} height={1080} />\n`);
+  root = root.replace(/ObjectsDemo23, ObjectsDemo24 \} from "\.\/kit\/ObjectsDemo";/, `ObjectsDemo23, ObjectsDemo24, ObjectsDemo25 } from "./kit/ObjectsDemo";`);
+  if (root.includes("kit-objects-25") && root.includes("ObjectsDemo25 }")) { fs.writeFileSync(rootPath, root); say("Registered kit-objects-25 (drawing library, page 25) in Root.tsx"); }
+  else say(`Register page 25 by hand: <Composition id="kit-objects-25" component={ObjectsDemo25} durationInFrames={60} fps={30} width={1920} height={1080} />`);
+}
+
 say("\nDone. Check the install:");
 say(`  cd ${path.relative(process.cwd(), project) || "."}`);
 say("  npx tsc --noEmit && node tools/qa.mjs kit-demo && node tools/qa.mjs kit-demo-vertical");

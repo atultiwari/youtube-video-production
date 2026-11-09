@@ -15,6 +15,7 @@ import { HE_LAB, type HeLab, isoBox, KI67, ki67Tile, LN, lymphNode, nodeMetTile,
 import { breastTile, coreSlide, filmToken, HEAT, heatSpot, modelCard, shapWaterfall, snowBank, superpixels } from "./objects";
 import { apple, car, clipboard, colonTile, detective, dog, drLesions, forger, fundus, HE, heSlide, kidney, microscope, network, neuron, researchArticle, retinalCamera, squamousTile, thyroidTile } from "./objects";
 import { ant, blochSphere, hypeCycle, HYPE_PHASES, quantumChandelier, robotCart, surgeonConsole } from "./objects";
+import { alluvial, boxPlot, chartAxis, dotStrip, violin, wordCloud } from "./objects";
 import { Dots, Fills, Ink, Label, Wash } from "./Picture";
 import { INK, TISSUE } from "./style";
 import { P, type Pts } from "./shapes";
@@ -1157,4 +1158,61 @@ export const AntArt: React.FC<{ cx: number; cy: number; s?: number; ang?: number
     <Ink strokes={[...k.legs, ...k.antennae]} from={at} durationInFrames={4} id={`${id}l`} width={Math.max(2, 2.2 * s)} double={false} pen={false} color={color} />
     <Fills shapes={k.body} color={color} at={at + 2} alpha={1} />
   </>;
+};
+
+/* B2 (Nov 2026): the four charts of AI papers, drawn from real statistics (objects.tsx page 25). */
+
+/** A value axis with tick marks and typeset tick values (and an optional title above it). */
+export const AxisArt: React.FC<{ x: number; y: number; h: number; vmin: number; vmax: number; ticks: readonly number[]; at: number; id: string; w?: number; title?: string; size?: number }> = ({ x, y, h, vmin, vmax, ticks, at, id, w = 0, title, size = 36 }) => {
+  const a = chartAxis(x, y, h, vmin, vmax, ticks, w);
+  return <>
+    {a.grid.length ? <Ink strokes={a.grid} from={at} durationInFrames={8} id={`${id}g`} width={1.5} double={false} pen={false} color="#D8CFC2" /> : null}
+    <Ink strokes={[a.axis, ...(a.base ? [a.base] : []), ...a.tickMarks]} from={at} durationInFrames={10} id={`${id}a`} width={3} double={false} pen={false} />
+    {ticks.map((t, i) => <Label key={i} text={String(t)} x={a.tickAt[i][0]} y={a.tickAt[i][1] + size * 0.35} at={at + 4 + i} size={size} italic={false} weight={600} anchor="end" />)}
+    {title ? <Label text={title} x={x - 10} y={y - 30} at={at + 6} size={size} italic={false} weight={700} anchor="start" /> : null}
+  </>;
+};
+
+/** A Tukey box plot (kit `boxPlot`): box washed, outlined, then median (thick), whiskers and caps, then outlier dots. Parts can be timed separately. */
+export const BoxPlotArt: React.FC<{ cx: number; w: number; Y: (v: number) => number; vals: readonly number[]; at: number; id: string; color?: string; medAt?: number; whiskAt?: number; outAt?: number; medColor?: string }> = ({ cx, w, Y, vals, at, id, color = "#A9C8EA", medAt, whiskAt, outAt, medColor = "#C8423B" }) => {
+  const b = boxPlot(cx, w, Y, vals);
+  return <>
+    <Wash shape={b.box} color={color} at={at} id={`${id}w`} alpha={1} amount={1} highlight />
+    <Ink strokes={[b.box]} from={at} durationInFrames={8} id={`${id}b`} width={4} double={false} />
+    <Ink strokes={[b.median]} from={medAt ?? at + 8} durationInFrames={5} id={`${id}m`} width={8} double={false} pen={false} color={medColor} />
+    <Ink strokes={[...b.whiskers, ...b.caps]} from={whiskAt ?? at + 10} durationInFrames={8} id={`${id}k`} width={4} double={false} pen={false} />
+    <Fills shapes={b.outliers} color="#2B2F36" at={outAt ?? at + 14} every={2} alpha={1} />
+  </>;
+};
+
+/** Every data value as a dot beside or over a box (kit `dotStrip`). */
+export const DotStripArt: React.FC<{ cx: number; Y: (v: number) => number; vals: readonly number[]; at: number; id: string; color?: string; r?: number; every?: number }> = ({ cx, Y, vals, at, color = "#2F5E8E", r = 9, every = 1 }) =>
+  <Dots points={dotStrip(cx, Y, vals, r)} r={r} color={color} at={at} every={every} />;
+
+/** A violin (kit `violin`): the mirrored density washed, then its outline drawn. */
+export const ViolinArt: React.FC<{ cx: number; halfW: number; Y: (v: number) => number; vals: readonly number[]; bw: number; trim?: boolean; at: number; id: string; color?: string; dur?: number }> = ({ cx, halfW, Y, vals, bw, trim = true, at, id, color = "#C9B6E4", dur = 14 }) => {
+  const v = violin(cx, halfW, Y, vals, bw, trim);
+  return <>
+    <Wash shape={v.outline} color={color} at={at} id={`${id}w`} alpha={1} amount={1} highlight />
+    <Ink strokes={[v.right, v.left]} from={at} durationInFrames={dur} id={`${id}o`} width={4} double={false} />
+  </>;
+};
+
+/** An alluvial plot (kit `alluvial`): node columns first, then each band in turn (`every` frames apart), coloured by its left category. */
+export const AlluvialArt: React.FC<{ x: number; y: number; w: number; h: number; left: readonly number[]; right: readonly number[]; flows: readonly (readonly number[])[]; colors: readonly string[]; at: number; id: string; bandsAt?: number; every?: number; only?: number; nodeW?: number; gap?: number; rightAt?: number }> = ({ x, y, w, h, left, right, flows, colors, at, id, bandsAt, every = 3, only, nodeW = 46, gap = 26, rightAt }) => {
+  const a = alluvial(x, y, w, h, left, right, flows, nodeW, gap);
+  const t0 = bandsAt ?? at + 12;
+  return <>
+    {a.bands.map((b, i) => (only === undefined || only === b.from) ? <Wash key={i} shape={b.shape} color={colors[b.from]} at={t0 + i * every} id={`${id}b${i}`} alpha={0.75} amount={1} highlight /> : null)}
+    {a.leftNodes.map((n, i) => <Wash key={`l${i}`} shape={n} color={colors[i]} at={at + i * 2} id={`${id}l${i}`} alpha={1} amount={1} highlight />)}
+    {a.rightNodes.map((n, j) => <Wash key={`r${j}`} shape={n} color={colors[j]} at={(rightAt ?? at + 4) + j * 2} id={`${id}r${j}`} alpha={1} amount={1} highlight />)}
+    <Ink strokes={a.leftNodes} from={at} durationInFrames={8} id={`${id}n`} width={3} double={false} pen={false} />
+    <Ink strokes={a.rightNodes} from={rightAt ?? at} durationInFrames={8} id={`${id}m`} width={3} double={false} pen={false} />
+  </>;
+};
+
+/** A word cloud (kit `wordCloud`): typeset words, biggest first, `every` frames apart. */
+export const WordCloudArt: React.FC<{ cx: number; cy: number; w: number; h: number; words: readonly { t: string; n: number }[]; colors: readonly string[]; at: number; id: string; every?: number; maxSize?: number; minSize?: number }> = ({ cx, cy, w, h, words, colors, at, every = 2, maxSize = 96, minSize = 38 }) => {
+  const placed = wordCloud(cx, cy, w, h, words, maxSize, minSize);
+  return <>{placed.map((p, i) => <Label key={p.t} text={p.t} x={p.x} y={p.y} at={at + i * every} size={p.size} italic={false} weight={800} color={colors[i % colors.length]} />)}</>;
 };

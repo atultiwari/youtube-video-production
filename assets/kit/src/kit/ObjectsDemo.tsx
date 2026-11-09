@@ -9,6 +9,8 @@ import { BpMonitorArt, DashboardArt, EcgPatchArt, HouseArt, MeshHeartArt, PaSens
 import { Ki67TileArt, LymphNodeArt, NodeMetTileArt, NodeSlideArt, TilePyramidArt, WsiScannerArt } from "./art";
 
 import { AntArt, BlochArt, HypeCycleArt, QuantumArt, RobotCartArt, SurgeonConsoleArt } from "./art";
+import { AlluvialArt, AxisArt, BoxPlotArt, DotStripArt, ViolinArt, WordCloudArt } from "./art";
+import { bwNrd0, chartAxis } from "./objects";
 import { Paper } from "./Chrome";
 import { Cell, Rbc } from "./cells";
 import { Dots, Fills, Hatch, Ink, Label, Picture, Wash } from "./Picture";
@@ -950,3 +952,28 @@ export const ObjectsDemo24: React.FC = () => (
     </Paper>
   </AbsoluteFill>
 );
+
+/** Page 25 (B2): box plot with its dots, violin with a box inside, an alluvial plot, a word cloud. */
+const D25A = [9, 12, 14, 15, 16, 17, 18, 19, 19, 20, 20, 21, 22, 23, 24, 25, 26, 26, 27, 27, 29, 30, 31, 32, 33, 34, 35, 37, 38, 40, 40, 40, 44, 47, 50, 54, 58, 64, 85, 110];
+const D25B = [9, 14, 16, 17, 18, 19, 19, 20, 20, 20, 20, 21, 21, 21, 22, 22, 23, 23, 24, 26, 30, 36, 37, 38, 38, 39, 39, 39, 40, 40, 40, 41, 42, 43, 44, 47, 54, 64, 85, 110];
+export const ObjectsDemo25: React.FC = () => {
+  const Y = chartAxis(90, 60, 360, 0, 120, [0, 20, 40, 60, 80, 100, 120]).Y;
+  return (
+    <AbsoluteFill>
+      <Paper chapter={C}>
+        <Picture>
+          <AxisArt x={90} y={60} h={360} vmin={0} vmax={120} ticks={[0, 20, 40, 60, 80, 100, 120]} at={0} id="ax" title="minutes" size={22} />
+          <BoxPlotArt cx={200} w={90} Y={Y} vals={D25A} at={0} id="bx" />
+          <DotStripArt cx={320} Y={Y} vals={D25A} r={6} at={0} id="ds" every={0} />
+          <BoxPlotArt cx={430} w={90} Y={Y} vals={D25B} at={0} id="bx2" />
+          <ViolinArt cx={580} halfW={70} Y={Y} vals={D25B} bw={bwNrd0(D25B) * 0.8} at={0} id="vl" />
+          <BoxPlotArt cx={580} w={24} Y={Y} vals={D25B} at={0} id="bx3" color="#FFFFFF" />
+          <Label text="box · strip · same box · violin" x={350} y={470} at={0} size={22} italic={false} />
+          <AlluvialArt x={680} y={60} w={380} h={360} left={[70, 18, 12]} right={[70, 11, 19]} flows={[[62, 6, 2], [8, 4, 6], [0, 1, 11]]} colors={["#7FB77E", "#E9B949", "#E58A7E"]} at={0} id="al" bandsAt={0} every={0} />
+          <Label text="alluvial plot (100 X-rays)" x={870} y={470} at={0} size={22} italic={false} />
+          <WordCloudArt cx={545} cy={680} w={900} h={300} words={[{ t: "helpful", n: 48 }, { t: "quick", n: 36 }, { t: "pain", n: 30 }, { t: "doctor", n: 22 }, { t: "easy", n: 18 }, { t: "wait", n: 15 }, { t: "confusing", n: 12 }, { t: "night", n: 10 }, { t: "medicine", n: 9 }, { t: "app", n: 8 }, { t: "answer", n: 8 }, { t: "nurse", n: 7 }]} colors={["#2F5E8E", "#C8423B", "#3F7F6F", "#7A4E9E", "#B5651D"]} at={0} id="wc" every={0} maxSize={80} minSize={30} />
+        </Picture>
+      </Paper>
+    </AbsoluteFill>
+  );
+};
