@@ -9,7 +9,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { bundle } from "@remotion/bundler";
+import { serveUrlFor } from "./serve-url.mjs";
 import { renderStill, selectComposition } from "@remotion/renderer";
 
 const args = process.argv.slice(2);
@@ -22,7 +22,7 @@ if (!id) {
 }
 
 const inputProps = { qa: true, measure: true };
-const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts") });
+const serveUrl = await serveUrlFor(id);
 const composition = await selectComposition({ serveUrl, id, inputProps });
 const step = Math.round(every * composition.fps);
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "qa-"));

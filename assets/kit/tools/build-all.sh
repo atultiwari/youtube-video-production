@@ -13,11 +13,11 @@
 #   4. full render, muxed with the mix; with --deliver-4k (Shorts) also the 2160x3840 upload
 #   5. stills: beat midpoints, beat ends (fully built) and every 2 s, contact sheets, phone sheet, frame fill
 set -euo pipefail
-# Housekeeping: every Remotion render leaves a ~1 GB webpack bundle in the macOS temp folder and
+# Housekeeping: a Remotion bundle made outside this script leaves a webpack bundle in the macOS temp folder and
 # nothing deletes it (E07: 268 bundles filled the disk). Remove bundles and Chrome profiles older
 # than 2 hours (never a running build's), and orphaned headless Chromes (parent launchd) over 2 h.
 TMPD=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null || echo "${TMPDIR:-/tmp}")
-find "$TMPD" -maxdepth 1 \( -name 'remotion-webpack-bundle-*' -o -name 'puppeteer_dev_chrome_profile-*' \) -mmin +120 -exec rm -rf {} + 2>/dev/null || true
+find "$TMPD" -maxdepth 1 \( -name 'remotion-webpack-bundle-*' -o -name 'yvp-bundle-*' -o -name 'puppeteer_dev_chrome_profile-*' \) -mmin +120 -exec rm -rf {} + 2>/dev/null || true
 for pid in $(pgrep -f chrome-headless-shell 2>/dev/null || true); do
   [[ $(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ') == 1 ]] || continue
   et=$(ps -o etime= -p "$pid" | tr -d ' '); [[ $et == *-* || $et =~ ^[0-9]+:[0-9]+:[0-9]+$ && ${et%%:*} -ge 2 ]] && kill "$pid" 2>/dev/null || true
@@ -40,6 +40,15 @@ done
 grid=public/$key/grid/beats.json; lines=public/$key/lines.json; out=out/$key
 mkdir -p "$out"
 
+# One slim bundle for the whole run (tools/serve-url.mjs): every render and still reuses it, and it
+# is deleted on exit. Before this, each of the 6+ Remotion calls copied all of public/ (~4 GB by E22)
+# into a temp bundle that nothing removed.
+BUNDLE=$(mktemp -d "$TMPD/yvp-bundle-$key-XXXX")
+trap 'rm -rf "$BUNDLE" "$BUNDLE-public"' EXIT
+echo "== bundle (public/$key + shared assets)"
+node tools/serve-url.mjs "$key" "$BUNDLE" >/dev/null
+export REMOTION_SERVE_URL=$BUNDLE
+
 echo "== lint"
 # Duplicate step ids, before the long QA pass (E06). Checks the composition's own source files.
 compfile=$(grep -lE "export const $comp(:| =)" -r src --include='*.tsx' 2>/dev/null | head -1)
@@ -52,7 +61,7 @@ echo "== QA"
 # Every issue is printed; the run stops here if there are any.
 node tools/qa.mjs "$comp" --every 1 --json "$out/qa.json" | grep -v '^\[Tab' 
 echo "== measure render"
-npx remotion render "$comp" "$out/measure.mp4" --scale=0.25 --muted --props='{"measure":true}' --log=error
+npx remotion render "$BUNDLE" "$comp" "$out/measure.mp4" --scale=0.25 --muted --props='{"measure":true}' --log=error
 echo "== event gaps"
 "$PY" -I tools/event-gaps.py "$out/measure.mp4" "$grid" "$lines" | tee "$out/event-gaps.txt" | tail -1
 static=$(tail -1 "$out/event-gaps.txt" | sed -n 's/.*(\([0-9]*\)%).*/\1/p')
@@ -66,13 +75,13 @@ echo "== one focus at a time"
 echo "== sound"
 "$PY" -I tools/sound-design.py "$out/measure.mp4" --out "$out/sound" --beats "$grid" ${narration[@]+"${narration[@]}"}
 echo "== full render"
-npx remotion render "$comp" "$out/$comp-silent.mp4" --muted --log=error
+npx remotion render "$BUNDLE" "$comp" "$out/$comp-silent.mp4" --muted --log=error
 ffmpeg -v error -y -i "$out/$comp-silent.mp4" -i "$out/sound/mix.wav" -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k \
   -shortest -movflags +faststart "$out/$comp.mp4"
 if [[ $deliver4k == 1 ]]; then
   # 06-publish.md: a Short uploads at 2160x3840, which platforms give more bitrate.
   echo "== 4K delivery render"
-  npx remotion render "$comp" "$out/$comp-4k-silent.mp4" --scale=2 --muted --log=error
+  npx remotion render "$BUNDLE" "$comp" "$out/$comp-4k-silent.mp4" --scale=2 --muted --log=error
   size=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$out/$comp-4k-silent.mp4")
   if [[ $size != "2160x3840" ]]; then echo "warning: the 4K render is $size, not 2160x3840 (is $comp a 1080x1920 Short?)" >&2; fi
   ffmpeg -v error -y -i "$out/$comp-4k-silent.mp4" -i "$out/sound/mix.wav" -map 0:v -map 1:a -c:v copy -c:a aac \

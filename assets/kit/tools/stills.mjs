@@ -11,7 +11,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { bundle } from "@remotion/bundler";
+import { serveUrlFor } from "./serve-url.mjs";
 import { renderStill, selectComposition } from "@remotion/renderer";
 
 const [id, gridPath, outDir, mode] = process.argv.slice(2);
@@ -20,7 +20,7 @@ if (!id || !gridPath || !outDir || !mode) {
   process.exit(1);
 }
 
-const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts") });
+const serveUrl = await serveUrlFor(id);
 const composition = await selectComposition({ serveUrl, id });
 const grid = JSON.parse(fs.readFileSync(gridPath, "utf8"));
 
